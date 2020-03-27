@@ -1,0 +1,90 @@
+# Referenced at /Users/zhenyu/Desktop/Bangumi32/android/app/build/intermediates/merged_manifests/release/universal/AndroidManifest.xml:48
+-keep class androidx.core.app.CoreComponentFactory { <init>(); }
+# Referenced at /Users/zhenyu/Desktop/Bangumi32/android/app/build/intermediates/merged_manifests/release/universal/AndroidManifest.xml:56
+-keep class com.czy0729.bangumi.MainActivity { <init>(); }
+# Referenced at /Users/zhenyu/Desktop/Bangumi32/android/app/build/intermediates/merged_manifests/release/universal/AndroidManifest.xml:48
+-keep class com.czy0729.bangumi.MainApplication { <init>(); }
+# Referenced at /Users/zhenyu/Desktop/Bangumi32/android/app/build/intermediates/merged_manifests/release/universal/AndroidManifest.xml:67
+-keep class com.facebook.react.devsupport.DevSettingsActivity { <init>(); }
+# Referenced at /Users/zhenyu/Desktop/Bangumi32/android/app/build/intermediates/merged_manifests/release/universal/AndroidManifest.xml:87
+-keep class com.google.android.gms.common.api.GoogleApiActivity { <init>(); }
+# Referenced at /Users/zhenyu/Desktop/Bangumi32/android/app/build/intermediates/merged_manifests/release/universal/AndroidManifest.xml:73
+-keep class expo.modules.filesystem.FileSystemFileProvider { <init>(); }
+# Referenced at /Users/zhenyu/Desktop/Bangumi32/android/app/build/intermediates/merged_manifests/release/universal/AndroidManifest.xml:83
+-keep class expo.modules.location.services.LocationTaskService { <init>(); }
+# Referenced at /Users/zhenyu/Desktop/Bangumi32/android/app/build/intermediates/merged_manifests/release/universal/AndroidManifest.xml:96
+-keep class io.nlopez.smartlocation.activity.providers.ActivityGooglePlayServicesProvider$ActivityRecognitionService { <init>(); }
+# Referenced at /Users/zhenyu/Desktop/Bangumi32/android/app/build/intermediates/merged_manifests/release/universal/AndroidManifest.xml:102
+-keep class io.nlopez.smartlocation.geocoding.providers.AndroidGeocodingProvider$AndroidGeocodingService { <init>(); }
+# Referenced at /Users/zhenyu/Desktop/Bangumi32/android/app/build/intermediates/merged_manifests/release/universal/AndroidManifest.xml:99
+-keep class io.nlopez.smartlocation.geofencing.providers.GeofencingGooglePlayServicesProvider$GeofencingService { <init>(); }
+# Referenced at /Users/zhenyu/.gradle/caches/transforms-1/files-1.1/appcompat-1.0.0.aar/8fbb337006c46a851ccd7ef75799d6d2/res/layout/abc_alert_dialog_title_material.xml:56
+# Referenced at /Users/zhenyu/.gradle/caches/transforms-1/files-1.1/appcompat-1.0.0.aar/8fbb337006c46a851ccd7ef75799d6d2/res/layout/abc_alert_dialog_material.xml:52
+# Referenced at /Users/zhenyu/.gradle/caches/transforms-1/files-1.1/appcompat-1.0.0.aar/8fbb337006c46a851ccd7ef75799d6d2/res/layout/abc_alert_dialog_button_bar_material.xml:43
+-keep class android.widget.Space { <init>(android.content.Context, android.util.AttributeSet); }
+
+# Referenced at /Users/zhenyu/.gradle/caches/transforms-1/files-1.1/appcompat-1.0.0.aar/8fbb337006c46a851ccd7ef75799d6d2/res/layout/abc_select_dialog_material.xml:23
+-keep class androidx.appcompat.app.AlertController$RecycleListView { <init>(android.content.Context, android.util.AttributeSet); }
+
+# Referenced at /Users/zhenyu/.gradle/caches/transforms-1/files-1.1/appcompat-1.0.0.aar/8fbb337006c46a851ccd7ef75799d6d2/res/layout/abc_action_menu_item_layout.xml:17
+-keep class androidx.appcompat.view.menu.ActionMenuItemView { <init>(android.content.Context, android.util.AttributeSet); }
+
+# Referenced at /Users/zhenyu/.gradle/caches/transforms-1/files-1.1/appcompat-1.0.0.aar/8fbb337006c46a851ccd7ef75799d6d2/res/layout/abc_expanded_menu_layout.xml:17
+-keep class androidx.appcompat.view.menu.ExpandedMenuView { <init>(android.content.Context, android.util.AttributeSet); }
+
+# Referenced at /Users/zhenyu/.gradle/caches/transforms-1/files-1.1/appcompat-1.0.0.aar/8fbb337006c46a851ccd7ef75799d6d2/res/layout/abc_popup_menu_item_layout.xml:17
+# Referenced at /Users/zhenyu/.gradle/caches/transforms-1/files-1.1/appcompat-1.0.0.aar/8fbb337006c46a851ccd7ef75799d6d2/res/layout/abc_list_menu_item_layout.xml:17
+# Referenced at /Users/zhenyu/.gradle/caches/transforms-1/files-1.1/appcompat-1.0.0.aar/8fbb337006c46a851ccd7ef75799d6d2/res/layout/abc_cascading_menu_item_layout.xml:20
+-keep class androidx.appcompat.view.menu.ListMenuItemView { <init>(android.content.Context, android.util.AttributeSet); }
+
+# Referenced at /Users/zhenyu/.gradle/caches/transforms-1/files-1.1/appcompat-1.0.0.aar/8fbb337006c46a851ccd7ef75799d6d2/res/layout/abc_screen_toolbar.xml:27
+-keep class androidx.appcompat.widget.ActionBarContainer { <init>(android.content.Context, android.util.AttributeSet); }
+
+# Referenced at /Users/zhenyu/.gradle/caches/transforms-1/files-1.1/appcompat-1.0.0.aar/8fbb337006c46a851ccd7ef75799d6d2/res/layout/abc_screen_toolbar.xml:43
+# Referenced at /Users/zhenyu/.gradle/caches/transforms-1/files-1.1/appcompat-1.0.0.aar/8fbb337006c46a851ccd7ef75799d6d2/res/layout/abc_action_mode_bar.xml:19
+-keep class androidx.appcompat.widget.ActionBarContextView { <init>(android.content.Context, android.util.AttributeSet); }
+
+# Referenced at /Users/zhenyu/.gradle/caches/transforms-1/files-1.1/appcompat-1.0.0.aar/8fbb337006c46a851ccd7ef75799d6d2/res/layout/abc_screen_toolbar.xml:17
+-keep class androidx.appcompat.widget.ActionBarOverlayLayout { <init>(android.content.Context, android.util.AttributeSet); }
+
+# Referenced at /Users/zhenyu/.gradle/caches/transforms-1/files-1.1/appcompat-1.0.0.aar/8fbb337006c46a851ccd7ef75799d6d2/res/layout/abc_action_menu_layout.xml:17
+-keep class androidx.appcompat.widget.ActionMenuView { <init>(android.content.Context, android.util.AttributeSet); }
+
+# Referenced at /Users/zhenyu/.gradle/caches/transforms-1/files-1.1/appcompat-1.0.0.aar/8fbb337006c46a851ccd7ef75799d6d2/res/layout/abc_activity_chooser_view.xml:19
+-keep class androidx.appcompat.widget.ActivityChooserView$InnerLayout { <init>(android.content.Context, android.util.AttributeSet); }
+
+# Referenced at /Users/zhenyu/.gradle/caches/transforms-1/files-1.1/appcompat-1.0.0.aar/8fbb337006c46a851ccd7ef75799d6d2/res/layout/abc_alert_dialog_material.xml:18
+-keep class androidx.appcompat.widget.AlertDialogLayout { <init>(android.content.Context, android.util.AttributeSet); }
+
+# Referenced at /Users/zhenyu/.gradle/caches/transforms-1/files-1.1/appcompat-1.0.0.aar/8fbb337006c46a851ccd7ef75799d6d2/res/layout/abc_alert_dialog_button_bar_material.xml:26
+-keep class androidx.appcompat.widget.ButtonBarLayout { <init>(android.content.Context, android.util.AttributeSet); }
+
+# Referenced at /Users/zhenyu/.gradle/caches/transforms-1/files-1.1/appcompat-1.0.0.aar/8fbb337006c46a851ccd7ef75799d6d2/res/layout/abc_screen_content_include.xml:19
+-keep class androidx.appcompat.widget.ContentFrameLayout { <init>(android.content.Context, android.util.AttributeSet); }
+
+# Referenced at /Users/zhenyu/.gradle/caches/transforms-1/files-1.1/appcompat-1.0.0.aar/8fbb337006c46a851ccd7ef75799d6d2/res/layout/abc_alert_dialog_title_material.xml:45
+-keep class androidx.appcompat.widget.DialogTitle { <init>(android.content.Context, android.util.AttributeSet); }
+
+# Referenced at /Users/zhenyu/.gradle/caches/transforms-1/files-1.1/appcompat-1.0.0.aar/8fbb337006c46a851ccd7ef75799d6d2/res/layout/abc_screen_simple_overlay_action_mode.xml:23
+-keep class androidx.appcompat.widget.FitWindowsFrameLayout { <init>(android.content.Context, android.util.AttributeSet); }
+
+# Referenced at /Users/zhenyu/.gradle/caches/transforms-1/files-1.1/appcompat-1.0.0.aar/8fbb337006c46a851ccd7ef75799d6d2/res/layout/abc_screen_simple.xml:17
+# Referenced at /Users/zhenyu/.gradle/caches/transforms-1/files-1.1/appcompat-1.0.0.aar/8fbb337006c46a851ccd7ef75799d6d2/res/layout/abc_dialog_title_material.xml:22
+-keep class androidx.appcompat.widget.FitWindowsLinearLayout { <init>(android.content.Context, android.util.AttributeSet); }
+
+# Referenced at /Users/zhenyu/.gradle/caches/transforms-1/files-1.1/appcompat-1.0.0.aar/8fbb337006c46a851ccd7ef75799d6d2/res/layout/abc_search_view.xml:75
+-keep class androidx.appcompat.widget.SearchView$SearchAutoComplete { <init>(android.content.Context, android.util.AttributeSet); }
+
+# Referenced at /Users/zhenyu/.gradle/caches/transforms-1/files-1.1/appcompat-1.0.0.aar/8fbb337006c46a851ccd7ef75799d6d2/res/layout/abc_screen_toolbar.xml:36
+-keep class androidx.appcompat.widget.Toolbar { <init>(android.content.Context, android.util.AttributeSet); }
+
+# Referenced at /Users/zhenyu/.gradle/caches/transforms-1/files-1.1/appcompat-1.0.0.aar/8fbb337006c46a851ccd7ef75799d6d2/res/layout/abc_screen_simple_overlay_action_mode.xml:32
+# Referenced at /Users/zhenyu/.gradle/caches/transforms-1/files-1.1/appcompat-1.0.0.aar/8fbb337006c46a851ccd7ef75799d6d2/res/layout/abc_screen_simple.xml:25
+-keep class androidx.appcompat.widget.ViewStubCompat { <init>(android.content.Context, android.util.AttributeSet); }
+
+# Referenced at /Users/zhenyu/.gradle/caches/transforms-1/files-1.1/browser-1.0.0.aar/27a69ebc422de62bd8326e771fb1e398/res/layout/browser_actions_context_menu_page.xml:5
+-keep class androidx.browser.browseractions.BrowserActionsFallbackMenuView { <init>(android.content.Context, android.util.AttributeSet); }
+
+# Referenced at /Users/zhenyu/.gradle/caches/transforms-1/files-1.1/appcompat-1.0.0.aar/8fbb337006c46a851ccd7ef75799d6d2/res/layout/abc_alert_dialog_material.xml:41
+-keep class androidx.core.widget.NestedScrollView { <init>(android.content.Context, android.util.AttributeSet); }
+

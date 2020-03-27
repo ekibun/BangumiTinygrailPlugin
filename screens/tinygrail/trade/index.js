@@ -8,7 +8,7 @@ import React from 'react'
 import { StyleSheet, ScrollView, View } from 'react-native'
 import { SafeAreaView, NavigationEvents } from 'react-navigation'
 import PropTypes from 'prop-types'
-import { Flex, Button, Touchable, UM } from '@components'
+import { Flex, Button, Touchable } from '@components'
 import { StatusBarPlaceholder } from '@screens/_'
 import { _ } from '@stores'
 import { inject, observer } from '@utils/decorators'
@@ -113,7 +113,6 @@ class TinygrailTrade extends React.Component {
         style={[_.container.flex, this.styles.dark]}
         forceInset={{ top: 'never' }}
       >
-        <UM screen={title} />
         {this.renderFocus()}
         <StatusBarEvents />
         <StatusBarPlaceholder style={this.styles.dark} />

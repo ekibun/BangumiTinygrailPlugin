@@ -5,7 +5,7 @@
  * @Last Modified time: 2020-03-21 01:41:44
  */
 import React from 'react'
-import { StatusBarEvents, Flex, Popover, Menu, Iconfont, UM } from '@components'
+import { StatusBarEvents, Flex, Popover, Menu, Iconfont } from '@components'
 import { IconBack } from '@screens/_'
 import { _ } from '@stores'
 import { hm as utilsHM } from '@utils/fetch'
@@ -146,7 +146,6 @@ const withHeader = ({
             : _params.statusBarEvents
         return (
           <>
-            <UM screen={screen} />
             {_statusBarEvents && (
               <StatusBarEvents backgroundColor={backgroundColor} />
             )}

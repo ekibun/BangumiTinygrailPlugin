@@ -7,27 +7,23 @@
  * @Last Modified by: czy0729
  * @Last Modified time: 2020-03-26 19:52:18
  */
-import { NativeModules, InteractionManager } from 'react-native'
+import { InteractionManager } from 'react-native'
 import Constants from 'expo-constants'
 import { Portal, Toast } from '@ant-design/react-native'
 import {
   IOS,
   APP_ID,
-  APP_ID_BAIDU,
   HOST_NAME,
   HOST,
   VERSION_GITHUB_RELEASE,
   DEV
 } from '@constants'
 import events from '@constants/events'
-import { BAIDU_KEY } from '@constants/secret'
 import fetch from './thirdParty/fetch-polyfill'
-import md5 from './thirdParty/md5'
 import { urlStringify, sleep, getTimestamp, randomn } from './index'
 import { log } from './dev'
 import { info as UIInfo } from './ui'
 
-const UMAnalyticsModule = NativeModules.UMAnalyticsModule
 const SHOW_LOG = true // 开发显示请求信息
 const FETCH_TIMEOUT = 8000 // api超时时间
 const FETCH_RETRY = 4 // get请求失败自动重试次数
@@ -385,23 +381,6 @@ export function t(desc, eventData) {
         eventData ? JSON.stringify(eventData) : ''
       }`
     )
-    return
-  }
-
-  try {
-    // 保证这种低优先级的操作在UI响应之后再执行
-    InteractionManager.runAfterInteractions(() => {
-      const eventId = events[desc]
-      if (eventId) {
-        if (eventData) {
-          UMAnalyticsModule.onEventWithMap(eventId, eventData)
-        } else {
-          UMAnalyticsModule.onEvent(eventId)
-        }
-      }
-    })
-  } catch (error) {
-    warn('utils/fetch', 't', error)
   }
 }
 
@@ -429,29 +408,8 @@ export async function queue(fetchs, num = 2) {
  * 百度翻译
  * @param {*} query
  */
-export async function baiduTranslate(query) {
-  try {
-    const appid = APP_ID_BAIDU // 秘密
-    const salt = new Date().getTime()
-    const from = 'auto'
-    const to = 'zh'
-    const q = query.split('\r\n').join('\n')
-    const sign = md5(`${appid}${q}${salt}${BAIDU_KEY}`)
-    const { _response } = await xhrCustom({
-      url: `https://api.fanyi.baidu.com/api/trans/vip/translate?${urlStringify({
-        q,
-        appid,
-        salt,
-        from,
-        to,
-        sign
-      })}`
-    })
-    return _response
-  } catch (error) {
-    warn('utils/fetch.js', 'baiduTranslate', error)
-    return false
-  }
+export async function baiduTranslate() {
+  return false
 }
 
 /**

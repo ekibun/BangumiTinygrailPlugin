@@ -7,7 +7,7 @@
 import React from 'react'
 import { View } from 'react-native'
 import PropTypes from 'prop-types'
-import { StatusBarEvents, Popover, Menu, Flex, Iconfont, UM } from '@components'
+import { StatusBarEvents, Popover, Menu, Flex, Iconfont } from '@components'
 import { IconBack } from '@screens/_'
 import { _ } from '@stores'
 import { gradientColor } from '@utils'
@@ -223,7 +223,6 @@ const withTransitionHeader = ({
         const { barStyle } = this.state
         return (
           <>
-            <UM screen={screen} />
             <StatusBarEvents
               barStyle={barStyle}
               backgroundColor='transparent'

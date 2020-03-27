@@ -5,7 +5,7 @@
  * @Last Modified time: 2020-03-26 23:27:42
  */
 export default {
-  initialRouteName: 'HomeTab', // HomeTab TinygrailSacrifice
+  initialRouteName: 'Tinygrail', // HomeTab TinygrailSacrifice
   initialRouteParams: {
     // id: 240929
     // blogId: 286710 // 294448
@@ -24,5 +24,3 @@ export default {
     // userName: 'ekibun',
   }
 }
-
-export const initialHomeTabName = 'Home'

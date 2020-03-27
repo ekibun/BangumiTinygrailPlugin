@@ -7,7 +7,7 @@
 import React from 'react'
 import { ScrollView, View, RefreshControl } from 'react-native'
 import PropTypes from 'prop-types'
-import { Flex, UM } from '@components'
+import { Flex } from '@components'
 import { StatusBarPlaceholder } from '@screens/_'
 import { _ } from '@stores'
 import { inject, observer } from '@utils/decorators'
@@ -68,7 +68,6 @@ class TinygrailDeal extends React.Component {
     const { refreshing } = this.state
     return (
       <View style={[_.container.flex, this.styles.dark]}>
-        <UM screen={title} />
         <StatusBarEvents />
         <StatusBarPlaceholder style={this.styles.dark} />
         <Header />

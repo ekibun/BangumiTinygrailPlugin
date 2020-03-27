@@ -7,7 +7,7 @@
  */
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
-import { StatusBarEvents, UM } from '@components'
+import { StatusBarEvents } from '@components'
 import { BlurView, Logo } from '@screens/_'
 import { _ } from '@stores'
 import { hm as utilsHM } from '@utils/fetch'
@@ -101,7 +101,6 @@ const withTabsHeader = ({ screen } = {}, hm) => ComposedComponent =>
         }
         return (
           <>
-            <UM screen={screen} />
             <StatusBarEvents backgroundColor={backgroundColor} />
             <ComposedComponent navigation={navigation} />
           </>
