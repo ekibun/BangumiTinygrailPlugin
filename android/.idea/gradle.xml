@@ -23,6 +23,7 @@
             <option value="$PROJECT_DIR$/../node_modules/expo-permissions/android" />
             <option value="$PROJECT_DIR$/../node_modules/expo-sqlite/android" />
             <option value="$PROJECT_DIR$/../node_modules/expo-web-browser/android" />
+            <option value="$PROJECT_DIR$/../node_modules/react-native-exception-handler/android" />
             <option value="$PROJECT_DIR$/../node_modules/react-native-gesture-handler/android" />
             <option value="$PROJECT_DIR$/../node_modules/react-native-navigation-bar-color/android" />
             <option value="$PROJECT_DIR$/../node_modules/react-native-reanimated/android" />

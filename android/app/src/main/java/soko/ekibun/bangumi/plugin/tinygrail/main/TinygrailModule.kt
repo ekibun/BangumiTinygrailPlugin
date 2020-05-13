@@ -11,9 +11,9 @@ class TinygrailModule(reactContext: ReactApplicationContext) : ReactContextBaseJ
   @ReactMethod
   fun getIntentExtra(callback: Callback) {
     callback( Arguments.createMap().also {
-      it.putString("userInfo", currentActivity?.intent?.getStringExtra(EXTRA_USER_INFO)?:"null")
-      it.putString("userCookie", currentActivity?.intent?.getStringExtra(EXTRA_USER_COOKIE)?:"null")
-      it.putString("cookie", currentActivity?.intent?.getStringExtra(EXTRA_TINYGRAIL_COOKIE)?:"null")
+      it.putString("userInfo", currentActivity?.intent?.getStringExtra(EXTRA_USER_INFO)?:"")
+      it.putString("userCookie", currentActivity?.intent?.getStringExtra(EXTRA_USER_COOKIE)?:"")
+      it.putString("cookie", currentActivity?.intent?.getStringExtra(EXTRA_TINYGRAIL_COOKIE)?:"")
     })
   }
 

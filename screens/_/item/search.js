@@ -2,7 +2,7 @@
  * @Author: czy0729
  * @Date: 2019-05-15 16:26:34
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-03-23 15:42:30
+ * @Last Modified time: 2020-04-25 17:40:55
  */
 import React from 'react'
 import { View } from 'react-native'
@@ -34,6 +34,7 @@ function ItemSearch({
   type,
   collected,
   comments,
+  position = [],
   event
 }) {
   const styles = memoStyles()
@@ -82,12 +83,7 @@ function ItemSearch({
               <Flex align='start' style={{ width: '100%' }}>
                 <Flex.Item>
                   {!!(nameCn || name) && (
-                    <Text size={15} numberOfLines={2}>
-                      {/* {collected && (
-                        <Text type='main' lineHeight={15}>
-                          [已收藏]{' '}
-                        </Text>
-                      )} */}
+                    <Text size={15} numberOfLines={1} bold>
                       {HTMLDecode(nameCn || name)}
                       {!!comments && (
                         <Text type='main' lineHeight={15}>
@@ -116,12 +112,19 @@ function ItemSearch({
                 )}
               </Flex>
               {!!tip && (
-                <Text style={_.mt.md} size={12} numberOfLines={2}>
+                <Text style={_.mt.sm} size={12} numberOfLines={2}>
                   {HTMLDecode(tip)}
                 </Text>
               )}
             </View>
-            <Flex style={_.mt.xs}>
+            {!!position.length && (
+              <Flex style={_.mt.md} wrap='wrap'>
+                {position.map(item => (
+                  <Tag key={item} style={_.mr.sm} value={item} />
+                ))}
+              </Flex>
+            )}
+            <Flex style={_.mt.md}>
               <Stars style={_.mr.xs} value={score} color='warning' />
               <Text style={_.mr.sm} type='sub' size={13}>
                 {total}
@@ -157,7 +160,7 @@ const memoStyles = _.memoStyles(_ => ({
     width: imgWidth
   },
   wrap: {
-    paddingVertical: _.wind,
+    paddingVertical: _.space,
     paddingRight: _.wind
   },
   border: {
@@ -165,6 +168,6 @@ const memoStyles = _.memoStyles(_ => ({
     borderTopWidth: _.hairlineWidth
   },
   content: {
-    height: imgHeight
+    minHeight: imgHeight
   }
 }))

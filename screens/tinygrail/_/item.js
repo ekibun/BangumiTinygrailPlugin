@@ -2,13 +2,13 @@
  * @Author: czy0729
  * @Date: 2019-08-25 19:51:55
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-03-20 23:34:43
+ * @Last Modified time: 2020-05-04 22:38:43
  */
 import React from 'react'
 import { Alert, View } from 'react-native'
 import PropTypes from 'prop-types'
 import { observer } from 'mobx-react'
-import { Flex, Text, Touchable } from '@components'
+import { Flex, Text, Touchable, Iconfont } from '@components'
 import { Avatar } from '@screens/_'
 import { _, tinygrailStore } from '@stores'
 import { lastDate, getTimestamp, formatNumber, toFixed } from '@utils'
@@ -28,6 +28,7 @@ function Item(props, { $, navigation }) {
   const styles = memoStyles()
   const {
     _index,
+    style,
     index,
     id,
     monoId,
@@ -48,6 +49,7 @@ function Item(props, { $, navigation }) {
     level,
     current,
     event,
+    showMenu,
     onAuctionCancel
   } = props
   const go = props.go || $.state.go
@@ -154,9 +156,8 @@ function Item(props, { $, navigation }) {
     }
   }
   const auctioning = auctionText === '竞拍中'
-
   return (
-    <Flex style={styles.container} align='start'>
+    <Flex style={[styles.container, style]} align='start'>
       <Avatar
         style={styles.avatar}
         src={tinygrailOSS(icon)}
@@ -175,7 +176,7 @@ function Item(props, { $, navigation }) {
           })
         }}
       />
-      <Flex.Item style={index !== 0 && styles.border}>
+      <Flex.Item style={[styles.wrap, index !== 0 && styles.border]}>
         <Flex align='start'>
           <Flex.Item>
             <Touchable
@@ -294,7 +295,21 @@ function Item(props, { $, navigation }) {
           {!isAuction && (
             <StockPreview style={styles.stockPreview} {...props} _loaded />
           )}
-          {!isICO && <Popover id={monoId || id} event={event} />}
+          {showMenu && !!tinygrailStore.collected(id) && (
+            <Iconfont
+              style={styles.favor}
+              size={12}
+              name='star-full'
+              color={_.tSelect(_.colorTinygrailText, _.colorYellow)}
+            />
+          )}
+          {showMenu && !isICO && (
+            <Popover
+              id={monoId || id}
+              event={event}
+              onCollect={tinygrailStore.toggleCollect}
+            />
+          )}
         </Flex>
       </Flex.Item>
     </Flex>
@@ -308,7 +323,9 @@ Item.contextTypes = {
 
 Item.defaultProps = {
   event: EVENT,
-  onAuctionCancel: Function.prototype
+  showMenu: true,
+  onAuctionCancel: Function.prototype,
+  onCollect: Function.prototype
 }
 
 export default observer(Item)
@@ -317,6 +334,9 @@ const memoStyles = _.memoStyles(_ => ({
   container: {
     paddingLeft: _.wind,
     backgroundColor: _.colorTinygrailContainer
+  },
+  wrap: {
+    paddingRight: _.wind - _._wind
   },
   avatar: {
     marginRight: _.xs,
@@ -337,6 +357,11 @@ const memoStyles = _.memoStyles(_ => ({
   },
   stockPreview: {
     marginRight: -12
+  },
+  favor: {
+    position: 'absolute',
+    right: 11,
+    top: 40
   }
 }))
 

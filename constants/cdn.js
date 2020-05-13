@@ -4,11 +4,18 @@
  * @Author: czy0729
  * @Date: 2020-01-17 11:59:14
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-03-08 22:07:07
+ * @Last Modified time: 2020-05-04 21:55:15
  */
+import { getTimestamp } from '@utils'
 import { HASH_AVATAR, HASH_SUBJECT } from './hash'
 
 export const HOST_CDN = 'https://cdn.jsdelivr.net'
+
+const VERSION_SUBJECT = '20200502'
+const VERSION_MONO = '20200502'
+const VERSION_RAKUEN = '20200502'
+const VERSION_OSS = '20200502'
+const VERSION_STATIC = '20200504'
 
 const I64BIT_TABLE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-'.split(
   ''
@@ -36,7 +43,8 @@ function hash(input) {
  * 每日放送
  * @url https://github.com/ekibun/bangumi_onair
  */
-export const CDN_ONAIR = `${HOST_CDN}/gh/ekibun/bangumi_onair@master/calendar.json`
+export const CDN_ONAIR = () =>
+  `${HOST_CDN}/gh/ekibun/bangumi_onair@master/calendar.json?t=${getTimestamp()}`
 
 /**
  * 单集数据源
@@ -46,15 +54,15 @@ export const CDN_ONAIR = `${HOST_CDN}/gh/ekibun/bangumi_onair@master/calendar.js
 export const CDN_EPS = subjectId =>
   `${HOST_CDN}/gh/ekibun/bangumi_onair@master/onair/${parseInt(
     parseInt(subjectId) / 1000
-  )}/${subjectId}.json`
+  )}/${subjectId}.json?t=${getTimestamp()}`
 
 /**
  * 条目CDN自维护数据
  * @url https://github.com/czy0729/Bangumi-Subject
  * @param {*} subjectId
  */
-export const CDN_SUBJECT = subjectId =>
-  `${HOST_CDN}/gh/czy0729/Bangumi-Subject@master/data/${parseInt(
+export const CDN_SUBJECT = (subjectId, version = VERSION_SUBJECT) =>
+  `${HOST_CDN}/gh/czy0729/Bangumi-Subject@${version}/data/${parseInt(
     parseInt(subjectId) / 100
   )}/${subjectId}.json`
 
@@ -64,8 +72,8 @@ export const CDN_SUBJECT = subjectId =>
  * @param {int} monoId
  * @param {string} type data | person
  */
-export const CDN_MONO = (monoId, type = 'data') =>
-  `${HOST_CDN}/gh/czy0729/Bangumi-Mono@master/${type}/${parseInt(
+export const CDN_MONO = (monoId, type = 'data', version = VERSION_MONO) =>
+  `${HOST_CDN}/gh/czy0729/Bangumi-Mono@${version}/${type}/${parseInt(
     parseInt(monoId) / 100
   )}/${monoId}.json`
 
@@ -75,8 +83,8 @@ export const CDN_MONO = (monoId, type = 'data') =>
  * @param {*} topicId
  * @param {*} type topic | comment
  */
-export const CDN_RAKUEN = (topicId, type = 'topic') =>
-  `${HOST_CDN}/gh/czy0729/Bangumi-Rakuen@master/data/${type}/${parseInt(
+export const CDN_RAKUEN = (topicId, type = 'topic', version = VERSION_RAKUEN) =>
+  `${HOST_CDN}/gh/czy0729/Bangumi-Rakuen@${version}/data/${type}/${parseInt(
     parseInt(topicId) / 100
   )}/${topicId}.json`
 
@@ -85,7 +93,7 @@ export const CDN_RAKUEN = (topicId, type = 'topic') =>
  * @url https://github.com/czy0729/Bangumi-OSS
  */
 const avatarCache = {}
-export const CDN_OSS_AVATAR = src => {
+export const CDN_OSS_AVATAR = (src, version = VERSION_OSS) => {
   if (typeof src !== 'string') {
     return src
   }
@@ -108,7 +116,7 @@ export const CDN_OSS_AVATAR = src => {
   const _hash = hash(_src)
   if (_hash in HASH_AVATAR) {
     const path = _hash.slice(0, 1).toLocaleLowerCase()
-    const cdnSrc = `${HOST_CDN}/gh/czy0729/Bangumi-OSS@master/data/avatar/m/${path}/${_hash}.jpg`
+    const cdnSrc = `${HOST_CDN}/gh/czy0729/Bangumi-OSS@${version}/data/avatar/m/${path}/${_hash}.jpg`
     avatarCache[src] = cdnSrc
     return cdnSrc
   }
@@ -122,7 +130,7 @@ export const CDN_OSS_AVATAR = src => {
  * @url https://github.com/czy0729/Bangumi-OSS
  */
 const subjectCache = {}
-export const CDN_OSS_SUBJECT = src => {
+export const CDN_OSS_SUBJECT = (src, version = VERSION_OSS) => {
   if (typeof src !== 'string') {
     return src
   }
@@ -145,7 +153,7 @@ export const CDN_OSS_SUBJECT = src => {
   const _hash = hash(_src)
   if (_hash in HASH_SUBJECT) {
     const path = _hash.slice(0, 1).toLocaleLowerCase()
-    const cdnSrc = `${HOST_CDN}/gh/czy0729/Bangumi-OSS@master/data/subject/c/${path}/${_hash}.jpg`
+    const cdnSrc = `${HOST_CDN}/gh/czy0729/Bangumi-OSS@${version}/data/subject/c/${path}/${_hash}.jpg`
     subjectCache[src] = cdnSrc
     return cdnSrc
   }
@@ -155,8 +163,16 @@ export const CDN_OSS_SUBJECT = src => {
 }
 
 /**
+ * 发现首页
+ * @url https://github.com/czy0729/Bangumi-Static
+ * @param {*} version
+ */
+export const CDN_DISCOVERY_HOME = (version = VERSION_STATIC) =>
+  `${HOST_CDN}/gh/czy0729/Bangumi-Static@${version}/data/discovery/index.json`
+
+/**
  * 年鉴
  * @url https://github.com/czy0729/Bangumi-Static
  */
-export const CDN_AWARD = year =>
-  `${HOST_CDN}/gh/czy0729/Bangumi-Static@master/data/award/${year}.json`
+export const CDN_AWARD = (year, version = VERSION_STATIC) =>
+  `${HOST_CDN}/gh/czy0729/Bangumi-Static@${version}/data/award/${year}.json`

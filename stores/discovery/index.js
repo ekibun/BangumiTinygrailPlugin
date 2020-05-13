@@ -2,25 +2,39 @@
  * @Author: czy0729
  * @Date: 2019-06-22 15:44:31
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-01-05 19:11:31
+ * @Last Modified time: 2020-05-04 21:37:44
  */
-import { observable, computed } from 'mobx'
+import { observable } from 'mobx'
 import { getTimestamp } from '@utils'
 import store from '@utils/store'
 import { fetchHTML } from '@utils/fetch'
 import { log } from '@utils/dev'
 import { HTMLDecode } from '@utils/html'
 import { LIST_EMPTY, HOST_NING_MOE, HOST_ANITAMA } from '@constants'
-import { HTML_TAGS, HTML_CATALOG, HTML_CATALOG_DETAIL } from '@constants/html'
+import {
+  HTML_TAGS,
+  HTML_CATALOG,
+  HTML_CATALOG_DETAIL,
+  HTML_BLOG_LIST,
+  HTML_CHANNEL
+} from '@constants/html'
 import {
   NAMESPACE,
   DEFAULT_TYPE,
   INIT_NINGMOE_DETAIL_ITEM,
   INIT_ANITAMA_TIMELINE_ITEM,
   INIT_CATALOG_ITEM,
-  INIT_CATELOG_DETAIL_ITEM
+  INIT_CATELOG_DETAIL_ITEM,
+  INIT_BLOG_ITEM,
+  INIT_CHANNEL
 } from './init'
-import { analysisTags, analysisCatalog, analysisCatalogDetail } from './common'
+import {
+  analysisTags,
+  analysisCatalog,
+  analysisCatalogDetail,
+  cheerioBlog,
+  cheerioChannel
+} from './common'
 
 class Discovery extends store {
   state = observable({
@@ -31,73 +45,93 @@ class Discovery extends store {
 
     /**
      * 柠萌条目信息
+     * @param {*} bgmId
      */
     ningMoeDetail: {
-      // [bgmId]: INIT_NINGMOE_DETAIL_ITEM
+      0: INIT_NINGMOE_DETAIL_ITEM
     },
 
     /**
      * Anitama文章列表
+     * @param {*} page
      */
     anitamaTimeline: {
-      // [page]: INIT_ANITAMA_TIMELINE_ITEM
+      _: (page = 1) => page,
+      0: INIT_ANITAMA_TIMELINE_ITEM
     },
 
     /**
      * 标签
+     * @param {*} type
      */
     tags: {
-      // [type]: LIST_EMPTY<INIT_TAGS_ITEM>
+      _: (type = DEFAULT_TYPE) => type,
+      0: LIST_EMPTY // <INIT_TAGS_ITEM>
     },
 
     /**
      * 目录
-     * @params {*} type ''|collect|me
+     * @param {*} type '' | collect | me
+     * @param {*} page
      */
     catalog: {
-      // [`${type}|${page}`]: INIT_CATALOG_ITEM
+      _: (type = '', page = 1) => `${type}|${page}`,
+      0: INIT_CATALOG_ITEM
     },
 
     /**
      * 目录详情
+     * @param {*} id
      */
     catalogDetail: {
-      // [id]: INIT_CATELOG_DETAIL_ITEM
+      0: INIT_CATELOG_DETAIL_ITEM
+    },
+
+    /**
+     * 全站日志
+     * @param {*} type all => '' | anime | book | game | music | real
+     * @param {*} page
+     */
+    blog: {
+      _: (type = '', page = 1) => `${type}|${page}`,
+      0: INIT_BLOG_ITEM
+    },
+
+    /**
+     * 日志查看历史
+     * @param {*} blogId
+     */
+    blogReaded: {
+      0: false
+    },
+
+    /**
+     * 频道聚合
+     * @param {*} type
+     */
+    channel: {
+      0: INIT_CHANNEL,
+      anime: INIT_CHANNEL,
+      book: INIT_CHANNEL,
+      game: INIT_CHANNEL,
+      music: INIT_CHANNEL,
+      real: INIT_CHANNEL
     }
   })
 
   init = () =>
     this.readStorage(
-      ['ningMoeDetail', 'tags', 'catalog', 'catalogDetail'],
+      [
+        'ningMoeDetail',
+        'tags',
+        'catalog',
+        'catalogDetail',
+        'blog',
+        'blogReaded',
+        'channel'
+      ],
       NAMESPACE
     )
-
-  // -------------------- get --------------------
-  @computed get random() {
-    return this.state.random || LIST_EMPTY
-  }
-
-  ningMoeDetail(bgmId) {
-    return computed(
-      () => this.state.ningMoeDetail[bgmId] || INIT_NINGMOE_DETAIL_ITEM
-    ).get()
-  }
-
-  anitamaTimeline(page = 1) {
-    return this.state.anitamaTimeline[page] || INIT_ANITAMA_TIMELINE_ITEM
-  }
-
-  tags(type = DEFAULT_TYPE) {
-    return this.state.tags[type] || LIST_EMPTY
-  }
-
-  catalog(type = '', page = 1) {
-    return this.state.catalog[`${type}|${page}`] || INIT_CATALOG_ITEM
-  }
-
-  catalogDetail(id) {
-    return this.state.catalogDetail[id] || INIT_CATELOG_DETAIL_ITEM
-  }
 
   // -------------------- fetch --------------------
   /**
@@ -401,6 +435,69 @@ class Discovery extends store {
 
     return data
   }
+
+  /**
+   * 全站日志
+   */
+  fetchBlog = async ({ type = '', page = 1 }) => {
+    const key = 'blog'
+    const html = await fetchHTML({
+      url: HTML_BLOG_LIST(type, page)
+    })
+
+    const list = cheerioBlog(html)
+    this.setState({
+      [key]: {
+        [`${type}|${page}`]: {
+          list,
+          _loaded: getTimestamp()
+        }
+      }
+    })
+    this.setStorage(key, undefined, NAMESPACE)
+
+    return list
+  }
+
+  /**
+   * 频道聚合
+   */
+  fetchChannel = async ({ type }) => {
+    const key = 'channel'
+    const html = await fetchHTML({
+      url: HTML_CHANNEL(type)
+    })
+
+    const data = cheerioChannel(html)
+    this.setState({
+      [key]: {
+        [type]: {
+          ...data,
+          _loaded: getTimestamp()
+        }
+      }
+    })
+    this.setStorage(key, undefined, NAMESPACE)
+
+    return this.channel(type)
+  }
+
+  // -------------------- page --------------------
+  /**
+   * 更新日志查看历史
+   */
+  updateBlogReaded = blogId => {
+    const { blogReaded } = this.state
+    this.setState({
+      blogReaded: {
+        ...blogReaded,
+        [blogId]: true
+      }
+    })
+  }
 }
 
-export default new Discovery()
+const Store = new Discovery()
+Store.setup()
+
+export default Store

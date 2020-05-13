@@ -2,7 +2,7 @@
  * @Author: czy0729
  * @Date: 2019-11-17 14:24:04
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-03-20 18:30:07
+ * @Last Modified time: 2020-04-19 17:51:36
  */
 import React from 'react'
 import { View } from 'react-native'
@@ -71,7 +71,8 @@ function AuctionList({ style }, { $, navigation }) {
                       })
 
                       navigation.push('Zone', {
-                        userId: item.name
+                        userId: item.name,
+                        from: 'tinygrail'
                       })
                     }}
                   >
@@ -115,7 +116,8 @@ export default observer(AuctionList)
 
 const memoStyles = _.memoStyles(_ => ({
   container: {
-    padding: _.wind
+    paddingVertical: _.space,
+    paddingHorizontal: _.wind
   },
   info: {
     paddingBottom: _.sm

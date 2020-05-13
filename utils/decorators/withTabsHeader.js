@@ -3,11 +3,11 @@
  * @Author: czy0729
  * @Date: 2019-04-29 14:48:53
  * @Last Modified by: czy0729
- * @Last Modified time: 2019-12-21 16:46:07
+ * @Last Modified time: 2020-05-01 15:56:04
  */
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
-import { StatusBarEvents } from '@components'
+import { StatusBarEvents, UM } from '@components'
 import { BlurView, Logo } from '@screens/_'
 import { _ } from '@stores'
 import { hm as utilsHM } from '@utils/fetch'
@@ -20,8 +20,10 @@ const correctHeightIOS = 14 // @issue iOS端头部高度误差修正值
 const withTabsHeader = ({ screen } = {}, hm) => ComposedComponent =>
   observer(
     class withTabsHeaderComponent extends React.Component {
-      // @notice 把tabbar通过某些手段放进去header里面, 才能实现比较好的毛玻璃效果
-      // 安卓没有毛玻璃效果, 不设置
+      /**
+       * @notice 把tabbar通过某些手段放进去header里面, 才能实现比较好的毛玻璃效果
+       * 安卓没有毛玻璃效果, 不设置
+       */
       static navigationOptions = ({ navigation }) => {
         let withTabsHeaderOptions
         const headerLeft = navigation.getParam('headerLeft')
@@ -33,18 +35,29 @@ const withTabsHeader = ({ screen } = {}, hm) => ComposedComponent =>
               height: _.headerHeight - correctHeightIOS
             },
             headerTitle: (
-              <View>
-                <Logo />
-                <View style={{ height: _.tabsHeight }}>
-                  <View style={styles.headerTabsIOS}>
-                    {navigation.getParam('headerTabs')}
+              <>
+                <BlurView style={styles.headerBackgroundIOS} />
+                <View>
+                  <Logo />
+                  <View style={styles.headerTabsWrapIOS}>
+                    <View style={styles.headerTabsIOS}>
+                      {navigation.getParam('headerTabs')}
+                    </View>
                   </View>
                 </View>
-              </View>
+              </>
             ),
             headerLeft,
             headerRight,
-            headerBackground: <BlurView />
+            headerRightContainerStyle: {
+              marginRight: _._wind
+            }
+
+            /**
+             * @issue 这个属性在页面切换时会被隐藏掉?
+             * 暂使用headerTitle插入BlurView并适应位置代替
+             */
+            // headerBackground: <BlurView />
           }
         } else {
           const headerBackground = navigation.getParam(
@@ -73,7 +86,7 @@ const withTabsHeader = ({ screen } = {}, hm) => ComposedComponent =>
               paddingLeft: _.xs
             },
             headerRightContainerStyle: {
-              marginRight: _.wind - _.sm
+              marginRight: _._wind - _.sm
             },
             headerBackground
           }
@@ -101,6 +114,7 @@ const withTabsHeader = ({ screen } = {}, hm) => ComposedComponent =>
         }
         return (
           <>
+            <UM screen={screen} />
             <StatusBarEvents backgroundColor={backgroundColor} />
             <ComposedComponent navigation={navigation} />
           </>
@@ -144,12 +158,24 @@ withTabsHeader.listViewProps = IOS
 export default withTabsHeader
 
 const styles = StyleSheet.create({
+  headerBackgroundIOS: {
+    position: 'absolute',
+    top: 0,
+    left: '50%',
+    width: _.window.width,
+    height: _.tabsHeaderHeight,
+    marginTop: -_.tabsHeight - correctHeightIOS,
+    marginLeft: -_.window.width * 0.5
+  },
+  headerTabsWrapIOS: {
+    height: _.tabsHeight
+  },
   headerTabsIOS: {
     position: 'absolute',
+    zIndex: 1,
     left: 0,
     right: 0,
     bottom: 0,
-    zIndex: 1,
     width: _.window.width,
     transform: [
       {

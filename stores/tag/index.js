@@ -3,9 +3,9 @@
  * @Author: czy0729
  * @Date: 2019-06-08 03:25:36
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-01-24 14:14:02
+ * @Last Modified time: 2020-04-28 15:56:21
  */
-import { observable, computed } from 'mobx'
+import { observable } from 'mobx'
 import { getTimestamp } from '@utils'
 import store from '@utils/store'
 import { fetchHTML } from '@utils/fetch'
@@ -18,58 +18,37 @@ class Tag extends store {
   state = observable({
     /**
      * 标签列表
+     * @param {*} text    标签
+     * @param {*} type
+     * @param {*} airtime
      */
     tag: {
-      // [`${text}|${type}|${airtime}`]: LIST_EMPTY | INIT_TAG_ITEM
+      _: (text = '', type = DEFAULT_TYPE, airtime = '') =>
+        `${text.replace(/ /g, '+')}|${type}|${airtime}`,
+      0: LIST_EMPTY // <INIT_TAG_ITEM>
     },
 
     /**
      * 排行榜
+     * @param {*} type
      */
     rank: {
-      // [type]: LIST_EMPTY | INIT_RANK_ITEM
+      _: (type = DEFAULT_TYPE) => type,
+      0: LIST_EMPTY // <INIT_RANK_ITEM>
     },
 
     /**
      * 索引
+     * @param {*} type
+     * @param {*} airtime
      */
     browser: {
-      // [`${type}|${airdate}`]: LIST_EMPTY | INIT_RANK_ITEM
+      _: (type = DEFAULT_TYPE, airtime = '') => `${type}|${airtime}`,
+      0: LIST_EMPTY // <INIT_RANK_ITEM>
     }
   })
 
   init = () => this.readStorage(['tag', 'rank', 'browser'], NAMESPACE)
-
-  // -------------------- get --------------------
-  /**
-   * 取标签结果
-   * @param {*} text 标签
-   */
-  tag(text = '', type = DEFAULT_TYPE, airtime = '') {
-    const _text = text.replace(/ /g, '+')
-    return computed(
-      () => this.state.tag[`${_text}|${type}|${airtime}`] || LIST_EMPTY
-    ).get()
-  }
-
-  /**
-   * 取排行榜
-   * @param {*} text 标签
-   */
-  rank(type = DEFAULT_TYPE) {
-    return computed(() => this.state.rank[type] || LIST_EMPTY).get()
-  }
-
-  /**
-   * 索引
-   * @param {*} type
-   * @param {*} airtime
-   */
-  browser(type = DEFAULT_TYPE, airtime = '') {
-    return computed(
-      () => this.state.browser[`${type}|${airtime}`] || LIST_EMPTY
-    ).get()
-  }
 
   // -------------------- fetch --------------------
   /**
@@ -79,10 +58,10 @@ class Tag extends store {
    * @param {*} order 排序
    * @param {*} refresh 是否刷新
    */
-  async fetchTag(
+  fetchTag = async (
     { text = '', type = DEFAULT_TYPE, order, airtime = '' } = {},
     refresh
-  ) {
+  ) => {
     const _text = text.replace(/ /g, '+')
 
     const { list, pagination } = this.tag(_text, type, airtime)
@@ -120,7 +99,7 @@ class Tag extends store {
   }
 
   /**
-   * 排行榜(与标签相似, 所以共用逻辑)
+   * 排行榜 (与标签相似, 所以共用逻辑)
    * @param {*} type 类型
    * @param {*} filter 类型2
    * 动画: tv | web | ova | movie | misc
@@ -129,26 +108,25 @@ class Tag extends store {
    * 游戏: pc | mac | ps4 | xbox_one | ns | will_u | ps3 | xbox360
    * | wii | psv | 3ds | nds | psp | ps2 | xbox | ps | fc | gba | gb |
    * 三次元: jp | en | cn | misc
+   *
    * @param {*} airtime 2020-1960
    * @param {*} refresh 是否刷新
    */
-  async fetchRank({ type = DEFAULT_TYPE, filter, airtime } = {}, refresh) {
+  fetchRank = async (
+    { type = DEFAULT_TYPE, filter, airtime } = {},
+    refresh
+  ) => {
+    const key = 'rank'
+    const limit = 24
     const { list, pagination } = this.rank(type)
-    let page // 下一页的页码
-    if (refresh) {
-      page = 1
-    } else {
-      page = pagination.page + 1
-    }
+    const page = refresh ? 1 : pagination.page + 1
 
-    // -------------------- 请求HTML --------------------
     const res = fetchHTML({
       url: HTML_RANK(type, 'rank', page, filter, airtime)
     })
     const raw = await res
-    const { pageTotal, tag } = analysisTags(raw, page, pagination)
+    const { tag } = analysisTags(raw, page, pagination)
 
-    const key = 'rank'
     const stateKey = type
     this.setState({
       [key]: {
@@ -156,7 +134,7 @@ class Tag extends store {
           list: refresh ? tag : [...list, ...tag],
           pagination: {
             page,
-            pageTotal: parseInt(pageTotal)
+            pageTotal: tag.length === limit ? 1000 : page
           },
           _loaded: getTimestamp()
         }
@@ -172,7 +150,7 @@ class Tag extends store {
    * @param {*} param0
    * @param {*} refresh
    */
-  async fetchBrowser({ type = DEFAULT_TYPE, airtime } = {}, refresh) {
+  fetchBrowser = async ({ type = DEFAULT_TYPE, airtime } = {}, refresh) => {
     const { list, pagination } = this.browser(type, airtime)
     let page // 下一页的页码
     if (refresh) {
@@ -208,4 +186,7 @@ class Tag extends store {
   }
 }
 
-export default new Tag()
+const Store = new Tag()
+Store.setup()
+
+export default Store

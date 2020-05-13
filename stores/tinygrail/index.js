@@ -3,7 +3,7 @@
  * @Author: czy0729
  * @Date: 2019-08-24 23:18:17
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-03-21 20:55:40
+ * @Last Modified time: 2020-05-01 22:33:01
  */
 import { observable, computed, toJS } from 'mobx'
 import { getTimestamp, toFixed, throttle } from '@utils'
@@ -55,7 +55,10 @@ import {
   API_TINYGRAIL_USERS,
   API_TINYGRAIL_USER_CHARA,
   API_TINYGRAIL_VALHALL_CHARA,
-  API_TINYGRAIL_VALHALL_LIST
+  API_TINYGRAIL_VALHALL_LIST,
+  API_TINYGRAIL_USER_TEMPLE_TOTAL,
+  API_TINYGRAIL_USER_CHARA_TOTAL,
+  TINYGRAIL_ASSETS_LIMIT
 } from '@constants/api'
 import UserStore from '../user'
 import {
@@ -70,7 +73,6 @@ import {
   INIT_MY_CHARA_ASSETS,
   INIT_AUCTION_STATUS
 } from './init'
-import { NativeModules } from 'react-native'
 
 const defaultKey = 'recent'
 const defaultSort = '1/50'
@@ -97,9 +99,10 @@ class Tinygrail extends store {
 
     /**
      * 人物数据
+     * @param {*} monoId
      */
     characters: {
-      // [monoId]: INIT_CHARACTERS_ITEM
+      0: INIT_CHARACTERS_ITEM
     },
 
     /**
@@ -119,21 +122,28 @@ class Tinygrail extends store {
 
     /**
      * 番市首富
+     * @param {*} sort
      */
-    rich: INIT_RICH,
+    rich: {
+      _: (sort = defaultSort) => sort,
+      0: LIST_EMPTY, // <INIT_RICH_ITEM>
+      ...INIT_RICH
+    },
 
     /**
      * K线
+     * @param {*} monoId
      */
     kline: {
-      // [monoId]: INIT_KLINE_ITEM
+      0: INIT_KLINE_ITEM
     },
 
     /**
      * 深度图
+     * @param {*} monoId
      */
     depth: {
-      // [monoId]: INIT_DEPTH_ITEM
+      0: INIT_DEPTH_ITEM
     },
 
     /**
@@ -147,17 +157,27 @@ class Tinygrail extends store {
     assets: INIT_ASSETS,
 
     /**
+     * 其他用户资产
+     * @param {*} hash
+     */
+    userAssets: {
+      0: INIT_ASSETS
+    },
+
+    /**
      * 用户资产概览信息
+     * @param {*} hash
      */
     charaAssets: {
-      // [hash]: INIT_CHARA_ASSETS
+      0: INIT_CHARA_ASSETS
     },
 
     /**
      * 我的挂单和交易记录
+     * @param {*} monoId
      */
     userLogs: {
-      // [monoId]: INIT_USER_LOGS
+      0: INIT_USER_LOGS
     },
 
     /**
@@ -182,58 +202,68 @@ class Tinygrail extends store {
 
     /**
      * 记录所有角色的头像Map (用于没有头像的列表)
+     * @param {*} monoId
      */
     iconsCache: {
-      // [monoId]: ''
+      0: ''
     },
 
     /**
      * ICO参与者
+     * @param {*} monoId
      */
     initial: {
-      // [monoId]: {}
+      0: LIST_EMPTY
     },
 
     /**
      * 董事会
+     * @param {*} monoId
      */
     users: {
-      // [monoId]: LIST_EMPTY
+      0: LIST_EMPTY
     },
 
     /**
      * 用户圣殿
+     * @param {*} hash
      */
     temple: {
-      // [hash]: LIST_EMPTY<INIT_TEMPLE_ITEM>
+      _: hash => hash || this.hash,
+      0: LIST_EMPTY // <INIT_TEMPLE_ITEM>
     },
 
     /**
      * 用户所有角色信息
+     * @param {*} hash
      */
     charaAll: {
-      // [hash]: LIST_EMPTY<INIT_CHATACTER_ITEM>
+      _: hash => hash || this.hash,
+      0: LIST_EMPTY // <INIT_CHATACTER_ITEM>
     },
 
     /**
      * 角色圣殿
+     * @param {*} monoId
      */
     charaTemple: {
-      // [monoId]: LIST_EMPTY
+      0: LIST_EMPTY
     },
 
     /**
      * 可拍卖信息
+     * @param {*} monoId
      */
     valhallChara: {
-      // [monoId]: {}
+      0: {}
     },
 
     /**
      * 上周拍卖记录
+     * @param {*} monoId
      */
     auctionList: {
-      // [monoId]: LIST_EMPTY
+      0: LIST_EMPTY
     },
 
     /**
@@ -253,16 +283,18 @@ class Tinygrail extends store {
 
     /**
      * 当前拍卖状态
+     * @param {*} monoId
      */
     auctionStatus: {
-      // [monoId]: INIT_AUCTION_STATUS
+      0: INIT_AUCTION_STATUS
     },
 
     /**
      * 角色发行价
+     * @param {*} monoId
      */
     issuePrice: {
-      // [monoId]: 0
+      0: 0
     },
 
     /**
@@ -274,6 +306,22 @@ class Tinygrail extends store {
      * 每周萌王
      */
     topWeek: LIST_EMPTY,
+
+    /**
+     * 检测用户有多少圣殿
+     * @param {*} hash
+     */
+    templeTotal: {
+      0: 0
+    },
+
+    /**
+     * 检测用户有多少角色
+     * @param {*} hash
+     */
+    charaTotal: {
+      0: 0
+    },
 
     /**
      * 卖一推荐
@@ -291,9 +339,22 @@ class Tinygrail extends store {
     advanceAuctionList: LIST_EMPTY,
 
     /**
+     * 竞拍推荐 (按固定资产)
+     */
+    advanceAuctionList2: LIST_EMPTY,
+
+    /**
      * 献祭推荐
      */
     advanceSacrificeList: LIST_EMPTY,
+
+    /**
+     * 角色本地收藏
+     * @param {*} monoId
+     */
+    collected: {
+      0: 0
+    },
 
     /**
      * iOS此刻是否显示WebView
@@ -314,6 +375,7 @@ class Tinygrail extends store {
       [
         'advance',
         'advanceAuctionList',
+        'advanceAuctionList2',
         'advanceBidList',
         'advanceList',
         'advanceSacrificeList',
@@ -326,6 +388,7 @@ class Tinygrail extends store {
         'charaAssets',
         'charaTemple',
         'characters',
+        'collected',
         'cookie',
         'depth',
         'hash',
@@ -347,139 +410,13 @@ class Tinygrail extends store {
     )
 
   // -------------------- get --------------------
-  @computed get cookie() {
-    return this.state.cookie
-  }
-
-  @computed get advance() {
-    return this.state.advance
-  }
-
-  characters(id) {
-    return (
-      computed(() => this.state.characters[id]).get() || INIT_CHARACTERS_ITEM
-    )
-  }
-
   list(key = defaultKey) {
     return computed(() => this.state[key]).get() || LIST_EMPTY
   }
 
-  rich(sort = defaultSort) {
-    return computed(() => this.state.rich[sort]).get() || LIST_EMPTY
-  }
-
-  kline(id) {
-    return computed(() => this.state.kline[id]).get() || INIT_KLINE_ITEM
-  }
-
-  depth(id) {
-    return computed(() => this.state.depth[id]).get() || INIT_DEPTH_ITEM
-  }
-
-  @computed get hash() {
-    return this.state.hash
-  }
-
-  @computed get assets() {
-    return this.state.assets
-  }
-
-  charaAssets(hash) {
-    return (
-      computed(() => this.state.charaAssets[hash]).get() || INIT_CHARA_ASSETS
-    )
-  }
-
-  userLogs(id) {
-    return computed(() => this.state.userLogs[id]).get() || INIT_USER_LOGS
-  }
-
-  @computed get myCharaAssets() {
-    return this.state.myCharaAssets
-  }
-
-  @computed get balance() {
-    return this.state.balance
-  }
-
-  iconsCache(id) {
-    return computed(() => this.state.iconsCache[id]).get() || ''
-  }
-
-  initial(id) {
-    return computed(() => this.state.initial[id]).get() || LIST_EMPTY
-  }
-
-  users(id) {
-    return computed(() => this.state.users[id]).get() || LIST_EMPTY
-  }
-
-  temple(hash = this.hash) {
-    return computed(() => this.state.temple[hash]).get() || LIST_EMPTY
-  }
-
-  charaAll(hash = this.hash) {
-    return computed(() => this.state.charaAll[hash]).get() || LIST_EMPTY
-  }
-
-  charaTemple(id) {
-    return computed(() => this.state.charaTemple[id]).get() || LIST_EMPTY
-  }
-
-  valhallChara(id) {
-    return computed(() => this.state.valhallChara[id]).get() || {}
-  }
-
-  auctionList(id) {
-    return computed(() => this.state.auctionList[id]).get() || LIST_EMPTY
-  }
-
-  auctionStatus(id) {
-    return (
-      computed(() => this.state.auctionStatus[id]).get() || INIT_AUCTION_STATUS
-    )
-  }
-
-  @computed get valhallList() {
-    return this.state.valhallList
-  }
-
-  @computed get items() {
-    return this.state.items
-  }
-
-  issuePrice(id) {
-    return computed(() => this.state.issuePrice[id]).get() || 0
-  }
-
-  @computed get templeLast() {
-    return this.state.templeLast
-  }
-
-  @computed get topWeek() {
-    return this.state.topWeek
-  }
-
-  @computed get advanceList() {
-    return this.state.advanceList
-  }
-
-  @computed get advanceBidList() {
-    return this.state.advanceBidList
-  }
-
-  @computed get advanceAuctionList() {
-    return this.state.advanceAuctionList
-  }
-
-  @computed get advanceSacrificeList() {
-    return this.state.advanceSacrificeList
-  }
-
   // -------------------- fetch --------------------
   fetch = (url, isPost, data) => {
-    NativeModules.Tinygrail.logNative(`[axios] ${url} - ${this.cookie}`)
+    log(`[axios] ${url}`)
 
     axios.defaults.withCredentials = false
     const config = {
@@ -797,6 +734,35 @@ class Tinygrail extends store {
   }
 
   /**
+   * 其他用户资产信息
+   */
+  fetchUserAssets = async hash => {
+    const result = await this.fetch(API_TINYGRAIL_ASSETS(hash))
+
+    let data = {
+      ...INIT_ASSETS
+    }
+    if (result.data.State === 0) {
+      data = {
+        id: result.data.Value.Id,
+        balance: result.data.Value.Balance,
+        assets: result.data.Value.Assets,
+        lastIndex: result.data.Value.LastIndex,
+        _loaded: getTimestamp()
+      }
+    }
+
+    const key = 'userAssets'
+    this.setState({
+      [key]: {
+        [hash]: data
+      }
+    })
+
+    return Promise.resolve(data)
+  }
+
+  /**
    * 用户资产概览信息
    */
   fetchCharaAssets = async hash => {
@@ -942,7 +908,7 @@ class Tinygrail extends store {
   }
 
   /**
-   * 我的道具
+   * 每周萌王
    */
   fetchTopWeek = async () => {
     const result = await this.fetch(API_TINYGRAIL_TOP_WEEK())
@@ -983,6 +949,44 @@ class Tinygrail extends store {
     this.setStorage(key, undefined, NAMESPACE)
 
     return Promise.resolve(data)
+  }
+
+  /**
+   * 检测用户有多少圣殿
+   */
+  fetchTempleTotal = async hash => {
+    const result = await this.fetch(API_TINYGRAIL_USER_TEMPLE_TOTAL(hash))
+    let total = 0
+    if (result.data.State === 0) {
+      total = result.data.Value.TotalItems
+    }
+
+    const key = 'templeTotal'
+    this.setState({
+      [key]: {
+        [hash]: total
+      }
+    })
+    return Promise.resolve(total)
+  }
+
+  /**
+   * 检测用户有多少人物
+   */
+  fetchCharaTotal = async hash => {
+    const result = await this.fetch(API_TINYGRAIL_USER_CHARA_TOTAL(hash))
+    let total = 0
+    if (result.data.State === 0) {
+      total = result.data.Value.TotalItems
+    }
+
+    const key = 'charaTotal'
+    this.setState({
+      [key]: {
+        [hash]: total
+      }
+    })
+    return Promise.resolve(total)
   }
 
   /**
@@ -1739,8 +1743,8 @@ class Tinygrail extends store {
             .map(item => {
               const { asks } = this.depth(item.id)
 
-              // 列表有时有卖单数, 但是实际又没有人卖
-              if (!asks.length) {
+              // 列表有时有卖单数, 但是实际又没有人卖, 过滤冰山价格
+              if (!asks.length || asks[0].price === 0) {
                 return null
               }
 
@@ -1788,7 +1792,9 @@ class Tinygrail extends store {
     let data = {
       ...LIST_EMPTY
     }
-    const list = chara.list.filter(item => item.bids)
+
+    // 为了筛选掉过多数据, 当前价钱 > 20
+    const list = chara.list.filter(item => item.bids && item.current >= 20)
     if (list.length) {
       try {
         // 循环请求获取第一买单价
@@ -1854,7 +1860,54 @@ class Tinygrail extends store {
    * 从英灵殿中查找
    */
   fetchAdvanceAuctionList = async () => {
-    const result = await this.fetch(API_TINYGRAIL_VALHALL_LIST(1, 1000))
+    const result = await this.fetch(
+      API_TINYGRAIL_VALHALL_LIST(1, TINYGRAIL_ASSETS_LIMIT)
+    )
+    const { State, Value } = result.data
+
+    let data = {
+      ...LIST_EMPTY
+    }
+    if (State === 0) {
+      data = {
+        list: Value.Items.filter(
+          item => parseFloat(item.Rate) >= 2 && item.State >= 100
+        )
+          .map(item => ({
+            id: item.Id,
+            name: item.Name,
+            icon: item.Icon,
+            current: item.Current,
+            bonus: item.Bonus,
+            rate: toFixed(item.Rate, 2),
+            level: item.Level,
+            amount: item.State,
+            mark: toFixed((parseFloat(item.Rate) / item.Price) * 10, 1)
+          }))
+          .filter(item => parseFloat(item.mark) >= 2)
+          .sort((a, b) => parseFloat(b.mark) - parseFloat(a.mark)),
+        pagination: paginationOnePage,
+        _loaded: getTimestamp()
+      }
+    }
+
+    const key = 'advanceAuctionList'
+    this.setState({
+      [key]: data
+    })
+    this.setStorage(key, undefined, NAMESPACE)
+
+    return Promise.resolve(data)
+  }
+
+  /**
+   * 拍卖推荐 (按固定资产)
+   * 从英灵殿中查找
+   */
+  fetchAdvanceAuctionList2 = async () => {
+    const result = await this.fetch(
+      API_TINYGRAIL_VALHALL_LIST(1, TINYGRAIL_ASSETS_LIMIT)
+    )
     const { State, Value } = result.data
 
     let data = {
@@ -1864,10 +1917,7 @@ class Tinygrail extends store {
       data = {
         list: Value.Items.filter(item => {
           const templeRate = parseFloat(item.Rate) * (item.Level + 1) * 0.3
-          return (
-            Math.max(parseFloat(item.Rate), templeRate) >= 2 &&
-            item.State >= 100
-          )
+          return templeRate >= 2 && item.State >= 100
         })
           .map(item => {
             const templeRate = parseFloat(item.Rate) * (item.Level + 1) * 0.3
@@ -1880,10 +1930,7 @@ class Tinygrail extends store {
               rate: toFixed(item.Rate, 2),
               level: item.Level,
               amount: item.State,
-              mark: toFixed(
-                (Math.max(parseFloat(item.Rate), templeRate) / item.Price) * 10,
-                1
-              )
+              mark: toFixed((templeRate / item.Price) * 10, 1)
             }
           })
           .filter(item => parseFloat(item.mark) >= 2)
@@ -1893,7 +1940,7 @@ class Tinygrail extends store {
       }
     }
 
-    const key = 'advanceAuctionList'
+    const key = 'advanceAuctionList2'
     this.setState({
       [key]: data
     })
@@ -1962,6 +2009,25 @@ class Tinygrail extends store {
     this.setState({
       _stockPreview: !_stockPreview
     })
+  }
+
+  toggleCollect = monoId => {
+    const { collected } = this.state
+
+    const _collected = {
+      ...collected
+    }
+
+    if (_collected[monoId]) {
+      _collected[monoId] = 0
+    } else {
+      _collected[monoId] = getTimestamp()
+    }
+    this.setState({
+      collected: _collected
+    })
+
+    this.setStorage('collected', undefined, NAMESPACE)
   }
 
   // -------------------- action --------------------
@@ -2111,4 +2177,7 @@ class Tinygrail extends store {
   }
 }
 
-export default new Tinygrail()
+const Store = new Tinygrail()
+Store.setup()
+
+export default Store

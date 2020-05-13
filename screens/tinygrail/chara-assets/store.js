@@ -1,16 +1,20 @@
+/* eslint-disable no-await-in-loop */
+/* eslint-disable no-restricted-syntax */
 /*
  * @Author: czy0729
  * @Date: 2019-09-19 00:35:13
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-02-29 11:25:10
+ * @Last Modified time: 2020-05-04 00:47:03
  */
 import { Alert } from 'react-native'
 import { observable, computed } from 'mobx'
 import { tinygrailStore } from '@stores'
-import { toFixed } from '@utils'
+import { toFixed, getTimestamp } from '@utils'
 import store from '@utils/store'
 import { t } from '@utils/fetch'
+import { confirm, info } from '@utils/ui'
 import {
+  SORT_SC,
   SORT_GX,
   SORT_GXB,
   SORT_SDGX,
@@ -42,6 +46,7 @@ export const tabs = [
   }
 ]
 export const sortDS = [
+  SORT_SC,
   SORT_HYD,
   SORT_CGS,
   SORT_GDZC,
@@ -65,18 +70,32 @@ export default class ScreenTinygrailCharaAssets extends store {
     sort: '',
     direction: '', // void | down | up
     go: '卖出',
+    editing: false, // 是否批量选择中
+    editingIds: {}, // 选中的角色id
     _loaded: false
   })
 
   init = async () => {
+    const { _loaded } = this.state
+    const current = getTimestamp()
+    const needFetch = !_loaded || current - _loaded > 60
+
     const res = this.getStorage(undefined, namespace)
     const state = await res
     this.setState({
       ...state,
-      _loaded: true
+      editing: false,
+      _loaded: needFetch ? current : _loaded
     })
+    this.clearState('editingIds', {})
 
-    this.fetchMyCharaAssets()
+    if (this.userId) {
+      this.fetchMyCharaAssets()
+      this.fetchTemple()
+    } else if (needFetch) {
+      this.fetchMyCharaAssets()
+    }
+
     return res
   }
 
@@ -103,7 +122,11 @@ export default class ScreenTinygrailCharaAssets extends store {
         .split('#')
         .map(v => /(\d+)「(.+)」(\d+)股/.exec(v))
         .filter(v => v)
-        .map(v => ({ id: Number(v[1]), name: v[2], num: Number(v[3]) }))
+        .map(v => ({
+          id: Number(v[1]),
+          name: v[2],
+          num: Number(v[3])
+        }))
 
       let total = 0
       items.forEach(item => {
@@ -132,17 +155,51 @@ export default class ScreenTinygrailCharaAssets extends store {
   }
 
   // -------------------- fetch --------------------
-  fetchMyCharaAssets = () => tinygrailStore.fetchMyCharaAssets()
+  fetchMyCharaAssets = () => {
+    if (this.userId) {
+      return tinygrailStore.fetchCharaAssets(this.userId)
+    }
+    return tinygrailStore.fetchMyCharaAssets()
+  }
 
-  fetchTemple = () => tinygrailStore.fetchTemple()
+  fetchTemple = () => tinygrailStore.fetchTemple(this.userId)
 
   // -------------------- get --------------------
+  @computed get userId() {
+    const { userId } = this.params
+    return userId
+  }
+
   @computed get myCharaAssets() {
+    if (this.userId) {
+      // 统一他人和自己持仓的数据结构
+      const { characters, initials } = tinygrailStore.charaAssets(this.userId)
+      const _loaded = getTimestamp()
+      return {
+        chara: {
+          list: characters,
+          pagination: {
+            page: 1,
+            pageTotal: 1
+          },
+          _loaded
+        },
+        ico: {
+          list: initials,
+          pagination: {
+            page: 1,
+            pageTotal: 1
+          },
+          _loaded
+        },
+        _loaded
+      }
+    }
     return tinygrailStore.myCharaAssets
   }
 
   @computed get temple() {
-    return tinygrailStore.temple()
+    return tinygrailStore.temple(this.userId)
   }
 
   // -------------------- page --------------------
@@ -174,6 +231,10 @@ export default class ScreenTinygrailCharaAssets extends store {
   }
 
   tabChangeCallback = page => {
+    if (this.userId) {
+      return
+    }
+
     const { _loaded } = this.myCharaAssets
     if (!_loaded) {
       this.fetchMyCharaAssets()
@@ -181,6 +242,11 @@ export default class ScreenTinygrailCharaAssets extends store {
 
     if (page === 2) {
       this.fetchTemple()
+    }
+
+    const { editing } = this.state
+    if (editing) {
+      this.toggleBatchEdit()
     }
   }
 
@@ -218,5 +284,78 @@ export default class ScreenTinygrailCharaAssets extends store {
     }
 
     this.setStorage(undefined, undefined, namespace)
+  }
+
+  toggleBatchEdit = () => {
+    const { editing } = this.state
+    this.setState({
+      editing: !editing
+    })
+    this.clearState('editingIds', {})
+  }
+
+  toggleEditingId = (id, count) => {
+    const { editingIds } = this.state
+    const _editingIds = {
+      ...editingIds
+    }
+
+    if (_editingIds[id]) {
+      delete _editingIds[id]
+    } else {
+      _editingIds[id] = count
+    }
+
+    this.clearState('editingIds', _editingIds)
+  }
+
+  // -------------------- action --------------------
+  doBatchSacrifice = () => {
+    const { editingIds } = this.state
+    const ids = Object.keys(editingIds)
+    if (!ids.length) {
+      return
+    }
+
+    confirm(
+      `批量献祭${ids.length}个角色的所有流动股份, 该操作不能撤回, 确定? (若角色当前有挂单, 可用数与显示数对不上时, 不会自动献祭成功)`,
+      async () => {
+        t('我的持仓.批量献祭', {
+          length: ids.length
+        })
+
+        const errorIds = []
+        for (const id of ids) {
+          try {
+            const { State } = await tinygrailStore.doSacrifice({
+              monoId: id,
+              amount: editingIds[id],
+              isSale: false
+            })
+            if (State === 1) {
+              errorIds.push(id)
+            }
+          } catch (error) {
+            errorIds.push(id)
+          }
+          info(
+            `正在献祭 ${ids.findIndex(item => item === id) + 1} / ${ids.length}`
+          )
+        }
+
+        this.fetchMyCharaAssets()
+        if (errorIds.length) {
+          Alert.alert('小圣杯助手', `共有${errorIds.length}个角色献祭失败`, [
+            {
+              text: '知道了'
+            }
+          ])
+        } else {
+          info('操作完成')
+        }
+        this.toggleBatchEdit()
+      },
+      '警告'
+    )
   }
 }

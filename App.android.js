@@ -5,7 +5,13 @@
  * @Last Modified time: 2020-03-14 17:09:31
  */
 import React from 'react'
-import { View } from 'react-native'
+import { Alert, View } from 'react-native'
+import RNRestart from 'react-native-restart'
+import {
+  setJSExceptionHandler,
+  setNativeExceptionHandler
+} from 'react-native-exception-handler'
+import SplashScreen from 'react-native-splash-screen'
 import * as Font from 'expo-font'
 import { Provider } from '@ant-design/react-native'
 import { AppCommon } from '@screens/_'
@@ -57,6 +63,8 @@ class App extends React.Component {
         isLoadingComplete: true
       },
       () => {
+        // eslint-disable-next-line no-unused-expressions
+        SplashScreen && SplashScreen.hide && SplashScreen.hide()
       }
     )
   }
@@ -88,3 +96,33 @@ const memoStyles = _.memoStyles(_ => ({
     backgroundColor: _.colorBg
   }
 }))
+
+/**
+ * 崩溃处理
+ * @param {*} e
+ * @param {*} isFatal
+ */
+function errorHandler(e, isFatal) {
+  if (isFatal) {
+    Alert.alert(
+      'Unexpected error occurred',
+      `
+        Error: ${isFatal ? 'Fatal:' : ''} ${e.name} ${e.message}
+
+        We will need to restart the app.
+        `,
+      [
+        {
+          text: '重启',
+          onPress: () => {
+            RNRestart.Restart()
+          }
+        }
+      ]
+    )
+  }
+}
+
+setJSExceptionHandler(errorHandler)
+
+setNativeExceptionHandler(() => {})

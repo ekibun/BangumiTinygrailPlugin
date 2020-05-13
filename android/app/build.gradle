@@ -175,6 +175,7 @@ dependencies {
   implementation project(':react-native-screens')
   implementation project(':react-native-reanimated')
   implementation project(':react-native-gesture-handler')
+  implementation project(':react-native-exception-handler')
   implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
   implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
   implementation fileTree(include: ['*.jar'], dir: 'libs')

@@ -2,39 +2,58 @@
  * @Author: czy0729
  * @Date: 2020-03-22 15:37:07
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-03-22 17:03:54
+ * @Last Modified time: 2020-05-04 21:42:12
  */
 import React from 'react'
 import { View } from 'react-native'
 import PropTypes from 'prop-types'
 import { observer } from 'mobx-react'
 import { Touchable, Flex, Text, Image } from '@components'
-import { _ } from '@stores'
+import { _, discoveryStore } from '@stores'
 import { t } from '@utils/fetch'
-import { IOS, EVENT } from '@constants'
+import { findBangumiCn } from '@utils/app'
+import { EVENT } from '@constants'
 
 const imgWidth = 80
 
 function ItemBlog(
-  { index, id, cover, title, content, time, replies, tags, event },
+  {
+    style,
+    index,
+    id,
+    cover,
+    title,
+    content,
+    username,
+    subject,
+    time,
+    replies,
+    tags,
+    event
+  },
   { navigation }
 ) {
   const styles = memoStyles()
+  const readed = discoveryStore.blogReaded(id)
+  const line = []
+  if (username) line.push(username)
+  if (subject) line.push(findBangumiCn(subject))
+  if (time) line.push(time)
   return (
     <Touchable
-      style={styles.container}
+      style={[styles.container, readed && styles.readed, style]}
       onPress={() => {
         const { eventId, eventData } = event
         t(eventId, {
           to: 'Blog',
-          subjeblogIdctId: id,
+          subjectId: id,
           ...eventData
         })
 
+        discoveryStore.updateBlogReaded(id)
         navigation.push('Blog', {
           blogId: id,
-          _title: title,
-          _time: time
+          _title: title
         })
       }}
     >
@@ -42,25 +61,26 @@ function ItemBlog(
         {!!cover && (
           <View style={styles.imgContainer}>
             <Image
-              style={styles.image}
               src={cover}
               width={imgWidth}
               height={imgWidth}
               placeholder={false}
-              shadow={IOS}
+              shadow
             />
           </View>
         )}
         <Flex.Item>
-          <Text size={15} numberOfLines={2}>
-            {title}
-          </Text>
-          <Text style={_.mt.xs} type='sub' size={13}>
-            {time}{' '}
-            <Text size={12} type='main'>
+          <Text size={15} numberOfLines={2} bold>
+            {title}{' '}
+            <Text size={12} type='main' lineHeight={15}>
               {replies}
             </Text>
           </Text>
+          {!!line.length && (
+            <Text style={_.mt.xs} type='sub' size={13}>
+              {line.join(' / ')}
+            </Text>
+          )}
           <Text style={_.mt.sm} size={13} numberOfLines={4} lineHeight={15}>
             {content}
           </Text>
@@ -84,7 +104,6 @@ ItemBlog.defaultProps = {
 }
 
 ItemBlog.contextTypes = {
-  $: PropTypes.object,
   navigation: PropTypes.object
 }
 
@@ -95,12 +114,15 @@ const memoStyles = _.memoStyles(_ => ({
     paddingLeft: _.wind,
     backgroundColor: _.colorPlain
   },
+  readed: {
+    backgroundColor: _.select(_.colorBg, _._colorDarkModeLevel1)
+  },
   imgContainer: {
     width: imgWidth,
-    marginRight: _.wind
+    marginRight: _._wind
   },
   wrap: {
-    paddingVertical: _.wind,
+    paddingVertical: _.space,
     paddingRight: _.wind
   },
   border: {

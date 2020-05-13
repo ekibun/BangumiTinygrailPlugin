@@ -2,7 +2,7 @@
  * @Author: czy0729
  * @Date: 2019-07-24 13:59:03
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-02-23 05:21:38
+ * @Last Modified time: 2020-04-12 02:27:37
  */
 import React from 'react'
 import { observer } from 'mobx-react'
@@ -49,17 +49,19 @@ function ItemFriends({
       }}
     >
       <Flex>
-        <Avatar style={styles.image} size={48} name={userName} src={avatar} />
+        <Avatar style={styles.image} size={40} name={userName} src={avatar} />
         <Flex.Item style={[styles.item, _.ml.md]}>
           <Flex>
             <Flex.Item>
-              <Text numberOfLines={1}>{userName}</Text>
+              <Text numberOfLines={1} bold>
+                {userName}
+              </Text>
             </Flex.Item>
             <Text style={_.ml.sm} size={13}>
               {recent}
             </Text>
           </Flex>
-          <Text style={_.mt.md} size={10} type='sub'>
+          <Text style={_.mt.sm} size={10} type='sub'>
             {!!doing && `${doing}在看`}
             {!!collect && `${doing ? ' / ' : ''}${collect}看过`}
             {!!wish && ` / ${wish}想看`}

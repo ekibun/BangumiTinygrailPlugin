@@ -3,188 +3,154 @@
  * @Author: czy0729
  * @Date: 2019-02-27 07:47:57
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-03-08 22:12:30
+ * @Last Modified time: 2020-04-29 14:45:38
  */
-import { observable, computed } from 'mobx'
+import { observable } from 'mobx'
 import { LIST_EMPTY, LIMIT_LIST_COMMENTS } from '@constants'
 import { API_SUBJECT, API_SUBJECT_EP } from '@constants/api'
 import { CDN_SUBJECT, CDN_MONO } from '@constants/cdn'
-import { HTML_SUBJECT, HTML_SUBJECT_COMMENTS, HTML_EP } from '@constants/html'
+import {
+  HTML_SUBJECT,
+  HTML_SUBJECT_COMMENTS,
+  HTML_EP,
+  HTML_MONO_WORKS,
+  HTML_MONO_VOICES
+} from '@constants/html'
 import { getTimestamp } from '@utils'
 import { HTMLTrim, HTMLDecode } from '@utils/html'
 import store from '@utils/store'
 import { fetchHTML, xhrCustom } from '@utils/fetch'
 import {
   NAMESPACE,
-  INIT_SUBJECT_ITEM,
+  INIT_SUBJECT,
   INIT_SUBJECT_FROM_HTML_ITEM,
   INIT_SUBJECT_FROM_CDN_ITEM,
-  INIT_MONO
+  INIT_MONO,
+  INIT_MONO_WORKS
 } from './init'
-import { fetchMono, cheerioSubjectFormHTML } from './common'
+import {
+  fetchMono,
+  cheerioSubjectFormHTML,
+  cheerioMonoWorks,
+  cheerioMonoVoices
+} from './common'
 
 class Subject extends store {
   state = observable({
     /**
      * 条目
+     * @param {*} subjectId
      */
     subject: {
-      // [subjectId]: INIT_SUBJECT_ITEM
+      0: INIT_SUBJECT
     },
 
     /**
      * 条目HTML
+     * @param {*} subjectId
      */
     subjectFormHTML: {
-      // [subjectId]: INIT_SUBJECT_FROM_HTML_ITEM
+      0: INIT_SUBJECT_FROM_HTML_ITEM
     },
 
     /**
      * 条目CDN自维护数据
      * 用于条目首次渲染加速
+     * @param {*} subjectId
      */
     subjectFormCDN: {
-      // [subjectId]: INIT_SUBJECT_FROM_CDN_ITEM
+      0: INIT_SUBJECT_FROM_CDN_ITEM
     },
 
     /**
      * [待废弃] 条目章节
+     * @param {*} subjectId
      */
     subjectEp: {
-      // [subjectId]: {}
+      0: {}
     },
 
     /**
      * 条目吐槽箱
+     * @param {*} subjectId
      */
     subjectComments: {
-      // [subjectId]: LIST_EMPTY
+      0: LIST_EMPTY
     },
 
     /**
      * 章节内容
+     * @param {*} epId
      */
     epFormHTML: {
-      // [epId]: ''
+      0: ''
     },
 
     /**
      * 人物
+     * @param {*} monoId
      */
     mono: {
-      // [monoId]: INIT_MONO
+      0: INIT_MONO
     },
 
     /**
      * 人物吐槽箱
+     * @param {*} monoId
      */
     monoComments: {
-      // [monoId]: LIST_EMPTY | INIT_MONO_COMMENTS_ITEM
+      0: LIST_EMPTY // <INIT_MONO_COMMENTS_ITEM>
     },
 
     /**
      * 人物CDN自维护数据
      * 用于人物首次渲染加速
+     * @param {*} monoId
      */
     monoFormCDN: {
-      // [monoId]: INIT_MONO
+      0: INIT_MONO
+    },
+
+    /**
+     * 人物作品
+     * @param {*} monoId
+     * https://bgm.tv/person/8138/works
+     */
+    monoWorks: {
+      0: INIT_MONO_WORKS
+    },
+
+    /**
+     * 人物角色列表
+     * @param {*} monoId
+     * https://bgm.tv/person/8138/works/voice
+     */
+    monoVoices: {
+      0: INIT_MONO_WORKS
     }
   })
 
   init = () =>
     this.readStorage(
-      ['subject', 'subjectFormHTML', 'subjectComments', 'mono', 'monoComments'],
+      [
+        'subject',
+        'subjectFormHTML',
+        'subjectComments',
+        'mono',
+        'monoComments',
+        'monoWorks',
+        'monoVoices'
+      ],
       NAMESPACE
     )
-
-  // -------------------- get --------------------
-  /**
-   * 取条目信息
-   * @param {*} subjectId
-   */
-  subject(subjectId) {
-    return computed(
-      () => this.state.subject[subjectId] || INIT_SUBJECT_ITEM
-    ).get()
-  }
-
-  /**
-   * 取条目信息
-   * @param {*} subjectId
-   */
-  subjectFormHTML(subjectId) {
-    return computed(
-      () => this.state.subjectFormHTML[subjectId] || INIT_SUBJECT_FROM_HTML_ITEM
-    ).get()
-  }
-
-  /**
-   * 条目CDN自维护数据
-   * @param {*} subjectId
-   */
-  subjectFormCDN(subjectId) {
-    return computed(
-      () => this.state.subjectFormCDN[subjectId] || INIT_SUBJECT_FROM_CDN_ITEM
-    ).get()
-  }
-
-  /**
-   * 取章节数据
-   * @param {*} subjectId
-   */
-  subjectEp(subjectId) {
-    return computed(() => this.state.subjectEp[subjectId] || {}).get()
-  }
-
-  /**
-   * 取条目吐槽
-   * @param {*} subjectId
-   */
-  subjectComments(subjectId) {
-    return computed(
-      () => this.state.subjectComments[subjectId] || LIST_EMPTY
-    ).get()
-  }
-
-  /**
-   * 取章节内容
-   * @param {*} epId
-   */
-  epFormHTML(epId) {
-    return computed(() => this.state.epFormHTML[epId] || '').get()
-  }
-
-  /**
-   * 取人物信息
-   * @param {*} monoId
-   */
-  mono(monoId) {
-    return computed(() => this.state.mono[monoId] || INIT_MONO).get()
-  }
-
-  /**
-   * 取人物信息吐槽
-   * @param {*} monoId
-   */
-  monoComments(monoId) {
-    return computed(() => this.state.monoComments[monoId] || LIST_EMPTY).get()
-  }
-
-  /**
-   * 人物CDN自维护数据
-   * @param {*} monoId
-   */
-  monoFormCDN(monoId) {
-    return computed(() => this.state.monoFormCDN[monoId] || INIT_MONO).get()
-  }
 
   // -------------------- fetch --------------------
   /**
    * 条目信息
    * @param {*} subjectId
    */
-  fetchSubject(subjectId) {
-    return this.fetch(
+  fetchSubject = subjectId =>
+    this.fetch(
       {
         url: API_SUBJECT(subjectId),
         data: {
@@ -198,7 +164,6 @@ class Subject extends store {
         namespace: NAMESPACE
       }
     )
-  }
 
   /**
    * 网页获取条目信息
@@ -220,6 +185,7 @@ class Subject extends store {
         [subjectId]: data
       }
     })
+
     this.setStorage(key, undefined, NAMESPACE)
     return Promise.resolve(data)
   }
@@ -255,8 +221,8 @@ class Subject extends store {
    * 章节数据
    * @param {*} subjectId
    */
-  fetchSubjectEp(subjectId) {
-    return this.fetch(
+  fetchSubjectEp = subjectId =>
+    this.fetch(
       {
         url: API_SUBJECT_EP(subjectId),
         info: '章节数据'
@@ -267,7 +233,6 @@ class Subject extends store {
         namespace: NAMESPACE
       }
     )
-  }
 
   /**
    * 网页获取留言
@@ -275,7 +240,7 @@ class Subject extends store {
    * @param {*} refresh 是否重新获取
    * @param {*} reverse 是否倒序
    */
-  async fetchSubjectComments({ subjectId }, refresh, reverse) {
+  fetchSubjectComments = async ({ subjectId }, refresh, reverse) => {
     const { list, pagination, _reverse } = this.subjectComments(subjectId)
     let page // 下一页的页码
 
@@ -387,7 +352,7 @@ class Subject extends store {
    * 章节内容
    * @param {*} epId
    */
-  async fetchEpFormHTML(epId) {
+  fetchEpFormHTML = async epId => {
     // -------------------- 请求HTML --------------------
     const res = fetchHTML({
       url: `!${HTML_EP(epId)}`
@@ -413,7 +378,7 @@ class Subject extends store {
    * 为了提高体验, 吐槽箱做模拟分页加载效果, 逻辑与超展开回复一致
    * @param {*} monoId
    */
-  async fetchMono({ monoId }, refresh) {
+  fetchMono = async ({ monoId }, refresh) => {
     let res
     const monoKey = 'mono'
     const commentsKey = 'monoComments'
@@ -501,6 +466,67 @@ class Subject extends store {
       return Promise.resolve(INIT_MONO)
     }
   }
+
+  /**
+   * 人物作品
+   */
+  fetchMonoWorks = async ({ monoId, position, order } = {}, refresh) => {
+    const key = 'monoWorks'
+    const limit = 24
+    const { list, pagination } = this[key](monoId)
+    const page = refresh ? 1 : pagination.page + 1
+
+    const html = await fetchHTML({
+      url: HTML_MONO_WORKS(monoId, position, order, page)
+    })
+    const { list: _list, filters } = cheerioMonoWorks(html)
+    this.setState({
+      [key]: {
+        [monoId]: {
+          list: refresh ? _list : [...list, ..._list],
+          pagination: {
+            page,
+            pageTotal: _list.length === limit ? 100 : page
+          },
+          filters,
+          _loaded: getTimestamp()
+        }
+      }
+    })
+    this.setStorage(key, undefined, NAMESPACE)
+
+    return this[key](monoId)
+  }
+
+  /**
+   * 人物角色
+   */
+  fetchMonoVoices = async ({ monoId, position, order } = {}) => {
+    const key = 'monoVoices'
+    const html = await fetchHTML({
+      url: HTML_MONO_VOICES(monoId, position, order)
+    })
+    const { list, filters } = cheerioMonoVoices(html)
+    this.setState({
+      [key]: {
+        [monoId]: {
+          list,
+          pagination: {
+            page: 1,
+            pageTotal: 1
+          },
+          filters,
+          _loaded: getTimestamp()
+        }
+      }
+    })
+    this.setStorage(key, undefined, NAMESPACE)
+
+    return this[key](monoId)
+  }
 }
 
-export default new Subject()
+const Store = new Subject()
+Store.setup()
+
+export default Store

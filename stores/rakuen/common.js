@@ -2,7 +2,7 @@
  * @Author: czy0729
  * @Date: 2019-07-13 18:59:53
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-03-22 17:18:49
+ * @Last Modified time: 2020-05-02 16:22:22
  */
 import { safeObject, trim } from '@utils'
 import { getCoverSmall } from '@utils/app'
@@ -283,10 +283,7 @@ export function cheerioNotify(HTML) {
 
       if (title) {
         // eslint-disable-next-line no-extra-semi
-        ;[message, message2] = $tr
-          .find('div.reply_content')
-          .text()
-          .split(title)
+        ;[message, message2] = $tr.find('div.reply_content').text().split(title)
       } else {
         message = $tr.find('div.reply_content').text()
       }
@@ -369,9 +366,12 @@ export function cheerioTopic(HTML) {
             message: HTMLTrim(
               $row.find('> div.inner > div.reply_content > div.message').html()
             ),
-            replySub: $row
-              .find('> div.inner > span.userInfo > a.icons_cmt')
-              .attr('onclick'),
+            replySub:
+              $row
+                .find('> div.inner > span.userInfo > a.icons_cmt')
+                .attr('onclick') ||
+              // ep不一样
+              $row.find('> div.inner > a.icons_cmt').attr('onclick'),
             time,
             userId: matchUserId($row.find('a.avatar').attr('href')),
             userName:
@@ -439,12 +439,22 @@ export function cheerioBlog(HTML) {
       title = String(titleText.split(' / ')[1])
     }
     const $user = $('#pageHeader a.avatar')
+    const related =
+      $('ul#related_subject_list > li')
+        .map((index, element) => {
+          const $row = cheerio(element)
+          const $a = $row.find('> a.avatar')
+          return safeObject({
+            id: String($a.attr('href')).replace('/subject/', ''),
+            name: $a.attr('title'),
+            image: $row.find('img.avatar').attr('src')
+          })
+        })
+        .get() || []
 
     blog = safeObject({
       avatar: getCoverSmall(
-        $('#pageHeader img.avatar')
-          .attr('src')
-          .split('?')[0]
+        $('#pageHeader img.avatar').attr('src').split('?')[0]
       ),
       floor: '#0',
       formhash: $('input[name=formhash]').attr('value'),
@@ -455,11 +465,9 @@ export function cheerioBlog(HTML) {
         .replace('del / edit', ''),
       title,
       userId: matchUserId($user.attr('href')),
-      userName: $user
-        .text()
-        .replace(' ', '')
-        .replace('\n\n', ''),
-      userSign: ''
+      userName: $user.text().replace(' ', '').replace('\n\n', ''),
+      userSign: '',
+      related
     })
 
     // 回复
@@ -530,5 +538,28 @@ export function cheerioBlog(HTML) {
   return {
     blog,
     blogComments
+  }
+}
+
+/**
+ * 分析我的小组
+ * @param {*} HTML
+ */
+export function cheerioMine(HTML) {
+  const $ = cheerio(HTML)
+  return {
+    list:
+      $('ul.browserMedium > li.user')
+        .map((index, element) => {
+          const $li = cheerio(element)
+          const $a = $li.find('a.avatar')
+          return safeObject({
+            id: $a.attr('href').replace('/group/', ''),
+            cover: $li.find('img.avatar').attr('src').split('?')[0],
+            name: $a.text().trim(),
+            num: $li.find('small.feed').text().trim().replace(' 位成员', '')
+          })
+        })
+        .get() || []
   }
 }

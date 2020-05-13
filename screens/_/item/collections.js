@@ -2,7 +2,7 @@
  * @Author: czy0729
  * @Date: 2019-05-25 23:00:45
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-03-25 20:25:17
+ * @Last Modified time: 2020-04-19 17:33:09
  */
 import React from 'react'
 import { View } from 'react-native'
@@ -50,6 +50,21 @@ function ItemCollections({
   if (isDo || isOnHold || isDropped) {
     days = Math.ceil((getTimestamp() - getTimestamp(time)) / 86400)
   }
+
+  const info = []
+  if (isDo) info.push(`${days}天`)
+  if (isOnHold) info.push(`搁置${days}天`)
+  if (isDropped) info.push(`抛弃${days}天`)
+  if (tags) {
+    info.push(
+      tags
+        .replace(' ', '')
+        .split(' ')
+        .filter((item, index) => index < 2)
+        .join(' ')
+    )
+  }
+
   return (
     <Touchable
       style={[styles.container, isCollect && styles.containerActive]}
@@ -91,10 +106,10 @@ function ItemCollections({
           >
             <Flex>
               <Flex.Item>
-                <Text size={15} numberOfLines={2}>
+                <Text size={15} numberOfLines={2} bold>
                   {HTMLDecode(nameCn)}
                   {hasName && name !== nameCn && (
-                    <Text type='sub' size={13} lineHeight={15}>
+                    <Text type='sub' size={13} lineHeight={15} bold>
                       {' '}
                       {HTMLDecode(name)}
                     </Text>
@@ -104,7 +119,7 @@ function ItemCollections({
               {!!type && <Tag style={_.ml.sm} value={type} />}
             </Flex>
             {hasTip && (
-              <Text style={_.mt.sm} size={13} numberOfLines={2}>
+              <Text style={_.mt.sm} size={12} numberOfLines={2}>
                 {HTMLDecode(tip)}
               </Text>
             )}
@@ -114,14 +129,7 @@ function ItemCollections({
               )}
               <Text style={_.mr.sm} type='sub' size={13} numberOfLines={1}>
                 {hasScore && '/ '}
-                {isDo && `${days}天 / `}
-                {isOnHold && `搁置${days}天 / `}
-                {isDropped && `抛弃${days}天 / `}
-                {tags
-                  .replace(' ', '')
-                  .split(' ')
-                  .filter((item, index) => index < 2)
-                  .join(' ')}
+                {info.join(' / ')}
               </Text>
             </Flex>
           </Flex>
@@ -153,7 +161,7 @@ const memoStyles = _.memoStyles(_ => ({
     width: imgWidth
   },
   wrap: {
-    paddingVertical: _.wind,
+    paddingVertical: _.space,
     paddingRight: _.wind
   },
   border: {

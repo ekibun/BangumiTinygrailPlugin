@@ -2,13 +2,13 @@
  * @Author: czy0729
  * @Date: 2019-03-22 08:49:20
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-03-21 16:51:42
+ * @Last Modified time: 2020-05-02 22:21:10
  */
-import { Alert, NativeModules, ToastAndroid } from 'react-native'
+import { Alert } from 'react-native'
 import cheerio from 'cheerio-without-node-native'
 import { observable, computed } from 'mobx'
 import { userStore, tinygrailStore } from '@stores'
-import { urlStringify, getTimestamp, formatNumber } from '@utils'
+import { urlStringify, getTimestamp, formatNumber, toFixed } from '@utils'
 import store from '@utils/store'
 import { info } from '@utils/ui'
 import { queue, t } from '@utils/fetch'
@@ -16,9 +16,11 @@ import axios from '@utils/thirdParty/axios'
 import {
   HOST,
   TINYGRAIL_APP_ID,
-  TINYGRAIL_URL_OAUTH_REDIRECT
+  TINYGRAIL_URL_OAUTH_REDIRECT,
+  M
 } from '@constants'
 import { API_TINYGRAIL_TEST, API_TINYGRAIL_LOGOUT } from '@constants/api'
+import inject from './inject'
 
 const namespace = 'ScreenTinygrail'
 const errorStr = '/false'
@@ -48,26 +50,7 @@ export default class ScreenTinygrail extends store {
       loading: false
     })
 
-    const intentExtra = await new Promise(resolve => NativeModules.Tinygrail.getIntentExtra(resolve))
-    ToastAndroid.show(JSON.stringify(intentExtra.cookie), ToastAndroid.LONG)
-
-    // eject
-    if (intentExtra.userInfo) {
-      const nativeUser = JSON.parse(intentExtra.userInfo)
-      tinygrailStore.updateCookie(intentExtra.cookie || '')
-      userStore.updateUserInfo({
-        ...nativeUser,
-        avatar: {
-          large: nativeUser.avatar,
-          medium: nativeUser.avatar,
-          small: nativeUser.avatar
-        }
-      })
-      userStore.updateUserCookie({
-        cookie: intentExtra.userCookie,
-        userAgent: 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Mobile Safari/537.36'
-      })
-    }
+    await inject.init()
 
     // 没有资产就自动授权
     const { _loaded } = await tinygrailStore.fetchAssets()
@@ -230,19 +213,33 @@ export default class ScreenTinygrail extends store {
 
       const data = await res
       const { Total, Temples, Share, Tax, Daily } = data.data.Value
-      let message = `本期计息共${formatNumber(
-        Total,
-        0
-      )}股, 圣殿${Temples}座, 预期股息₵${formatNumber(Share, 2)}`
-      if (Tax) {
-        message += `, 个人所得税₵${formatNumber(Tax, 2)}, 税后₵${formatNumber(
-          Share - Tax,
-          2
-        )}`
+      const { short } = this.state
+
+      const AfterTax = Share - Tax
+      let _Total
+      let _Share
+      let _Tax
+      let _AfterTax
+      if (short) {
+        _Total =
+          Total > M ? `${toFixed(Total / M, 1)}万` : formatNumber(Total, 2)
+        _Share =
+          Share > M ? `${toFixed(Share / M, 1)}万` : formatNumber(Share, 2)
+        _Tax = Tax > M ? `${toFixed(Tax / M, 1)}万` : formatNumber(Tax, 2)
+        _AfterTax =
+          AfterTax > M
+            ? `${toFixed(AfterTax / M, 1)}万`
+            : formatNumber(AfterTax, 2)
+      } else {
+        _Total = formatNumber(Share, 0)
+        _Share = formatNumber(Share, 2)
+        _Tax = formatNumber(Tax, 2)
+        _AfterTax = formatNumber(AfterTax, 2)
       }
-      if (Daily) {
-        message += `, 签到奖励₵${Daily}`
-      }
+
+      let message = `本期计息共${_Total}股, 圣殿${Temples}座, 预期股息₵${_Share}`
+      if (Tax) message += `, 个人所得税₵${_Tax}, 税后₵${_AfterTax}`
+      if (Daily) message += `, 签到奖励₵${Daily}`
 
       Alert.alert('股息预测', message, [
         {
@@ -269,12 +266,37 @@ export default class ScreenTinygrail extends store {
       this.setState({
         loadingBonus: true
       })
+
       const { State, Value, Message } = await tinygrailStore.doLottery(isBonus2)
       this.setState({
         loadingBonus: false
       })
 
       if (State === 0) {
+        if (isBonus2) {
+          let text = '彩票刮刮乐共获得：'
+          Value.forEach(item => {
+            text += ` #${item.Id}「${item.Name}」${item.Amount}股`
+          })
+
+          Alert.alert('操作成功', `${text}，前往持仓查看吗`, [
+            {
+              text: '取消',
+              style: 'cancel'
+            },
+            {
+              text: '确定',
+              onPress: () => {
+                navigation.push('TinygrailCharaAssets', {
+                  form: 'lottery',
+                  message: text
+                })
+              }
+            }
+          ])
+          return
+        }
+
         Alert.alert('操作成功', `${Value}，前往持仓查看吗`, [
           {
             text: '取消',
@@ -503,7 +525,7 @@ export default class ScreenTinygrail extends store {
     tinygrailStore.updateCookie(
       `${data.headers['set-cookie'][0].split(';')[0]};`
     )
-    NativeModules.Tinygrail.updateResult(data.headers['set-cookie'].map(v => `${v.split(';')[0]};`).join(''))
+    inject.updateResult(data)
 
     return res
   }

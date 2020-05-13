@@ -2,10 +2,10 @@
  * @Author: czy0729
  * @Date: 2019-05-18 00:32:48
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-03-21 01:41:44
+ * @Last Modified time: 2020-04-15 15:56:26
  */
 import React from 'react'
-import { StatusBarEvents, Flex, Popover, Menu, Iconfont } from '@components'
+import { StatusBarEvents, Flex, Popover, Menu, Iconfont, UM } from '@components'
 import { IconBack } from '@screens/_'
 import { _ } from '@stores'
 import { hm as utilsHM } from '@utils/fetch'
@@ -87,6 +87,9 @@ const withHeader = ({
             />
           ),
           headerRight,
+          headerRightContainerStyle: {
+            marginRight: _._wind
+          },
           headerStyle: IOS
             ? {
                 backgroundColor: _.colorPlain,
@@ -146,6 +149,7 @@ const withHeader = ({
             : _params.statusBarEvents
         return (
           <>
+            <UM screen={screen} />
             {_statusBarEvents && (
               <StatusBarEvents backgroundColor={backgroundColor} />
             )}

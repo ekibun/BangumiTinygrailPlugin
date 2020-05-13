@@ -3,7 +3,7 @@
  * @Author: czy0729
  * @Date: 2019-04-12 22:58:20
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-03-22 18:54:17
+ * @Last Modified time: 2020-05-02 21:16:48
  */
 import { MODEL_TIMELINE_SCOPE } from '@constants/model'
 import { urlStringify } from '@utils'
@@ -39,6 +39,34 @@ export const HTML_MONO = monoId => {
   }
   return HOST
 }
+
+/**
+ * 人物作品
+ * @param {*} monoId person/{INT}
+ * @param {*} sort   date 按日期 | rank 按排名 | title 按名称
+ * @param {*} page
+ *
+ * 作品列表
+ * 类型: anime | book | game | music | real
+ * 职位: /position/{INT}
+ */
+export const HTML_MONO_WORKS = (
+  monoId,
+  position = '',
+  sort = 'title',
+  page = 1
+) => `${HOST}/${monoId}/works${position}?sort=${sort}&page=${page}`
+
+/**
+ * 人物角色
+ * @param {*} monoId person/{INT}
+ *
+ * 角色列表
+ * 类型: /voice/{anime | book | game | music | real}
+ * 角色: /voice/position/{INT}
+ */
+export const HTML_MONO_VOICES = (monoId, position = '') =>
+  `${HOST}/${monoId}/works/voice${position}`
 
 /**
  * 时间胶囊
@@ -87,10 +115,23 @@ export const HTML_GROUP = (groupId, page = 1) =>
   `${HOST}/group/${groupId}/forum?page=${page}`
 
 /**
+ * 我的小组
+ */
+export const HTML_GROUP_MINE = () => `${HOST}/group/mine`
+
+/**
  * 日志
  * @param {*} blogId
  */
 export const HTML_BLOG = blogId => `${HOST}/blog/${blogId}`
+
+/**
+ * 全站日志列表
+ * @param {*} type all => ''
+ * @param {*} page
+ */
+export const HTML_BLOG_LIST = (type = '', page = 1) =>
+  `${HOST}/${type !== 'all' ? `${type}/` : ''}blog/${page}.html`
 
 /**
  * 搜索
@@ -303,6 +344,12 @@ export const HTML_TAGS = (type, page = 1) => `${HOST}/${type}/tag?page=${page}`
 export const HTML_SAY = (userId, id) =>
   `${HOST}/user/${userId}/timeline/status/${id}`
 
+/**
+ * 频道聚合
+ * @param {*} channel
+ */
+export const HTML_CHANNEL = channel => `${HOST}/${channel}`
+
 // -------------------- action --------------------
 /**
  * 回复帖子
@@ -348,3 +395,14 @@ export const HTML_ACTION_TIMELINE_SAY = () => `${HOST}/update/user/say?ajax=1`
  */
 export const HTML_ACTION_ERASE_COLLECTION = (subjectId, formhash) =>
   `${HOST}/subject/${subjectId}/remove?gh=${formhash}`
+
+/**
+ * 输入框更新章节进度
+ * @param {*} subjectId
+ *
+ * referer: subject
+ * submit: 更新
+ * watchedeps: 3
+ */
+export const HTML_ACTION_SUBJECT_SET_WATCHED = subjectId =>
+  `${HOST}/subject/set/watched/${subjectId}`

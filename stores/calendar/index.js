@@ -3,16 +3,16 @@
  * @Author: czy0729
  * @Date: 2019-04-20 11:41:35
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-01-24 14:11:48
+ * @Last Modified time: 2020-04-30 18:52:19
  */
-import { observable, computed } from 'mobx'
+import { observable } from 'mobx'
 import { getTimestamp } from '@utils'
 import { fetchHTML, xhrCustom } from '@utils/fetch'
 import { HTMLTrim, HTMLToTree, findTreeNode } from '@utils/html'
 import store from '@utils/store'
 import { HOST, LIST_EMPTY } from '@constants'
 import { API_CALENDAR } from '@constants/api'
-import { CDN_ONAIR } from '@constants/cdn'
+import { CDN_ONAIR, CDN_DISCOVERY_HOME } from '@constants/cdn'
 import { NAMESPACE, INIT_HOME } from './init'
 import { cheerioToday } from './common'
 
@@ -29,27 +29,21 @@ class Calendar extends store {
     home: INIT_HOME,
 
     /**
+     * 首页信息聚合 (CDN)
+     */
+    homeFromCDN: INIT_HOME,
+
+    /**
      * ekibun的线上爬虫数据
+     * @param {*} subjectId
      */
     onAir: {
       // [subjectId]: INIT_ONAIR_ITEM
     }
   })
 
-  init = () => this.readStorage(['calendar', 'home', 'onAir'], NAMESPACE)
-
-  // -------------------- get --------------------
-  @computed get calendar() {
-    return this.state.calendar
-  }
-
-  @computed get home() {
-    return this.state.home
-  }
-
-  @computed get onAir() {
-    return this.state.onAir
-  }
+  init = () =>
+    this.readStorage(['calendar', 'home', 'homeFromCDN', 'onAir'], NAMESPACE)
 
   // -------------------- fetch --------------------
   /**
@@ -156,6 +150,35 @@ class Calendar extends store {
   }
 
   /**
+   * 首页信息聚合 (CDN)
+   */
+  fetchHomeFromCDN = async version => {
+    try {
+      const { _response } = await xhrCustom({
+        url: CDN_DISCOVERY_HOME(version)
+      })
+
+      const data = {
+        ...INIT_HOME,
+        ...JSON.parse(_response)
+      }
+      const key = 'homeFromCDN'
+      this.setState({
+        [key]: {
+          ...data,
+          _loaded: getTimestamp()
+        }
+      })
+
+      this.setStorage(key, undefined, NAMESPACE)
+      return Promise.resolve(data)
+    } catch (error) {
+      warn('calendarStore', 'fetchHomeFromCDN', 404)
+      return Promise.resolve(INIT_HOME)
+    }
+  }
+
+  /**
    * onAir数据
    */
   // 数据不会经常变化, 所以一个启动周期只请求一次
@@ -167,20 +190,22 @@ class Calendar extends store {
 
     try {
       const { _response } = await xhrCustom({
-        url: CDN_ONAIR
+        url: CDN_ONAIR()
       })
+
       const data = {
         _loaded: true
       }
       JSON.parse(_response).forEach(item => {
-        const airEps = item.eps.filter(item => item.status === 'Air')
-        if (!item.weekDayCN || !item.timeCN) {
-          return
-        }
+        const airEps = item.eps.filter(
+          item => item.status === 'Air' || item.status === 'Today'
+        )
 
         data[item.id] = {
           timeCN: item.timeCN,
-          weekDayCN: item.weekDayCN
+          timeJP: item.timeJP,
+          weekDayCN: item.weekDayCN,
+          weekDayJP: item.weekDayJP
         }
         if (airEps.length) {
           data[item.id].air = airEps[airEps.length - 1].sort
@@ -197,4 +222,7 @@ class Calendar extends store {
   }
 }
 
-export default new Calendar()
+const Store = new Calendar()
+Store.setup()
+
+export default Store

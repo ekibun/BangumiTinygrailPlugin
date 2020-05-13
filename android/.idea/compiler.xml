@@ -2,6 +2,8 @@
 <project version="4">
   <component name="CompilerConfiguration">
     <bytecodeTargetLevel>
+      <module name="@unimodules-core-android-unimodules-core" target="1.8" />
+      <module name="@unimodules-react-native-adapter-android-unimodules-react-native-adapter" target="1.8" />
       <module name="app" target="1.8" />
       <module name="BangumiPlugin-pluginlibrary" target="1.8" />
       <module name="core-android-unimodules-core" target="1.8" />
@@ -15,7 +17,33 @@
       <module name="expo-permissions-android-expo-permissions" target="1.8" />
       <module name="expo-sqlite-android-expo-sqlite" target="1.8" />
       <module name="expo-web-browser-android-expo-web-browser" target="1.8" />
+      <module name="node_modules-expo-app-loader-provider-android-expo-app-loader-provider" target="1.8" />
+      <module name="node_modules-expo-constants-android-expo-constants" target="1.8" />
+      <module name="node_modules-expo-file-system-android-expo-file-system" target="1.8" />
+      <module name="node_modules-expo-font-android-expo-font" target="1.8" />
+      <module name="node_modules-expo-keep-awake-android-expo-keep-awake" target="1.8" />
+      <module name="node_modules-expo-linear-gradient-android-expo-linear-gradient" target="1.8" />
+      <module name="node_modules-expo-location-android-expo-location" target="1.8" />
+      <module name="node_modules-expo-permissions-android-expo-permissions" target="1.8" />
+      <module name="node_modules-expo-sqlite-android-expo-sqlite" target="1.8" />
+      <module name="node_modules-expo-web-browser-android-expo-web-browser" target="1.8" />
+      <module name="node_modules-react-native-gesture-handler-android-react-native-gesture-handler" target="1.8" />
+      <module name="node_modules-react-native-navigation-bar-color-android-react-native-navigation-bar-color" target="1.8" />
+      <module name="node_modules-react-native-reanimated-android-react-native-reanimated" target="1.8" />
+      <module name="node_modules-react-native-screens-android-react-native-screens" target="1.8" />
+      <module name="node_modules-unimodules-barcode-scanner-interface-android-unimodules-barcode-scanner-interface" target="1.8" />
+      <module name="node_modules-unimodules-camera-interface-android-unimodules-camera-interface" target="1.8" />
+      <module name="node_modules-unimodules-constants-interface-android-unimodules-constants-interface" target="1.8" />
+      <module name="node_modules-unimodules-face-detector-interface-android-unimodules-face-detector-interface" target="1.8" />
+      <module name="node_modules-unimodules-file-system-interface-android-unimodules-file-system-interface" target="1.8" />
+      <module name="node_modules-unimodules-font-interface-android-unimodules-font-interface" target="1.8" />
+      <module name="node_modules-unimodules-image-loader-interface-android-unimodules-image-loader-interface" target="1.8" />
+      <module name="node_modules-unimodules-permissions-interface-android-unimodules-permissions-interface" target="1.8" />
+      <module name="node_modules-unimodules-sensors-interface-android-unimodules-sensors-interface" target="1.8" />
+      <module name="node_modules-unimodules-task-manager-interface-android-unimodules-task-manager-interface" target="1.8" />
       <module name="react-native-adapter-android-unimodules-react-native-adapter" target="1.8" />
+      <module name="react-native-exception-handler" target="1.8" />
+      <module name="react-native-exception-handler-android-react-native-exception-handler" target="1.8" />
       <module name="react-native-gesture-handler-android-react-native-gesture-handler" target="1.8" />
       <module name="react-native-navigation-bar-color-android-react-native-navigation-bar-color" target="1.8" />
       <module name="react-native-reanimated-android-react-native-reanimated" target="1.8" />

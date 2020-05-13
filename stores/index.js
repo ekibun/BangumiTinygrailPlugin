@@ -3,7 +3,7 @@
  * @Author: czy0729
  * @Date: 2019-03-02 06:14:49
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-01-09 21:55:03
+ * @Last Modified time: 2020-05-01 21:26:08
  */
 import { AsyncStorage, Alert } from 'react-native'
 import { CacheManager } from 'react-native-expo-image-cache'
@@ -54,7 +54,6 @@ class Stores {
         rakuenStore.init(),
         searchStore.init(),
         timelineStore.init(),
-        // tinygrailStore.init(),
         tagStore.init(),
         usersStore.init()
       ])
@@ -118,6 +117,7 @@ class Stores {
               undefined,
               'Tinygrail'
             )
+            tinygrailStore.setStorage('collected', undefined, 'Tinygrail') // 小圣杯人物收藏
 
             info('已清除')
           }

@@ -5,7 +5,7 @@
  * @Author: czy0729
  * @Date: 2019-03-14 05:08:45
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-03-26 19:52:18
+ * @Last Modified time: 2020-04-21 11:51:21
  */
 import { InteractionManager } from 'react-native'
 import Constants from 'expo-constants'
@@ -203,9 +203,10 @@ export async function fetchHTML({
       if (toastId) Portal.remove(toastId)
       return Promise.resolve(raw ? res : res.text())
     })
-    .catch(err => {
+    .catch(error => {
+      console.warn('[utils/fetch] fetchHTML', url, error)
       if (toastId) Portal.remove(toastId)
-      return Promise.reject(err)
+      return Promise.reject(error)
     })
 }
 
@@ -238,6 +239,7 @@ export function xhr(
     if (request.status === 200) {
       success(request.responseText)
     } else {
+      console.warn('[utils/fetch] xhr', url, request)
       fail(request)
     }
   }
@@ -265,25 +267,30 @@ export function xhrCustom({
 } = {}) {
   return new Promise((resolve, reject) => {
     const request = new XMLHttpRequest()
-    request.onreadystatechange = function() {
+    request.onreadystatechange = function () {
       if (this.readyState === 4) {
         if (this.status === 200) {
           resolve(this)
-        } else if (this.status === 404) {
+          return
+        }
+
+        if (this.status === 404) {
           reject(new TypeError('404'))
         } else if (this.status === 500) {
           reject(new TypeError('500'))
         }
+
+        console.warn('[utils/fetch] xhrCustom', url)
       }
     }
-    request.onerror = function() {
-      reject(new TypeError('Network request failed'))
+    request.onerror = function () {
+      reject(new TypeError('Network request onerror'))
     }
-    request.ontimeout = function() {
-      reject(new TypeError('Network request failed'))
+    request.ontimeout = function () {
+      reject(new TypeError('Network request ontimeout'))
     }
-    request.onabort = function() {
-      reject(new TypeError('AbortError'))
+    request.onabort = function () {
+      reject(new TypeError('Network request onabort'))
     }
 
     request.open(method, url, true)
@@ -381,7 +388,24 @@ export function t(desc, eventData) {
         eventData ? JSON.stringify(eventData) : ''
       }`
     )
+    // return
   }
+
+  // try {
+  //   // 保证这种低优先级的操作在UI响应之后再执行
+  //   InteractionManager.runAfterInteractions(() => {
+  //     const eventId = events[desc]
+  //     if (eventId) {
+  //       if (eventData) {
+  //         UMAnalyticsModule.onEventWithMap(eventId, eventData)
+  //       } else {
+  //         UMAnalyticsModule.onEvent(eventId)
+  //       }
+  //     }
+  //   })
+  // } catch (error) {
+  //   warn('utils/fetch', 't', error)
+  // }
 }
 
 /**
@@ -405,17 +429,18 @@ export async function queue(fetchs, num = 2) {
 }
 
 /**
- * 百度翻译
- * @param {*} query
- */
-export async function baiduTranslate() {
-  return false
-}
-
-/**
  * 接口某些字段为空返回null, 影响到es6函数初始值的正常使用, 统一处理成空字符串
  * @param {*} data
+ * @url https://jsperf.com/moved-null-2
  */
 function safe(data) {
-  return JSON.parse(JSON.stringify(data).replace(/:null/g, ':""'))
+  if (data instanceof Object) {
+    // eslint-disable-next-line no-param-reassign
+    Object.keys(data).forEach(k => (data[k] = safe(data[k])))
+  }
+  return data === null ? '' : data
 }
+
+// function safe(data) {
+//   return JSON.parse(JSON.stringify(data).replace(/:null/g, ':""'))
+// }

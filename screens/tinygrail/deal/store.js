@@ -2,19 +2,18 @@
  * @Author: czy0729
  * @Date: 2019-09-10 20:49:40
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-02-16 07:22:27
+ * @Last Modified time: 2020-05-03 04:17:10
  */
 import { observable, computed } from 'mobx'
 import { tinygrailStore } from '@stores'
-import { toFixed } from '@utils'
+import { toFixed, getTimestamp } from '@utils'
 import store from '@utils/store'
 import { queue, t } from '@utils/fetch'
-import { info } from '@utils/ui'
+import { info, confirm } from '@utils/ui'
 
 const namespace = 'ScreenTinygrailDeal'
 const defaultType = 'bid'
-const initState = {
-  loading: false,
+const excludeState = {
   type: defaultType, // 买卖类型
   value: 0, // 只能到一位小数
   amount: 0, // 只能是整数
@@ -23,7 +22,7 @@ const initState = {
 
 export default class ScreenTinygrailDeal extends store {
   state = observable({
-    ...initState,
+    ...excludeState,
     isIce: false, // 是否冰山委托
     _loaded: false
   })
@@ -31,17 +30,24 @@ export default class ScreenTinygrailDeal extends store {
   prev = 0
 
   init = async () => {
+    const { _loaded } = this.state
+    const current = getTimestamp()
+    const needFetch = !_loaded || current - _loaded > 60
+
     const res = this.getStorage(undefined, namespace)
     const state = await res
     const { type = defaultType } = this.params
     this.setState({
       ...state,
-      ...initState,
+      ...excludeState,
       type,
-      _loaded: true
+      _loaded: needFetch ? current : _loaded
     })
 
-    this.refresh()
+    if (needFetch) {
+      return this.refresh()
+    }
+    return true
   }
 
   refresh = () =>
@@ -106,13 +112,27 @@ export default class ScreenTinygrailDeal extends store {
   /**
    * 挂单
    */
-  doSubmit = async () => {
-    const { value, amount, isIce } = this.state
+  doSubmit = () => {
+    const { value, amount } = this.state
     if (!value || !amount) {
       info('出价有误')
       return
     }
 
+    if (this.isBid && value * amount > 20000) {
+      confirm(
+        `金额较大, 当前买入${amount}股 * ${value}, 确定?`,
+        this.doSubmitConfirm,
+        '小圣杯助手'
+      )
+      return
+    }
+
+    this.doSubmitConfirm()
+  }
+
+  doSubmitConfirm = async () => {
+    const { value, amount, isIce } = this.state
     t('交易.挂单', {
       monoId: this.monoId,
       type: this.isBid ? 'bid' : 'asks'

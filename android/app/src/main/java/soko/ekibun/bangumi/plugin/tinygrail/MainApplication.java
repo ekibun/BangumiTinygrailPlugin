@@ -15,6 +15,7 @@ import org.unimodules.adapters.react.ReactModuleRegistryProvider;
 import org.unimodules.core.interfaces.SingletonModule;
 import soko.ekibun.bangumi.plugin.tinygrail.generated.BasePackageList;
 import soko.ekibun.bangumi.plugin.tinygrail.main.TinygrailPackage;
+import com.masteratul.exceptionhandler.ReactNativeExceptionHandlerPackage;
 
 import java.util.Arrays;
 import java.util.List;
@@ -40,6 +41,7 @@ public class MainApplication extends Application implements ReactApplication {
         new RNGestureHandlerPackage(),
         new RNScreensPackage(),
         new TinygrailPackage(),
+        new ReactNativeExceptionHandlerPackage(),
         new ModuleRegistryAdapter(mModuleRegistryProvider)
       );
     }

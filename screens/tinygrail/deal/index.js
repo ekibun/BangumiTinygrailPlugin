@@ -2,12 +2,12 @@
  * @Author: czy0729
  * @Date: 2019-09-10 20:46:54
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-03-20 00:33:32
+ * @Last Modified time: 2020-04-19 22:29:01
  */
 import React from 'react'
 import { ScrollView, View, RefreshControl } from 'react-native'
 import PropTypes from 'prop-types'
-import { Flex } from '@components'
+import { Flex, UM } from '@components'
 import { StatusBarPlaceholder } from '@screens/_'
 import { _ } from '@stores'
 import { inject, observer } from '@utils/decorators'
@@ -68,6 +68,7 @@ class TinygrailDeal extends React.Component {
     const { refreshing } = this.state
     return (
       <View style={[_.container.flex, this.styles.dark]}>
+        <UM screen={title} />
         <StatusBarEvents />
         <StatusBarPlaceholder style={this.styles.dark} />
         <Header />
@@ -80,7 +81,7 @@ class TinygrailDeal extends React.Component {
             />
           }
         >
-          <Flex align='start'>
+          <Flex style={this.styles.form} align='start'>
             <Flex.Item>
               <Form />
             </Flex.Item>
@@ -104,8 +105,11 @@ const memoStyles = _.memoStyles(_ => ({
   dark: {
     backgroundColor: _.colorTinygrailContainer
   },
+  form: {
+    paddingRight: _.wind - _._wind
+  },
   depth: {
-    width: 176,
+    width: _.isPad ? 224 : 176,
     marginLeft: _.sm
   }
 }))

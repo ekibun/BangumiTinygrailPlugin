@@ -2,13 +2,15 @@
  * @Author: czy0729
  * @Date: 2019-11-29 21:58:45
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-02-14 06:39:03
+ * @Last Modified time: 2020-05-03 04:02:06
  */
 import { observable, computed } from 'mobx'
 import { tinygrailStore } from '@stores'
+import { getTimestamp } from '@utils'
 import store from '@utils/store'
 import { t } from '@utils/fetch'
 import {
+  SORT_SC,
   SORT_GX,
   SORT_GXB,
   SORT_SDGX,
@@ -21,6 +23,7 @@ import {
 } from '../_/utils'
 
 export const sortDS = [
+  SORT_SC,
   SORT_HYD,
   SORT_GX,
   SORT_GXB,
@@ -42,14 +45,21 @@ export default class ScreenTinygrailValhall extends store {
   })
 
   init = async () => {
+    const { _loaded } = this.state
+    const current = getTimestamp()
+    const needFetch = !_loaded || current - _loaded > 60
+
     const res = this.getStorage(undefined, namespace)
     const state = await res
     this.setState({
       ...state,
-      _loaded: true
+      _loaded: needFetch ? current : _loaded
     })
 
-    this.fetchValhallList()
+    if (needFetch) {
+      this.fetchValhallList()
+    }
+
     return res
   }
 

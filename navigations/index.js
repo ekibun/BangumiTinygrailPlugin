@@ -2,7 +2,7 @@
  * @Author: czy0729
  * @Date: 2019-03-29 10:38:12
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-03-24 21:54:39
+ * @Last Modified time: 2020-05-02 21:43:23
  */
 import {
   createAppContainer,
@@ -13,6 +13,7 @@ import {
   TinygrailAdvance,
   TinygrailAdvanceAsk,
   TinygrailAdvanceAuction,
+  TinygrailAdvanceAuction2,
   TinygrailAdvanceBid,
   TinygrailAdvanceSacrifice,
   TinygrailBid,
@@ -43,6 +44,7 @@ const HomeStack = createStackNavigator(
     TinygrailAdvance,
     TinygrailAdvanceAsk,
     TinygrailAdvanceAuction,
+    TinygrailAdvanceAuction2,
     TinygrailAdvanceBid,
     TinygrailAdvanceSacrifice,
     TinygrailBid,

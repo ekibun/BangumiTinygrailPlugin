@@ -1,9 +1,8 @@
-/* eslint-disable indent */
 /*
  * @Author: czy0729
  * @Date: 2019-03-14 06:02:03
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-03-26 22:17:58
+ * @Last Modified time: 2020-04-14 21:05:34
  */
 import { Dimensions, StyleSheet } from 'react-native'
 import Constants from 'expo-constants'
@@ -11,12 +10,15 @@ import { IOS } from '@constants'
 
 // -------------------- 设备 --------------------
 const { width, height } = Dimensions.get('window')
+const maxWidth = 544
 export const window = {
   width,
-  maxWidth: width, // @todo 以后兼容IPAD, 咕咕咕
+  maxWidth,
+  contentWidth: Math.min(width, maxWidth),
   height
 }
 export const logoWidth = 124 // logo宽度
+export const isPad = width > 616
 
 let _statusBarHeight = Constants.statusBarHeight // 状态栏高度
 
@@ -36,12 +38,13 @@ export const tabBarHeight = 50 // 标签栏高度
 
 // -------------------- 统一布局单位 --------------------
 export const hairlineWidth = StyleSheet.hairlineWidth
-export const xs = 4
-export const sm = 8
-export const md = 16
-export const lg = 32
-export const space = 20 // 上下
-export const wind = 16 // 两翼
+export const xs = isPad ? 8 : 4
+export const sm = isPad ? 12 : 8
+export const md = isPad ? 24 : 16
+export const lg = isPad ? 48 : 32
+export const wind = isPad ? parseInt((width - maxWidth) / 2) : 16 // 两翼
+export const _wind = 16
+export const space = isPad ? 24 : 16 // 上下
 export const bottom = tabBarHeight + lg + md // 底部留空
 
 // -------------------- 主题色 --------------------
@@ -75,7 +78,7 @@ export const colorPlain = `rgb(${colorPlainRaw.join()})`
 export const colorPlainHex = '#ffffff'
 export const colorYellow = 'rgb(255, 202, 40)'
 export const colorWait = 'rgb(200, 200, 200)'
-export const colorBg = 'rgb(243, 243, 243)'
+export const colorBg = 'rgb(248, 248, 248)'
 export const colorBorder = 'rgb(225, 225, 232)'
 
 export const colorTitleRaw = [0, 0, 0]
@@ -243,7 +246,7 @@ export const mt = StyleSheet.create({
     marginTop: lg
   },
   wind: {
-    marginTop: wind
+    marginTop: _wind
   },
   header: {
     marginTop: headerHeight
@@ -261,7 +264,7 @@ export const mr = StyleSheet.create({
     marginRight: md
   },
   wind: {
-    marginRight: wind
+    marginRight: _wind
   }
 })
 
@@ -291,7 +294,7 @@ export const ml = StyleSheet.create({
     marginLeft: lg
   },
   wind: {
-    marginLeft: wind
+    marginLeft: _wind
   }
 })
 

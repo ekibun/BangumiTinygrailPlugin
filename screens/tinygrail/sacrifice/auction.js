@@ -2,7 +2,7 @@
  * @Author: czy0729
  * @Date: 2019-11-17 15:33:52
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-03-21 20:21:01
+ * @Last Modified time: 2020-05-04 01:41:08
  */
 import React from 'react'
 import { View } from 'react-native'
@@ -61,7 +61,10 @@ function Auction({ style }, { $ }) {
               keyboardType='numeric'
               value={String(auctionAmount)}
               clearButtonMode='never'
+              returnKeyType='done'
+              returnKeyLabel='竞拍'
               onChangeText={$.changeAuctionAmount}
+              onSubmitEditing={$.doAuction}
             />
             <View style={styles.popover}>
               <Popover data={countDS} onSelect={$.changeAuctionAmountByMenu}>
@@ -145,7 +148,8 @@ export default observer(Auction)
 
 const memoStyles = _.memoStyles(_ => ({
   container: {
-    padding: _.wind,
+    paddingVertical: _.space,
+    paddingHorizontal: _.wind,
     backgroundColor: _.colorTinygrailBg
   },
   inputWrap: {
@@ -171,11 +175,6 @@ const memoStyles = _.memoStyles(_ => ({
     height: 34,
     borderLeftWidth: 1,
     borderColor: _.colorTinygrailBorder
-  },
-  placeholder: {
-    position: 'absolute',
-    top: 8,
-    right: 8
   },
   slider: {
     height: 40,

@@ -2,7 +2,7 @@
  * @Author: czy0729
  * @Date: 2019-05-08 20:12:06
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-01-23 18:09:14
+ * @Last Modified time: 2020-04-19 19:38:11
  */
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
@@ -14,8 +14,8 @@ import { t } from '@utils/fetch'
 import { EVENT } from '@constants'
 import Cover from '../base/cover'
 
-const imageWidth = _.window.width * 0.16
-const marginLeft = (_.window.width - 5 * imageWidth) / 6
+const imageWidth = _.window.contentWidth * 0.16
+const marginLeft = (_.window.contentWidth - 5 * imageWidth) / 5
 
 function ItemBangumiList({
   navigation,
@@ -50,7 +50,7 @@ function ItemBangumiList({
         onPress={onPress}
       />
       <Touchable withoutFeedback onPress={onPress}>
-        <Text style={_.mt.sm} size={11} numberOfLines={2}>
+        <Text style={_.mt.sm} size={11} numberOfLines={2} bold>
           {HTMLDecode(name)}
         </Text>
       </Touchable>
