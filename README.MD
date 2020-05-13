@@ -3,7 +3,7 @@
  * @Author: ekibun
  * @Date: 2020-05-13 22:33:47
  * @LastEditors: ekibun
- * @LastEditTime: 2020-05-13 22:54:05
+ * @LastEditTime: 2020-05-14 00:57:39
  -->
 <img src="https://cdn.jsdelivr.net/gh/czy0729/bangumi@master/preview/bangumi.png" width="100%" />
 
@@ -61,9 +61,9 @@
 
 ## Update
 
-v3.0.1
+—— 小圣杯助手 v2.3.1 ——
 
-基础功能
+- [x] [我的持仓] 修复安卓开了点击水纹效果的角色无法点击的问题
 
 —— 小圣杯助手 v2.3.0 ——
 

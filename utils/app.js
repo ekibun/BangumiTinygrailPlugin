@@ -18,7 +18,6 @@ const HOST_IMAGE = '//lain.bgm.tv'
  * 启动
  */
 export function bootApp() {
-  console.disableYellowBox = true
   global.log = globalLog
   global.warn = globalWarn
 

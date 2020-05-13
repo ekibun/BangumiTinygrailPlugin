@@ -2,7 +2,7 @@
  * @Author: czy0729
  * @Date: 2019-03-14 06:02:03
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-04-14 21:05:34
+ * @Last Modified time: 2020-05-12 16:36:40
  */
 import { Dimensions, StyleSheet } from 'react-native'
 import Constants from 'expo-constants'
@@ -45,11 +45,11 @@ export const lg = isPad ? 48 : 32
 export const wind = isPad ? parseInt((width - maxWidth) / 2) : 16 // 两翼
 export const _wind = 16
 export const space = isPad ? 24 : 16 // 上下
-export const bottom = tabBarHeight + lg + md // 底部留空
+export const bottom = tabBarHeight + lg // 底部留空
 
 // -------------------- 主题色 --------------------
 export const colorMainRaw = [254, 138, 149]
-export const colorPrimaryRaw = [68, 207, 252]
+export const colorPrimaryRaw = [13, 183, 243]
 export const colorSuccessRaw = [50, 200, 64]
 export const colorWarningRaw = [254, 190, 88]
 export const colorPlainRaw = [255, 255, 255]
@@ -57,7 +57,7 @@ export const colorPlainRaw = [255, 255, 255]
 export const colorDark = 'rgb(0, 0, 0)'
 export const colorMainLight = `rgba(${colorMainRaw.join()}, 0.1)`
 export const colorMainBorder = 'rgb(252, 128, 138)'
-export const colorPrimaryLight = `rgba(${colorPrimaryRaw.join()}, 0.1)`
+export const colorPrimaryLight = 'rgb(237, 250, 254)'
 export const colorPrimaryBorder = 'rgb(159, 230, 254)'
 export const colorSuccessLight = `rgba(${colorSuccessRaw.join()}, 0.1)`
 export const colorSuccessBorder = 'rgb(115, 241, 115)'
@@ -78,13 +78,13 @@ export const colorPlain = `rgb(${colorPlainRaw.join()})`
 export const colorPlainHex = '#ffffff'
 export const colorYellow = 'rgb(255, 202, 40)'
 export const colorWait = 'rgb(200, 200, 200)'
-export const colorBg = 'rgb(248, 248, 248)'
-export const colorBorder = 'rgb(225, 225, 232)'
+export const colorBg = 'rgb(244, 244, 244)' // #f8f8f8
+export const colorBorder = 'rgb(228, 228, 236)'
 
 export const colorTitleRaw = [0, 0, 0]
 export const colorTitle = `rgb(${colorTitleRaw.join()})`
 export const colorDesc = 'rgb(12, 12, 12)'
-export const colorSub = 'rgb(142, 142, 142)'
+export const colorSub = 'rgb(128, 128, 128)'
 export const colorDisabled = 'rgb(150, 150, 150)'
 export const colorIcon = 'rgb(200, 200, 200)'
 
@@ -161,13 +161,13 @@ export const shadow = IOS
   ? {
       shadowColor: colorShadow,
       shadowOffset: {
-        height: 2
+        height: 4
       },
-      shadowOpacity: 0.06,
-      shadowRadius: 4
+      shadowOpacity: 0.12,
+      shadowRadius: 6
     }
   : {
-      elevation: 2
+      elevation: 8
     }
 
 // --------------------  函数 --------------------
@@ -189,8 +189,8 @@ export const container = StyleSheet.create({
     backgroundColor: colorPlain
   },
   screen: {
-    flex: 1,
-    backgroundColor: colorBg
+    flex: 1
+    // backgroundColor: colorBg
   },
   column: {
     flex: 1,
