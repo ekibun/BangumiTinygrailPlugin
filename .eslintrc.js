@@ -63,7 +63,7 @@ module.exports = {
     'import/no-unresolved': 0,
     'import/order': 0,
     'import/prefer-default-export': 0,
-    'linebreak-style': ['error', 'unix'],
+    'linebreak-style': 0,
     'lines-between-class-members': 0,
     'max-len': ['error', 200],
     'no-console': 0, // 方便开发

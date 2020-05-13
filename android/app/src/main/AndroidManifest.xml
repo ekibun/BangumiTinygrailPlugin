@@ -24,13 +24,14 @@
       android:windowSoftInputMode="adjustResize">
     </activity>
     <activity android:name="com.facebook.react.devsupport.DevSettingsActivity"/>
-    <activity
-      android:name=".PluginActivity"
-      android:exported="true">
+    <service
+      android:name=".Plugin"
+      android:exported="true"
+      tools:ignore="ExportedService">
       <intent-filter>
         <action android:name="soko.ekibun.bangumi.plugins"/>
       </intent-filter>
-    </activity>
+    </service>
   </application>
 
 </manifest>

@@ -5,11 +5,11 @@
  * @Last Modified time: 2020-03-19 20:58:01
  */
 import React from 'react'
-import { ScrollView, RefreshControl } from 'react-native'
+import { ScrollView, RefreshControl, NativeModules, ToastAndroid } from 'react-native'
 import PropTypes from 'prop-types'
 import { Flex, Text } from '@components'
 import { StatusBarPlaceholder } from '@screens/_'
-import { _ } from '@stores'
+import { _, userStore } from '@stores'
 import { inject, observer } from '@utils/decorators'
 import { hm, t } from '@utils/fetch'
 import { appNavigate } from '@utils/app'
@@ -44,6 +44,27 @@ class Tinygrail extends React.Component {
   componentDidMount() {
     const { $ } = this.context
     $.init()
+
+    ToastAndroid.show(JSON.stringify(NativeModules.Tinygrail), ToastAndroid.SHORT)
+
+    if (NativeModules.Tinygrail.userInfo) {
+      const nativeUser = JSON.parse(NativeModules.Tinygrail.userInfo)
+      userStore.updateUserInfo({
+        ...nativeUser,
+        avatar: {
+          large: nativeUser.avatar,
+          medium: nativeUser.avatar,
+          small: nativeUser.avatar
+        }
+      })
+    }
+
+    if (NativeModules.Tinygrail.userCookie) {
+      userStore.updateUserCookie({
+        cookie: NativeModules.Tinygrail.userCookie,
+        userAgent: 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Mobile Safari/537.36'
+      })
+    }
 
     hm('tinygrail', 'Tinygrail')
   }

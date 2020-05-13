@@ -14,7 +14,7 @@ import org.unimodules.adapters.react.ModuleRegistryAdapter;
 import org.unimodules.adapters.react.ReactModuleRegistryProvider;
 import org.unimodules.core.interfaces.SingletonModule;
 import soko.ekibun.bangumi.plugin.tinygrail.generated.BasePackageList;
-import soko.ekibun.bangumi.plugin.tinygrail.BuildConfig;
+import soko.ekibun.bangumi.plugin.tinygrail.main.TinygrailPackage;
 
 import java.util.Arrays;
 import java.util.List;
@@ -39,6 +39,7 @@ public class MainApplication extends Application implements ReactApplication {
         new ReanimatedPackage(),
         new RNGestureHandlerPackage(),
         new RNScreensPackage(),
+        new TinygrailPackage(),
         new ModuleRegistryAdapter(mModuleRegistryProvider)
       );
     }

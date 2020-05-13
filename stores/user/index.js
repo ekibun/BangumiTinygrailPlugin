@@ -151,21 +151,21 @@ class Store extends store {
       NAMESPACE
     )
 
-    if (this.isLogin) {
-      const { _loaded } = this.userInfo
+    // if (this.isLogin) {
+    //   const { _loaded } = this.userInfo
 
-      // 用户信息被动刷新, 距离上次4小时候后才请求
-      if (!_loaded || getTimestamp() - _loaded > 60 * 60 * 4) {
-        this.fetchUserInfo()
-        this.fetchUsersInfo()
-      }
+    //   // 用户信息被动刷新, 距离上次4小时候后才请求
+    //   if (!_loaded || getTimestamp() - _loaded > 60 * 60 * 4) {
+    //     this.fetchUserInfo()
+    //     this.fetchUsersInfo()
+    //   }
 
-      try {
-        this.doCheckCookie()
-      } catch (e) {
-        // do nothing
-      }
-    }
+    //   try {
+    //     this.doCheckCookie()
+    //   } catch (e) {
+    //     // do nothing
+    //   }
+    // }
 
     return true
   }
@@ -651,6 +651,17 @@ class Store extends store {
       accessToken
     })
     this.setStorage('accessToken', undefined, NAMESPACE)
+  }
+
+  /**
+   * 更新用户信息
+   * @param {*} data
+   */
+  updateUserInfo = (userInfo = INIT_USER_INFO) => {
+    this.setState({
+      userInfo
+    })
+    this.setStorage('userInfo', undefined, NAMESPACE)
   }
 
   /**
