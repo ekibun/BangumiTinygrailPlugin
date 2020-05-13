@@ -21,5 +21,6 @@ yarn.lock
 .DS_Store
 /android/build
 /android/app/build
+/android/app/release
 /android/captures
 .externalNativeBuild

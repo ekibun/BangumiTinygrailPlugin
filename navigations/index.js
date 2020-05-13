@@ -8,6 +8,10 @@ import {
   createAppContainer,
   createStackNavigator
 } from 'react-navigation'
+
+import { BackHandler, NativeModules } from 'react-native';
+import { log } from '@utils/dev'
+
 import {
   Tinygrail,
   TinygrailAdvance,
@@ -37,6 +41,7 @@ import {
 } from '@screens'
 import navigationsParams from '../navigations'
 import config from './stacks/config'
+
 
 const HomeStack = createStackNavigator(
   {
@@ -71,5 +76,31 @@ const HomeStack = createStackNavigator(
     ...config
   }
 )
+
+const defaultGetStateForAction = HomeStack.router.getStateForAction
+HomeStack.router.getStateForAction = (action, state) => {
+  log(JSON.stringify({ action, state }))
+  if (action.type == 'Navigation/BACK' && state.routes.length < 2) {
+    BackHandler.exitApp();
+  } else {
+    switch (action.routeName) {
+        case 'Topic':
+          NativeModules.Tinygrail.startActivity(`http://bgm.tv/rakuen/topic/${action.params.topicId}`)
+          return null
+        case 'Group':
+          NativeModules.Tinygrail.startActivity(`http://bgm.tv/group/${action.params.groupId}`)
+          return null
+        case 'Mono':
+          NativeModules.Tinygrail.startActivity(`http://bgm.tv/${action.params.monoId}`)
+          return null
+        case 'Zone':
+          NativeModules.Tinygrail.startActivity(`http://bgm.tv/user/${action.params.userId}`)
+          return null
+        default:
+          break
+    }
+  }
+  return defaultGetStateForAction(action, state)
+}
 
 export default createAppContainer(HomeStack)

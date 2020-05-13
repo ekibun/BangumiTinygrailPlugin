@@ -10,7 +10,7 @@ import { userStore, tinygrailStore } from '@stores'
 
 export default {
   init: async () => {
-    const intentExtra = await new Promise(resolve => NativeModules.Tinygrail.getIntentExtra(resolve))
+    const intentExtra = await NativeModules.Tinygrail.getIntentExtra()
     if (intentExtra.userInfo) {
       const nativeUser = JSON.parse(intentExtra.userInfo)
       tinygrailStore.updateCookie(intentExtra.cookie || '')
