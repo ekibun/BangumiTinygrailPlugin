@@ -3,7 +3,7 @@
  * @Author: ekibun
  * @Date: 2020-05-13 22:33:47
  * @LastEditors: ekibun
- * @LastEditTime: 2020-05-13 22:52:20
+ * @LastEditTime: 2020-05-13 22:54:05
  -->
 <img src="https://cdn.jsdelivr.net/gh/czy0729/bangumi@master/preview/bangumi.png" width="100%" />
 
