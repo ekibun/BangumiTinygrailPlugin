@@ -70,6 +70,7 @@ import {
   INIT_MY_CHARA_ASSETS,
   INIT_AUCTION_STATUS
 } from './init'
+import { NativeModules } from 'react-native'
 
 const defaultKey = 'recent'
 const defaultSort = '1/50'
@@ -478,7 +479,7 @@ class Tinygrail extends store {
 
   // -------------------- fetch --------------------
   fetch = (url, isPost, data) => {
-    log(`[axios] ${url}`)
+    NativeModules.Tinygrail.logNative(`[axios] ${url} - ${this.cookie}`)
 
     axios.defaults.withCredentials = false
     const config = {

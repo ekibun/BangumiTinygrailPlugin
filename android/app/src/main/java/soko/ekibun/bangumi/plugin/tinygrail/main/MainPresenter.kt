@@ -25,11 +25,29 @@ class MainPresenter(activityRef: WeakReference<Activity>) {
     val superListener = proxy.mainPresenter.drawerView.navigationItemSelectedListener
     proxy.mainPresenter.drawerView.navigationItemSelectedListener = {
       if (menu.itemId == it.itemId) {
-        activityRef.get()?.startActivity(Intent(pluginContext, MainActivity::class.java)
-          .putExtra(TinygrailModule.EXTRA_USER_INFO, JsonUtil.toJson(proxy.mainPresenter.user))
-          .putExtra(TinygrailModule.EXTRA_USER_COOKIE, CookieManager.getInstance().getCookie(".bgm.tv")))
+        val cookieManager = CookieManager.getInstance()
+        cookieManager.flush()
+        activityRef.get()?.startActivityForResult(Intent(pluginContext, MainActivity::class.java)
+          .putExtra(TinygrailModule.EXTRA_USER_INFO, JsonUtil.toJson(App.app.userModel.current()))
+          .putExtra(TinygrailModule.EXTRA_USER_COOKIE, cookieManager.getCookie(".bgm.tv"))
+          .putExtra(TinygrailModule.EXTRA_TINYGRAIL_COOKIE, cookieManager.getCookie(XSB_COOKIE_HOST))
+          , RESULT_TINYGRAIL)
       }
       superListener(it)
     }
+
+    val superOnActivityResult = proxy.onActivityResultListener
+    proxy.onActivityResultListener = { requestCode: Int, resultCode: Int, data: Intent? ->
+      if(requestCode == RESULT_TINYGRAIL) data?.getStringExtra(TinygrailModule.EXTRA_TINYGRAIL_COOKIE)?.let { cookie ->
+        if(cookie.isEmpty()) return@let
+        CookieManager.getInstance().setCookie(XSB_COOKIE_HOST, cookie)
+        App.app.userModel.updateUser(App.app.userModel.current())
+      } else superOnActivityResult(requestCode, resultCode, data)
+    }
+  }
+
+  companion object {
+    const val RESULT_TINYGRAIL = 641
+    const val XSB_COOKIE_HOST = "tinygrail.com"
   }
 }

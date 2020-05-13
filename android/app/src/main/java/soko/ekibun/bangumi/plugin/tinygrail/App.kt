@@ -3,10 +3,22 @@ package soko.ekibun.bangumi.plugin.tinygrail
 import android.app.Activity
 import android.content.Context
 import androidx.appcompat.view.ContextThemeWrapper
+import soko.ekibun.bangumi.api.bangumi.bean.UserInfo
+import soko.ekibun.bangumi.plugins.util.ReflectUtil
 import java.lang.ref.WeakReference
 
 class App(val host: Context, val plugin: Context) {
     val handler = android.os.Handler { true }
+
+  val userModel by lazy {
+    val clazz = host.classLoader.loadClass("soko.ekibun.bangumi.model.UserModel")
+    ReflectUtil.proxyObject(clazz.getField("INSTANCE").get(null), IUserModel::class.java)!!
+  }
+
+  interface IUserModel {
+    fun current(): UserInfo
+    fun updateUser(user: UserInfo)
+  }
 
     companion object {
         val inited get() = Companion::app.isInitialized

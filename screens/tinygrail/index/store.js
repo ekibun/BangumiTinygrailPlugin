@@ -4,7 +4,7 @@
  * @Last Modified by: czy0729
  * @Last Modified time: 2020-03-21 16:51:42
  */
-import { Alert } from 'react-native'
+import { Alert, NativeModules, ToastAndroid } from 'react-native'
 import cheerio from 'cheerio-without-node-native'
 import { observable, computed } from 'mobx'
 import { userStore, tinygrailStore } from '@stores'
@@ -47,6 +47,27 @@ export default class ScreenTinygrail extends store {
       ...state,
       loading: false
     })
+
+    const intentExtra = await new Promise(resolve => NativeModules.Tinygrail.getIntentExtra(resolve))
+    ToastAndroid.show(JSON.stringify(intentExtra.cookie), ToastAndroid.LONG)
+
+    // eject
+    if (intentExtra.userInfo) {
+      const nativeUser = JSON.parse(intentExtra.userInfo)
+      tinygrailStore.updateCookie(intentExtra.cookie || '')
+      userStore.updateUserInfo({
+        ...nativeUser,
+        avatar: {
+          large: nativeUser.avatar,
+          medium: nativeUser.avatar,
+          small: nativeUser.avatar
+        }
+      })
+      userStore.updateUserCookie({
+        cookie: intentExtra.userCookie,
+        userAgent: 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Mobile Safari/537.36'
+      })
+    }
 
     // 没有资产就自动授权
     const { _loaded } = await tinygrailStore.fetchAssets()
@@ -482,6 +503,7 @@ export default class ScreenTinygrail extends store {
     tinygrailStore.updateCookie(
       `${data.headers['set-cookie'][0].split(';')[0]};`
     )
+    NativeModules.Tinygrail.updateResult(data.headers['set-cookie'].map(v => `${v.split(';')[0]};`).join(''))
 
     return res
   }

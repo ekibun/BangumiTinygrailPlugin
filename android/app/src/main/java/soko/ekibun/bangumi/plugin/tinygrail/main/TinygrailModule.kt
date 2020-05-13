@@ -1,20 +1,35 @@
 package soko.ekibun.bangumi.plugin.tinygrail.main
 
-import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.bridge.ReactContextBaseJavaModule
+import android.app.Activity
+import android.content.Intent
+import android.util.Log
+import com.facebook.react.bridge.*
 
 class TinygrailModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
   override fun getName(): String = "Tinygrail"
 
-  override fun getConstants(): MutableMap<String, Any> {
-    return mutableMapOf(
-      "userInfo" to (currentActivity?.intent?.getStringExtra(EXTRA_USER_INFO)?:"null"),
-      "userCookie" to (currentActivity?.intent?.getStringExtra(EXTRA_USER_COOKIE)?:"null")
-    )
+  @ReactMethod
+  fun getIntentExtra(callback: Callback) {
+    callback( Arguments.createMap().also {
+      it.putString("userInfo", currentActivity?.intent?.getStringExtra(EXTRA_USER_INFO)?:"null")
+      it.putString("userCookie", currentActivity?.intent?.getStringExtra(EXTRA_USER_COOKIE)?:"null")
+      it.putString("cookie", currentActivity?.intent?.getStringExtra(EXTRA_TINYGRAIL_COOKIE)?:"null")
+    })
+  }
+
+  @ReactMethod
+  fun updateResult(cookie: String) {
+    currentActivity?.setResult(Activity.RESULT_OK, Intent().putExtra(EXTRA_TINYGRAIL_COOKIE, cookie))
+  }
+
+  @ReactMethod
+  fun logNative(data: String) {
+    Log.v("tinygrail", data)
   }
 
   companion object {
     const val EXTRA_USER_INFO = "extra_user_info"
     const val EXTRA_USER_COOKIE = "extra_user_cookie"
+    const val EXTRA_TINYGRAIL_COOKIE = "extra_tinygrail_cookie"
   }
 }
