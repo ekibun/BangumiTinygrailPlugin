@@ -120,8 +120,8 @@ android {
         applicationId "soko.ekibun.bangumi.plugin.tinygrail"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 301
-        versionName "3.0.1"
+        versionCode 340
+        versionName "3.4.0"
     }
     signingConfigs {
         release {

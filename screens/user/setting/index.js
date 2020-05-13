@@ -32,8 +32,7 @@ import {
 import {
   MODEL_SETTING_QUALITY,
   MODEL_SETTING_FONTSIZEADJUST,
-  MODEL_SETTING_TRANSITION,
-  MODEL_INITIAL_PAGE
+  MODEL_SETTING_TRANSITION
 } from '@constants/model'
 
 const title = '设置'
@@ -229,24 +228,6 @@ class Setting extends React.Component {
           withoutFeedback
           information='首页点击头部Bangumi的Logo也可以快速切换主题'
         />
-        <ItemSetting
-          border
-          hd='小圣杯'
-          ft={
-            <Switch
-              checked={tinygrail}
-              onChange={() => {
-                t('设置.切换', {
-                  title: '小圣杯',
-                  checked: !tinygrail
-                })
-
-                systemStore.switchSetting('tinygrail')
-              }}
-            />
-          }
-          withoutFeedback
-        />
         {tinygrail && (
           <ItemSetting
             border
@@ -277,29 +258,12 @@ class Setting extends React.Component {
   }
 
   renderBasic() {
-    const { quality, hideScore, cnFirst, initialPage } = systemStore.setting
+    const { quality, cnFirst } = systemStore.setting
     return (
       <>
         <Text style={this.styles.section} type='sub'>
           基本
         </Text>
-        <ItemSetting
-          hd='隐藏他人评分'
-          ft={
-            <Switch
-              checked={hideScore}
-              onChange={() => {
-                t('设置.切换', {
-                  title: '隐藏他人评分',
-                  checked: !hideScore
-                })
-
-                systemStore.switchSetting('hideScore')
-              }}
-            />
-          }
-          withoutFeedback
-        />
         <ItemSetting
           border
           hd='优先中文'
@@ -317,22 +281,6 @@ class Setting extends React.Component {
             />
           }
           withoutFeedback
-        />
-        <ItemSetting
-          border
-          hd='启动页'
-          ft={
-            <Popover
-              data={MODEL_INITIAL_PAGE.data.map(({ label }) => label)}
-              onSelect={this.setInitialPage}
-            >
-              <Text size={16} type='sub'>
-                {MODEL_INITIAL_PAGE.getLabel(initialPage)}
-              </Text>
-            </Popover>
-          }
-          arrow
-          highlight
         />
         <ItemSetting
           border
@@ -377,7 +325,6 @@ class Setting extends React.Component {
       avatarRound,
       ripple,
       imageTransition,
-      heatMap,
       speech,
       transition
     } = systemStore.setting
@@ -465,25 +412,6 @@ class Setting extends React.Component {
             information='当按钮被按下时产生一个涟漪状的背景, 关闭可以提升性能'
           />
         )}
-        <ItemSetting
-          border
-          hd='章节讨论热力图'
-          ft={
-            <Switch
-              checked={heatMap}
-              onChange={() => {
-                t('设置.切换', {
-                  title: '章节讨论热力图',
-                  checked: !heatMap
-                })
-
-                systemStore.switchSetting('heatMap')
-              }}
-            />
-          }
-          withoutFeedback
-          information='章节按钮下方不同透明度的橙色条块, 可以快速了解到哪些章节讨论比较激烈'
-        />
         <ItemSetting
           border
           hd='Bangumi娘话语'
@@ -617,7 +545,6 @@ class Setting extends React.Component {
   }
 
   renderSystem() {
-    const { navigation } = this.props
     const { storageSize } = this.state
     return (
       <>
@@ -634,21 +561,6 @@ class Setting extends React.Component {
           arrow
           highlight
           onPress={this.clearStorage}
-        />
-        <ItemSetting
-          border
-          hd={
-            <Text size={16} type='danger'>
-              退出登陆
-            </Text>
-          }
-          arrow
-          highlight
-          onPress={() => {
-            t('设置.退出登陆')
-
-            Stores.logout(navigation)
-          }}
         />
       </>
     )

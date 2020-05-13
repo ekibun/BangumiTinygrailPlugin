@@ -13,6 +13,8 @@ import { BackHandler, NativeModules } from 'react-native';
 import { log } from '@utils/dev'
 
 import {
+  Qiafan,
+  Setting,
   Tinygrail,
   TinygrailAdvance,
   TinygrailAdvanceAsk,
@@ -45,6 +47,8 @@ import config from './stacks/config'
 
 const HomeStack = createStackNavigator(
   {
+    Qiafan,
+    Setting,
     Tinygrail,
     TinygrailAdvance,
     TinygrailAdvanceAsk,
@@ -95,6 +99,9 @@ HomeStack.router.getStateForAction = (action, state) => {
           return null
         case 'Zone':
           NativeModules.Tinygrail.startActivity(`http://bgm.tv/user/${action.params.userId}`)
+          return null
+        case 'Say':
+          NativeModules.Tinygrail.startActivity(`http://bgm.tv/user/sukaretto/timeline/status/${action.params.id}`)
           return null
         default:
           break

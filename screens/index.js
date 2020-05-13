@@ -5,6 +5,9 @@
  * @Last Modified time: 2020-05-02 21:43:05
  */
 
+export { default as Qiafan } from './user/qiafan'
+export { default as Setting } from './user/setting'
+
 // Tinygrail
 export { default as Tinygrail } from './tinygrail/index'
 export { default as TinygrailAdvance } from './tinygrail/advance'
