@@ -4,10 +4,10 @@
  * 请求相关
  * @Author: czy0729
  * @Date: 2019-03-14 05:08:45
- * @Last Modified by: czy0729
+ * @Last Modified by: ekibun
  * @Last Modified time: 2020-06-16 20:53:54
  */
-import { NativeModules, InteractionManager } from 'react-native'
+import { InteractionManager } from 'react-native'
 import Constants from 'expo-constants'
 import { Portal, Toast } from '@ant-design/react-native'
 import {
@@ -27,7 +27,7 @@ import { urlStringify, sleep, getTimestamp, randomn, debounce } from './index'
 import { log } from './dev'
 import { info as UIInfo } from './ui'
 
-const UMAnalyticsModule = NativeModules.UMAnalyticsModule
+// const UMAnalyticsModule = NativeModules.UMAnalyticsModule
 const SHOW_LOG = true // 开发显示请求信息
 const FETCH_TIMEOUT = 8000 // api超时时间
 const FETCH_RETRY = 4 // get请求失败自动重试次数
@@ -462,24 +462,24 @@ export function t(desc, eventData) {
         eventData ? JSON.stringify(eventData) : ''
       }`
     )
-    return
+    // return
   }
 
-  try {
-    // 保证这种低优先级的操作在UI响应之后再执行
-    InteractionManager.runAfterInteractions(() => {
-      const eventId = events[desc]
-      if (eventId) {
-        if (eventData) {
-          UMAnalyticsModule.onEventWithMap(eventId, eventData)
-        } else {
-          UMAnalyticsModule.onEvent(eventId)
-        }
-      }
-    })
-  } catch (error) {
-    warn('utils/fetch', 't', error)
-  }
+  // try {
+  //   // 保证这种低优先级的操作在UI响应之后再执行
+  //   InteractionManager.runAfterInteractions(() => {
+  //     const eventId = events[desc]
+  //     if (eventId) {
+  //       if (eventData) {
+  //         UMAnalyticsModule.onEventWithMap(eventId, eventData)
+  //       } else {
+  //         UMAnalyticsModule.onEvent(eventId)
+  //       }
+  //     }
+  //   })
+  // } catch (error) {
+  //   warn('utils/fetch', 't', error)
+  // }
 }
 
 /**

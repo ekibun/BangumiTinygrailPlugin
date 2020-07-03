@@ -1,7 +1,7 @@
 /*
  * @Author: czy0729
  * @Date: 2019-12-23 12:07:36
- * @Last Modified by: czy0729
+ * @Last Modified by: ekibun
  * @Last Modified time: 2020-05-01 23:01:25
  */
 import React from 'react'
@@ -9,7 +9,7 @@ import { Alert } from 'react-native'
 import PropTypes from 'prop-types'
 import { Button } from '@components'
 import { Popover } from '@screens/_'
-import { _ } from '@stores'
+import { _, tinygrailStore } from '@stores'
 import { observer } from '@utils/decorators'
 import { APP_ID_SAY_TINYGRAIL } from '@constants'
 
@@ -18,8 +18,8 @@ const dataMore = ['重新授权', '人物直达', '意见反馈', '设置']
 
 function Btns(props, { $, navigation }) {
   const styles = memoStyles()
-  const { loading, loadingBonus, _loaded } = $.state
-  if (!_loaded) {
+  const { loading, loadingBonus } = $.state
+  if (!tinygrailStore.cookie) {
     return (
       <Button
         style={styles.btn}

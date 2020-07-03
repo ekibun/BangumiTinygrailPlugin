@@ -4,7 +4,7 @@
  * 一般cookie没多久就过期了
  * @Author: czy0729
  * @Date: 2019-02-21 20:40:30
- * @Last Modified by: czy0729
+ * @Last Modified by: ekibun
  * @Last Modified time: 2020-06-19 12:13:07
  */
 import { observable, computed } from 'mobx'
@@ -596,6 +596,17 @@ class User extends store {
       accessToken
     })
     this.setStorage('accessToken', undefined, NAMESPACE)
+  }
+
+  /**
+   * 更新用户信息
+   * @param {*} data
+   */
+  updateUserInfo = (userInfo = INIT_USER_INFO) => {
+    this.setState({
+      userInfo
+    })
+    this.setStorage('userInfo', undefined, NAMESPACE)
   }
 
   /**

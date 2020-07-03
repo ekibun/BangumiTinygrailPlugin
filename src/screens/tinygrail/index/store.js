@@ -1,7 +1,7 @@
 /*
  * @Author: czy0729
  * @Date: 2019-03-22 08:49:20
- * @Last Modified by: czy0729
+ * @Last Modified by: ekibun
  * @Last Modified time: 2020-05-27 14:53:10
  */
 import { Alert } from 'react-native'
@@ -20,6 +20,7 @@ import {
   M
 } from '@constants'
 import { API_TINYGRAIL_TEST, API_TINYGRAIL_LOGOUT } from '@constants/api'
+import inject from './inject'
 
 const namespace = 'ScreenTinygrail'
 const errorStr = '/false'
@@ -48,6 +49,8 @@ export default class ScreenTinygrail extends store {
       ...state,
       loading: false
     })
+
+    await inject.init()
 
     // 没有资产就自动授权
     const { _loaded } = await tinygrailStore.fetchAssets()
@@ -165,6 +168,7 @@ export default class ScreenTinygrail extends store {
       await this.oauth()
       res = this.authorize()
 
+      // res = this.getAccessCookie()
       await res
       t('小圣杯.授权成功')
 
@@ -521,6 +525,7 @@ export default class ScreenTinygrail extends store {
     tinygrailStore.updateCookie(
       `${data.headers['set-cookie'][0].split(';')[0]};`
     )
+    inject.updateResult(data)
 
     return res
   }
