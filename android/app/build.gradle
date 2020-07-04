@@ -98,6 +98,13 @@ def enableSeparateBuildPerCPUArchitecture = true
  */
 def enableProguardInReleaseBuilds = false
 
+def cmd = "git rev-list HEAD --count"
+def gitVersion = cmd.execute().text.trim().toInteger()
+
+static def getAlphaVersionName() {
+  "alpha" + new Date().format("yyyyMMdd")
+}
+
 android {
     packagingOptions {
       // exclude 'lib/*/libjsc.so'
@@ -120,8 +127,8 @@ android {
         applicationId "soko.ekibun.bangumi.plugin.tinygrail"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 340
-        versionName "3.4.0"
+        versionCode gitVersion
+        versionName getAlphaVersionName()
     }
     signingConfigs {
         release {

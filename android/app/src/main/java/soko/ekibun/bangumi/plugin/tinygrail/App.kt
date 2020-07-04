@@ -3,7 +3,7 @@ package soko.ekibun.bangumi.plugin.tinygrail
 import android.app.Activity
 import android.content.Context
 import androidx.appcompat.view.ContextThemeWrapper
-import soko.ekibun.bangumi.api.bangumi.bean.UserInfo
+import soko.ekibun.bangumi.plugin.tinygrail.bean.UserInfo
 import soko.ekibun.bangumi.plugins.util.ReflectUtil
 import java.lang.ref.WeakReference
 
