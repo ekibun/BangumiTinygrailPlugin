@@ -2,7 +2,7 @@
  * @Author: czy0729
  * @Date: 2019-03-22 08:49:20
  * @Last Modified by: ekibun
- * @Last Modified time: 2020-05-27 14:53:10
+ * @Last Modified time: 2020-07-01 13:05:37
  */
 import { Alert } from 'react-native'
 import cheerio from 'cheerio-without-node-native'
@@ -168,7 +168,6 @@ export default class ScreenTinygrail extends store {
       await this.oauth()
       res = this.authorize()
 
-      // res = this.getAccessCookie()
       await res
       t('小圣杯.授权成功')
 
@@ -237,9 +236,9 @@ export default class ScreenTinygrail extends store {
         _AfterTax = formatNumber(AfterTax, 2)
       }
 
-      let message = `本期计息共${_Total}股, 圣殿${Temples}座, 预期股息₵${_Share}`
-      if (Tax) message += `, 个人所得税₵${_Tax}, 税后₵${_AfterTax}`
-      if (Daily) message += `, 签到奖励₵${Daily}`
+      let message = `本期计息共${_Total}股, 圣殿${Temples}座, 预期股息${_Share}`
+      if (Tax) message += `, 个人所得税${_Tax}, 税后${_AfterTax}`
+      if (Daily) message += `, 签到奖励${Daily}`
 
       Alert.alert('股息预测', message, [
         {

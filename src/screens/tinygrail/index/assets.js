@@ -2,7 +2,7 @@
  * @Author: czy0729
  * @Date: 2019-11-17 01:37:57
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-03-19 20:58:26
+ * @Last Modified time: 2020-07-09 11:26:33
  */
 import React from 'react'
 import { StyleSheet } from 'react-native'
@@ -50,21 +50,35 @@ function Assets(props, { $ }) {
 
   let balanceChangeText
   let balanceTextColor
+  let _changeBalance
+  if (short && Math.abs(changeBalance) >= 1000) {
+    _changeBalance = `${toFixed(Math.abs(changeBalance) / M, 1)}万`
+  } else {
+    _changeBalance = formatNumber(Math.abs(changeBalance), 1)
+  }
+
   if (changeBalance > 0) {
-    balanceChangeText = `(+${formatNumber(changeBalance, 0)})`
+    balanceChangeText = `(+${_changeBalance})`
     balanceTextColor = 'bid'
   } else if (changeBalance < 0) {
-    balanceChangeText = `(-${formatNumber(Math.abs(changeBalance), 0)})`
+    balanceChangeText = `(-${_changeBalance})`
     balanceTextColor = 'ask'
   }
 
   let totalChangeText
   let totalTextColor
+  let _changeTotal
+  if (short && Math.abs(changeTotal) >= 1000) {
+    _changeTotal = `${toFixed(Math.abs(changeTotal) / M, 1)}万`
+  } else {
+    _changeTotal = formatNumber(Math.abs(changeTotal), 1)
+  }
+
   if (changeTotal > 0) {
-    totalChangeText = `(+${formatNumber(changeTotal, 0)})`
+    totalChangeText = `(+${_changeTotal})`
     totalTextColor = 'bid'
   } else if (changeTotal < 0) {
-    totalChangeText = `(-${formatNumber(Math.abs(changeTotal), 0)})`
+    totalChangeText = `(-${_changeTotal})`
     totalTextColor = 'ask'
   }
 
@@ -72,27 +86,31 @@ function Assets(props, { $ }) {
     <Flex style={styles.container}>
       <Flex.Item>
         <Touchable onPress={$.toogleShort}>
-          <Text type='tinygrailPlain'>
-            ₵ {_balance}
+          <Text type='tinygrailPlain' size={13}>
+            {_balance}
             {balanceChangeText && (
-              <Text type={balanceTextColor} size={12} lineHeight={14}>
+              <Text type={balanceTextColor} size={10} lineHeight={13}>
                 {' '}
                 {balanceChangeText}
               </Text>
             )}{' '}
             / {_total}{' '}
             {totalChangeText && (
-              <Text type={totalTextColor} size={12} lineHeight={14}>
+              <Text type={totalTextColor} size={10} lineHeight={13}>
                 {totalChangeText}{' '}
               </Text>
             )}
             {!!lastIndex && `/ #${lastIndex}`}
-            <Text type='tinygrailPlain'>{short ? ' [-]' : ' [+]'}</Text>
+            <Text type='tinygrailPlain' size={13}>
+              {short ? ' [-]' : ' [+]'}
+            </Text>
           </Text>
         </Touchable>
       </Flex.Item>
-      <Touchable style={_.ml.sm} onPress={$.doTest}>
-        <Text type='tinygrailText'>[股息预测]</Text>
+      <Touchable style={_.ml.xs} onPress={$.doTest}>
+        <Text type='tinygrailText' size={13}>
+          [股息预测]
+        </Text>
       </Touchable>
     </Flex>
   )

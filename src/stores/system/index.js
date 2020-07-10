@@ -2,15 +2,16 @@
  * @Author: czy0729
  * @Date: 2019-05-17 21:53:14
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-06-27 00:19:18
+ * @Last Modified time: 2020-07-02 21:00:02
  */
-// import { NetInfo } from 'react-native'
 import { observable, computed } from 'mobx'
+import { getTimestamp } from '@utils'
 import store from '@utils/store'
 import { info } from '@utils/ui'
 import {
   DEV,
   IOS,
+  GITHUB_DATA,
   GITHUB_RELEASE_REPOS,
   VERSION_GITHUB_RELEASE
 } from '@constants'
@@ -30,6 +31,11 @@ import {
 
 class System extends store {
   state = observable({
+    /**
+     * 云端配置数据
+     */
+    ota: {},
+
     /**
      * 基本设置
      */
@@ -63,21 +69,14 @@ class System extends store {
 
   init = async () => {
     await this.readStorage(
-      ['setting', 'release', 'dev', 'iosUGCAgree'],
+      ['ota', 'setting', 'release', 'dev', 'iosUGCAgree'],
       NAMESPACE
     )
-
-    // const res = NetInfo.getConnectionInfo()
-    // const { type } = await res
-    // if (type === 'wifi') {
-    //   this.setState({
-    //     wifi: true
-    //   })
-    // }
 
     // 检查新版本
     if (!DEV) {
       setTimeout(() => {
+        this.fetchOTA()
         this.fetchRelease()
       }, 4000)
     }
@@ -94,6 +93,27 @@ class System extends store {
   }
 
   // -------------------- fetch --------------------
+  /*
+   * 检查云端数据
+   */
+  fetchOTA = async () => {
+    let res
+    try {
+      res = fetch(`${GITHUB_DATA}?t=${getTimestamp()}`).then(response =>
+        response.json()
+      )
+
+      const ota = (await res) || {}
+      this.setState({
+        ota
+      })
+      this.setStorage('ota', undefined, NAMESPACE)
+    } catch (error) {
+      // do nothing
+    }
+    return res
+  }
+
   /*
    * 检查新版本
    */

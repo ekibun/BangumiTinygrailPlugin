@@ -2,7 +2,7 @@
  * @Author: czy0729
  * @Date: 2020-03-05 17:59:15
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-06-30 19:52:43
+ * @Last Modified time: 2020-07-08 15:16:32
  */
 import React from 'react'
 import { ScrollView, View } from 'react-native'
@@ -17,7 +17,11 @@ import CharactersModal from './characters-modal'
 import Store from './store'
 
 const title = '我的道具'
-const canUseItems = ['混沌魔方', '虚空道标']
+const canUseItems = {
+  混沌魔方: 100,
+  虚空道标: 90,
+  星光碎片: 80
+}
 
 export default
 @inject(Store)
@@ -33,13 +37,17 @@ class TinygrailItems extends React.Component {
   }
 
   static contextTypes = {
-    $: PropTypes.object,
-    navigation: PropTypes.object
+    $: PropTypes.object
   }
 
   componentDidMount() {
     const { $ } = this.context
     $.init()
+  }
+
+  componentWillUnmount() {
+    const { $ } = this.context
+    $.onCloseModal()
   }
 
   renderList() {
@@ -52,12 +60,10 @@ class TinygrailItems extends React.Component {
       >
         {list
           .sort(
-            (a, b) =>
-              (canUseItems.includes(b.name) ? 1 : 0) -
-              (canUseItems.includes(a.name) ? 1 : 0)
+            (a, b) => (canUseItems[b.name] || 0) - (canUseItems[a.name] || 0)
           )
           .map((item, index) => {
-            if (canUseItems.includes(item.name)) {
+            if (canUseItems[item.name]) {
               return (
                 <Touchable
                   key={item.id}
@@ -67,17 +73,17 @@ class TinygrailItems extends React.Component {
                   <Flex
                     style={[
                       this.styles.wrap,
-                      index !== 0 && this.styles.border
+                      index !== 0 && !_.flat && this.styles.border
                     ]}
                   >
                     <Image
                       style={this.styles.image}
-                      size={44}
+                      size={40}
                       src={tinygrailOSS(item.icon)}
                       radius
                     />
                     <Flex.Item style={_.ml.md}>
-                      <Text type='tinygrailPlain' bold>
+                      <Text type='tinygrailPlain' size={15} bold>
                         {item.name}
                       </Text>
                       <Text style={_.mt.xs} type='tinygrailText' size={10}>
@@ -89,7 +95,7 @@ class TinygrailItems extends React.Component {
                       <Iconfont
                         style={_.ml.xs}
                         name='right'
-                        size={16}
+                        size={15}
                         color={_.colorTinygrailText}
                       />
                     </Flex>
@@ -101,7 +107,10 @@ class TinygrailItems extends React.Component {
             return (
               <View key={item.id} style={this.styles.item}>
                 <Flex
-                  style={[this.styles.wrap, index !== 0 && this.styles.border]}
+                  style={[
+                    this.styles.wrap,
+                    index !== 0 && !_.flat && this.styles.border
+                  ]}
                 >
                   <Image
                     style={this.styles.image}
@@ -128,22 +137,18 @@ class TinygrailItems extends React.Component {
     )
   }
 
-  render() {
-    const { $, navigation } = this.context
+  renderModal() {
+    const { $ } = this.context
     const { title, visible } = $.state
+    return <CharactersModal visible={visible} title={title} />
+  }
+
+  render() {
     return (
       <View style={this.styles.container}>
         <StatusBarEvents />
         {this.renderList()}
-        <CharactersModal
-          navigation={navigation}
-          visible={visible}
-          title={title}
-          left={$.temple}
-          right={title === '虚空道标' ? $.msrc : false}
-          onClose={$.onCloseModal}
-          onSubmit={$.doUse}
-        />
+        {this.renderModal()}
       </View>
     )
   }

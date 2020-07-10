@@ -1,9 +1,8 @@
-import { AppRegistry, Platform } from 'react-native';
+import { registerRootComponent } from 'expo';
+
 import App from './App';
 
-AppRegistry.registerComponent('czy0729.bangumi', () => App);
-
-if (Platform.OS === 'web') {
-  const rootTag = document.getElementById('root') || document.getElementById('main');
-  AppRegistry.runApplication('czy0729.bangumi', { rootTag });
-}
+// registerRootComponent calls AppRegistry.registerComponent('main', () => App);
+// It also ensures that whether you load the app in the Expo client or in a native build,
+// the environment is set up appropriately
+registerRootComponent(App);

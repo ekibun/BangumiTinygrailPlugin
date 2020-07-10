@@ -1,5 +1,8 @@
-package soko.ekibun.bangumi.api.bangumi.bean
+package soko.ekibun.bangumi.plugin.tinygrail.bean
 
+import soko.ekibun.bangumi.plugins.util.ReflectUtil
+
+@ReflectUtil.ReflectClass("soko.ekibun.bangumi.api.bangumi.bean.UserInfo")
 data class UserInfo(
   var id: Int = 0,
   var username: String? = null,

@@ -2,15 +2,15 @@
  * @Author: czy0729
  * @Date: 2019-09-20 20:24:05
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-06-27 13:05:52
+ * @Last Modified time: 2020-07-06 14:42:16
  */
 import React from 'react'
 import { View } from 'react-native'
 import PropTypes from 'prop-types'
+import { observer } from 'mobx-react'
 import { Flex, Text, Image, Iconfont, Touchable, CountDown } from '@components'
 import { _ } from '@stores'
 import { formatNumber, getTimestamp } from '@utils'
-import { observer } from '@utils/decorators'
 import { tinygrailOSS, getCoverLarge, caculateICO } from '@utils/app'
 import { t } from '@utils/fetch'
 import Bar from './bar'
@@ -86,7 +86,7 @@ function Info(props, { $, navigation }) {
         下一等级需要 {formatNumber(next, 0)}
       </Text>
       <Text style={_.mt.sm} type='tinygrailPlain' align='center'>
-        预计发行量 约{formatNumber(amount, 0)}股 / 发行价 ₵{formatNumber(price)}
+        预计发行量 约{formatNumber(amount, 0)}股 / 发行价 {formatNumber(price)}
       </Text>
       <Bar style={_.mt.md} total={total} level={level} next={next} />
     </View>

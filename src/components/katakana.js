@@ -10,7 +10,7 @@
  * @Author: czy0729
  * @Date: 2020-06-16 13:53:11
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-06-30 20:12:33
+ * @Last Modified time: 2020-07-07 20:56:58
  */
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
@@ -118,6 +118,10 @@ export async function translateAll(str) {
 
 @observer
 class KatakanaProvider extends React.Component {
+  static defaultProps = {
+    itemStyle: undefined
+  }
+
   static childContextTypes = {
     lineHeightIncrease: PropTypes.number, // 用于往嵌套Text传递需要增大行高的标记
     onKatakana: PropTypes.func //  接受到匹配到片假名
@@ -279,7 +283,10 @@ class KatakanaProvider extends React.Component {
     // 在整串文字中, 取得每一个片假名的索引位置, 使用onLayout计算英文需要出现的位置
     const { style } = this.props
     return (
-      <Flex style={[styles.measure, style]} wrap='wrap'>
+      <Flex
+        style={style ? [styles.measure, style] : styles.measure}
+        wrap='wrap'
+      >
         {fullTextConfig.map(node => {
           const jpIndexMap = {}
           matches.forEach(
