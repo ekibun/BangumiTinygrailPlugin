@@ -197,6 +197,8 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation "com.facebook.react:react-native:+"  // From node_modules
+    implementation "com.umeng.umsdk:analytics:8.0.0"
+    implementation "com.umeng.umsdk:common:2.0.0"
     addUnimodulesDependencies()
 
     if (enableHermes) {

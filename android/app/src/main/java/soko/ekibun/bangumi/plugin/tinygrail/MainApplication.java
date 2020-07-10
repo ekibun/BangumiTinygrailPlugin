@@ -29,6 +29,10 @@ import javax.annotation.Nullable;
 import soko.ekibun.bangumi.plugin.tinygrail.generated.BasePackageList;
 import soko.ekibun.bangumi.plugin.tinygrail.main.TinygrailPackage;
 
+import soko.ekibun.bangumi.plugin.tinygrail.umeng.DplusReactPackage;
+import soko.ekibun.bangumi.plugin.tinygrail.umeng.RNUMConfigure;
+import com.umeng.commonsdk.UMConfigure;
+
 public class MainApplication extends Application implements ReactApplication {
   private final ReactModuleRegistryProvider mModuleRegistryProvider = new ReactModuleRegistryProvider(
     new BasePackageList().getPackageList()
@@ -44,6 +48,7 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       List<ReactPackage> packages = new PackageList(this).getPackages();
       packages.add(new TinygrailPackage());
+      packages.add(new DplusReactPackage());
       packages.add(new ModuleRegistryAdapter(mModuleRegistryProvider));
       return packages;
     }
@@ -86,6 +91,8 @@ public class MainApplication extends Application implements ReactApplication {
     if (!BuildConfig.DEBUG) {
       UpdatesController.initialize(this);
     }
+
+    RNUMConfigure.init(this, "5f0893db978eea0850afaa9d", "Umeng", UMConfigure.DEVICE_TYPE_PHONE, null);
   }
 
   /**
