@@ -3,9 +3,8 @@
     "start": "react-native start",
     "start:eject": "react-native start",
     "android:eject": "react-native run-android",
-    "build:android": "cd android && ./gradlew assembleRelease",
+    "build:android": "cd android && gradlew.bat assembleRelease --stacktrace",
     "build:ios": "expo build:ios -c",
-    "unlink": "react-native unlink react-native-gesture-handler",
     "ios": "react-native run-ios",
     "android": "react-native run-android"
   },
