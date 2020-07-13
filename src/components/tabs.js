@@ -49,7 +49,7 @@ function Tabs({
       >
         {children}
       </AntdTabs>
-      {IOS && children && <View style={styles.touchBlock} />}
+      {children && <View style={styles.touchBlock} />}
     </>
   )
 }

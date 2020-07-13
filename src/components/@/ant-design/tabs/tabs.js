@@ -3,7 +3,6 @@ import React from 'react'
 import {
   Animated,
   Dimensions,
-  Platform,
   View
 } from 'react-native'
 import Flex from '../../../flex'
@@ -164,16 +163,6 @@ export class Tabs extends React.PureComponent {
   }
 
   scrollTo = (index, animated = true) => {
-    if (Platform.OS === 'android') {
-      if (this.viewPager) {
-        if (animated) {
-          this.viewPager.setPage(index)
-        } else {
-          this.viewPager.setPageWithoutAnimation(index)
-        }
-        return
-      }
-    }
     const { containerWidth } = this.state
     if (containerWidth) {
       const offset = index * containerWidth
