@@ -1,7 +1,7 @@
 /*
  * @Author: czy0729
  * @Date: 2019-05-17 21:53:14
- * @Last Modified by: czy0729
+ * @Last Modified by: ekibun
  * @Last Modified time: 2020-07-02 21:00:02
  */
 import { observable, computed } from 'mobx'
@@ -77,7 +77,7 @@ class System extends store {
     if (!DEV) {
       setTimeout(() => {
         this.fetchOTA()
-        this.fetchRelease()
+        // this.fetchRelease()
       }, 4000)
     }
 
