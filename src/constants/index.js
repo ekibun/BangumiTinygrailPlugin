@@ -4,19 +4,19 @@
  * @Author: czy0729
  * @Date: 2019-02-22 01:25:31
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-07-12 21:21:39
+ * @Last Modified time: 2020-07-17 11:27:49
  */
 import { Platform } from 'react-native'
 
+const expoPackageJson = require('@/node_modules/expo/package.json')
 const appJson = require('@/app.json')
 
-/* ==================== DEV ==================== */
-export const SDK = parseInt(appJson.expo.sdkVersion.split(',')[0]) // 打包apk和bangumi-ios-test线上expo使用35, 打包ipa提审需至少使用37
-export const BUNDLE_IDENTIFIER = appJson.name
-export const DEV = false // 是否开发模式
-export const BARE = true // 裸工作流
-export const VERSION_GITHUB_RELEASE = '3.8.0' // 版本号
-export const VERSION_TINYGRAIL_PLUGIN = '2.5.0'
+export const DEV = global.__DEV__ // 是否开发模式
+export const SDK = parseInt(expoPackageJson.version.split(',')[0]) // 打包apk和bangumi-ios-test线上expo使用35, 打包ipa提审需至少使用37
+export const BUNDLE_IDENTIFIER = appJson.name // Expo线上预览唯一标识
+export const VERSION_GITHUB_RELEASE = appJson.expo.version // 版本号
+export const VERSION_TINYGRAIL_PLUGIN = appJson.expo.versionTinygrail // 小圣杯助手版本
+export const BARE = true // 裸工作流 (已稳定脱离, 待废弃)
 
 /* ==================== BASE ==================== */
 // HOST
@@ -26,6 +26,7 @@ export const HOST_2 = 'https://bangumi.tv' // 备用域名
 export const HOST_3 = 'https://chii.in'
 export const HOST_NING_MOE = 'https://www.ningmoe.com' // 柠萌瞬间地址
 export const HOST_ANITAMA = 'https://app.anitama.net' // Anitama api地址
+export const HOST_MANGA = 'https://a402731062.gitee.io/manga'
 
 // URL
 export const URL_OAUTH = `${HOST}/oauth/authorize` // 登陆v1.0 oauth地址

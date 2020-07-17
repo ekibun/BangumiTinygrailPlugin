@@ -2,7 +2,7 @@
  * @Author: czy0729
  * @Date: 2019-03-29 10:38:12
  * @Last Modified by: ekibun
- * @Last Modified time: 2020-06-11 11:57:04
+ * @Last Modified time: 2020-07-17 11:03:58
  */
 import {
   createAppContainer,
@@ -40,7 +40,7 @@ import {
   TinygrailTreeRich,
   TinygrailValhall
 } from '@screens'
-import navigationsParams from '../../navigations'
+import navigationsParams from '@/config'
 import config from './stacks/config'
 
 const HomeStack = createStackNavigator(

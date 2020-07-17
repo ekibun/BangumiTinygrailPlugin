@@ -2,7 +2,7 @@
  * 支持各种属性设置的文本
  * @Author: czy0729
  * @Date: 2019-03-15 06:11:55
- * @Last Modified by: czy0729
+ * @Last Modified by: ekibun
  * @Last Modified time: 2020-07-09 13:50:30
  */
 import React from 'react'

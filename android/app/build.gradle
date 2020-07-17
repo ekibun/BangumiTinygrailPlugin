@@ -125,12 +125,10 @@ def jscFlavor = 'org.webkit:android-jsc:+'
  */
 def enableHermes = project.ext.react.get("enableHermes", false);
 
-def cmd = "git rev-list HEAD --count"
-def gitVersion = cmd.execute().text.trim().toInteger()
-
-static def getAlphaVersionName() {
-  "alpha" + new Date().format("yyyyMMdd")
-}
+def gitVersion = "git rev-list HEAD --count".execute().text.trim().toInteger()
+println "VersionCode: " + gitVersion
+def expoVersionName = "node -p require('../app.json').expo.version".execute().text.trim()
+println "VersionName: " + expoVersionName
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
@@ -145,7 +143,7 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode gitVersion
-        versionName getAlphaVersionName()
+        versionName expoVersionName
     }
     splits {
         abi {
