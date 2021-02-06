@@ -1,4 +1,3 @@
-/* eslint-disable no-cond-assign, no-bitwise */
 /*
  * jsDelivr CDN
  *  - 每日放送
@@ -10,43 +9,44 @@
  * @Author: czy0729
  * @Date: 2020-01-17 11:59:14
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-07-15 21:25:54
+ * @Last Modified time: 2021-01-21 00:55:50
  */
 import { getTimestamp } from '@utils'
-import { getOTA } from '@utils/app'
+import { getSystemStoreAsync } from '@utils/async'
+import _hash from '@utils/thirdParty/hash'
+import hashSubject from '@constants/json/hash/subject.json'
+import hashAvatar from '@constants/json/hash/avatar.json'
 import { SDK } from './index'
-import { HASH_AVATAR, HASH_SUBJECT } from './hash'
 
 export const HOST_CDN = 'https://cdn.jsdelivr.net'
 
-const VERSION_MONO = '20200502'
-const VERSION_SUBJECT = '20200615'
-const VERSION_OSS = '20200615'
-const VERSION_AVATAR = '20200712'
-const VERSION_STATIC = '20200715'
-const VERSION_RAKUEN = '20200712'
-
-const I64BIT_TABLE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-'.split(
-  ''
-)
-export function hash(input) {
-  let hash = 5381
-  let i = input.length - 1
-
-  if (typeof input == 'string') {
-    for (; i > -1; i -= 1) hash += (hash << 5) + input.charCodeAt(i)
-  } else {
-    for (; i > -1; i -= 1) hash += (hash << 5) + input[i]
-  }
-  let value = hash & 0x7fffffff
-
-  let retValue = ''
-  do {
-    retValue += I64BIT_TABLE[value & 0x3f]
-  } while ((value >>= 6))
-
-  return retValue
+/**
+ * 获取设置
+ */
+export function getOTA() {
+  return getSystemStoreAsync().ota
 }
+
+export const VERSION_STATIC = '20210113'
+export const VERSION_RAKUEN = '20210113'
+export const VERSION_AVATAR = '20210113'
+export const VERSION_OSS = '20210113'
+export const VERSION_SUBJECT = '20210113'
+export const VERSION_MONO = '20201216'
+export const VERSION_ANIME = '20201126'
+export const VERSION_WENKU = '20200927'
+export const VERSIONS_AVATAR = [
+  '20201213',
+  '20201018',
+  '20200712',
+  '20200502',
+  '1.0.2'
+]
+
+/**
+ * 对图片完整地址进行哈希计算
+ */
+export const hash = _hash
 
 /**
  * 每日放送
@@ -119,17 +119,34 @@ export const CDN_RAKUEN = (topicId, type = 'topic') => {
 }
 
 /**
+ * 某用户的超展开
+ * @url https://github.com/czy0729/Bangumi-Rakuen
+ * @param {*} userId
+ */
+export const CDN_RAKUEN_USER_TOPICS = userId => {
+  const ota = getOTA()
+  const version =
+    parseInt(ota.VERSION_RAKUEN) > parseInt(VERSION_RAKUEN)
+      ? ota.VERSION_RAKUEN
+      : VERSION_RAKUEN
+
+  return `${HOST_CDN}/gh/czy0729/Bangumi-Rakuen@${version}/data/user/${String(
+    userId
+  ).slice(0, 1)}/${userId}.json`
+}
+
+/**
  * 头像CDN
  * @url https://github.com/czy0729/Bangumi-OSS
  */
-const avatarCache = {}
+const cacheAvatar = {}
 export const CDN_OSS_AVATAR = src => {
   if (typeof src !== 'string') {
     return src
   }
 
-  if (avatarCache[src]) {
-    return avatarCache[src]
+  if (cacheAvatar[src]) {
+    return cacheAvatar[src]
   }
 
   // 修正图片地址
@@ -139,12 +156,8 @@ export const CDN_OSS_AVATAR = src => {
   }
   _src = _src.replace('http://', 'https://')
 
-  /**
-   * 计算图片hash, 之后查询在不在OSS缓存里面
-   * 计算规则: 带https://开头, 使用/m/质量, 去掉?后面的参数
-   */
   const _hash = hash(_src)
-  if (_hash in HASH_AVATAR) {
+  if (_hash in hashAvatar) {
     const ota = getOTA()
     const version =
       parseInt(ota.VERSION_AVATAR) > parseInt(VERSION_AVATAR)
@@ -153,11 +166,11 @@ export const CDN_OSS_AVATAR = src => {
 
     const path = _hash.slice(0, 1).toLocaleLowerCase()
     const cdnSrc = `${HOST_CDN}/gh/czy0729/Bangumi-OSS@${version}/data/avatar/m/${path}/${_hash}.jpg`
-    avatarCache[src] = cdnSrc
+    cacheAvatar[src] = cdnSrc
     return cdnSrc
   }
 
-  avatarCache[src] = src
+  cacheAvatar[src] = src
   return src
 }
 
@@ -165,14 +178,14 @@ export const CDN_OSS_AVATAR = src => {
  * 条目封面CDN
  * @url https://github.com/czy0729/Bangumi-OSS
  */
-const subjectCache = {}
+const cacheSubject = {}
 export const CDN_OSS_SUBJECT = src => {
   if (typeof src !== 'string') {
     return src
   }
 
-  if (subjectCache[src]) {
-    return subjectCache[src]
+  if (cacheSubject[src]) {
+    return cacheSubject[src]
   }
 
   // 修正图片地址
@@ -182,12 +195,8 @@ export const CDN_OSS_SUBJECT = src => {
   }
   _src = _src.replace('http://', 'https://')
 
-  /**
-   * 计算图片hash, 之后查询在不在OSS缓存里面
-   * 计算规则: 带https://开头, 使用/c/质量, 去掉?后面的参数
-   */
   const _hash = hash(_src)
-  if (_hash in HASH_SUBJECT) {
+  if (_hash in hashSubject) {
     const ota = getOTA()
     const version =
       parseInt(ota.VERSION_OSS) > parseInt(VERSION_OSS)
@@ -196,11 +205,11 @@ export const CDN_OSS_SUBJECT = src => {
 
     const path = _hash.slice(0, 1).toLocaleLowerCase()
     const cdnSrc = `${HOST_CDN}/gh/czy0729/Bangumi-OSS@${version}/data/subject/c/${path}/${_hash}.jpg`
-    subjectCache[src] = cdnSrc
+    cacheSubject[src] = cdnSrc
     return cdnSrc
   }
 
-  subjectCache[src] = src
+  cacheSubject[src] = src
   return src
 }
 
@@ -216,7 +225,37 @@ export const CDN_DISCOVERY_HOME = () => {
       ? ota.VERSION_STATIC
       : VERSION_STATIC
 
-  return `${HOST_CDN}/gh/czy0729/Bangumi-Static@${version}/data/discovery/index.json`
+  return `${HOST_CDN}/gh/czy0729/Bangumi-Static@${version}/data/discovery/home.json`
+}
+
+/**
+ * 找番剧数据
+ * @url https://github.com/czy0729/Bangumi-Static
+ * @param {*} version
+ */
+export const CDN_STATIC_ANIME = () => {
+  const ota = getOTA()
+  const version =
+    parseInt(ota.VERSION_STATIC) > parseInt(VERSION_STATIC)
+      ? ota.VERSION_STATIC
+      : VERSION_STATIC
+
+  return `${HOST_CDN}/gh/czy0729/Bangumi-Static@${version}/data/agefans/anime.json`
+}
+
+/**
+ * 找文库数据
+ * @url https://github.com/czy0729/Bangumi-Static
+ * @param {*} version
+ */
+export const CDN_STATIC_WENKU = () => {
+  const ota = getOTA()
+  const version =
+    parseInt(ota.VERSION_STATIC) > parseInt(VERSION_STATIC)
+      ? ota.VERSION_STATIC
+      : VERSION_STATIC
+
+  return `${HOST_CDN}/gh/czy0729/Bangumi-Static@${version}/data/wenku8/wenku.json`
 }
 
 /**
@@ -233,4 +272,14 @@ export const CDN_AWARD = year => {
   return `${HOST_CDN}/gh/czy0729/Bangumi-Static@${version}/data/award/${year}${
     SDK >= 36 ? '.expo' : ''
   }.json`
+}
+
+export const CDN_HD = subjectId => {
+  const ota = getOTA()
+  return `${HOST_CDN}/${ota.SITE_HD}/${subjectId}/index.json`
+}
+
+export const CDN_HD_OBJECT = (subjectId, vol) => {
+  const ota = getOTA()
+  return `${HOST_CDN}/${ota.SITE_HD}/${subjectId}/${vol}/cover.jpg`
 }

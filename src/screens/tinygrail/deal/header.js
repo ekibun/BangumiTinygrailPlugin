@@ -2,17 +2,16 @@
  * @Author: czy0729
  * @Date: 2019-09-10 20:58:38
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-06-27 14:00:23
+ * @Last Modified time: 2021-01-27 10:12:49
  */
 import React from 'react'
 import { View } from 'react-native'
-import PropTypes from 'prop-types'
 import { Flex, Text } from '@components'
 import { Avatar, IconBack } from '@screens/_'
 import { _ } from '@stores'
 import { toFixed } from '@utils'
 import { tinygrailOSS } from '@utils/app'
-import { observer } from '@utils/decorators'
+import { obc } from '@utils/decorators'
 import { t } from '@utils/fetch'
 
 function Header(props, { $, navigation }) {
@@ -32,6 +31,7 @@ function Header(props, { $, navigation }) {
     fluctuationText = `${toFixed(fluctuation, 2)}%`
   }
 
+  const { subject, r } = $.relation
   return (
     <View>
       {_.isPad && (
@@ -51,45 +51,69 @@ function Header(props, { $, navigation }) {
                 color={_.colorTinygrailPlain}
               />
             )}
-            <Avatar
-              style={styles.avatar}
-              src={tinygrailOSS(icon)}
-              size={32}
-              borderColor='transparent'
-              name={name}
-              onPress={() => {
-                t('交易.跳转', {
-                  to: 'Mono',
-                  monoId: $.monoId
-                })
+            {!!icon && (
+              <Avatar
+                style={styles.avatar}
+                src={tinygrailOSS(icon)}
+                size={32}
+                borderColor='transparent'
+                name={name}
+                onPress={() => {
+                  t('交易.跳转', {
+                    to: 'Mono',
+                    monoId: $.monoId
+                  })
 
-                navigation.push('Mono', {
-                  monoId: `character/${$.monoId}`
-                })
-              }}
-            />
+                  navigation.push('Mono', {
+                    monoId: `character/${$.monoId}`,
+                    _name: name
+                  })
+                }}
+              />
+            )}
             <Flex.Item style={_.ml.sm}>
               <Flex>
-                <Text type='tinygrailPlain' numberOfLines={1} bold>
+                <Text type='tinygrailPlain' size={13} numberOfLines={1} bold>
                   {name}
                   {!!bonus && (
-                    <Text type='warning' size={12} lineHeight={14}>
+                    <Text type='warning' size={12} lineHeight={13}>
                       {' '}
                       x{bonus}
                     </Text>
                   )}
-                  <Text type='ask' size={12} lineHeight={14}>
+                  <Text type='ask' size={12} lineHeight={13}>
                     {' '}
                     lv{level}
                   </Text>
                 </Text>
-                <Text style={_.ml.sm} type={color} align='center'>
+                <Text
+                  style={_.ml.xs}
+                  type={color}
+                  size={12}
+                  lineHeight={13}
+                  align='center'
+                >
                   {fluctuationText}
                 </Text>
               </Flex>
-              <Text type='tinygrailText' size={12} lineHeight={13}>
+              <Text type='tinygrailText' size={11} lineHeight={13}>
                 #{$.monoId} / +{toFixed(rate, 2)} / +
                 {toFixed(rate * (level + 1) * 0.3, 2)}
+                {!!subject && (
+                  <Text
+                    type='tinygrailText'
+                    size={11}
+                    onPress={() => {
+                      navigation.push('TinygrailRelation', {
+                        ids: r,
+                        name: `${subject} (${r.length})`
+                      })
+                    }}
+                  >
+                    {' '}
+                    [关联]
+                  </Text>
+                )}
               </Text>
             </Flex.Item>
           </Flex>
@@ -97,7 +121,7 @@ function Header(props, { $, navigation }) {
         <Text
           style={styles.sacrifice}
           type='tinygrailText'
-          size={15}
+          size={13}
           onPress={() => {
             t('交易.跳转', {
               to: 'TinygrailSacrifice',
@@ -121,7 +145,7 @@ function Header(props, { $, navigation }) {
         <Text
           style={styles.trade}
           type='tinygrailText'
-          size={15}
+          size={13}
           onPress={() => {
             t('交易.跳转', {
               to: 'TinygrailTrade',
@@ -147,12 +171,7 @@ function Header(props, { $, navigation }) {
   )
 }
 
-Header.contextTypes = {
-  $: PropTypes.object,
-  navigation: PropTypes.object
-}
-
-export default observer(Header)
+export default obc(Header)
 
 const memoStyles = _.memoStyles(_ => ({
   container: {
@@ -170,6 +189,7 @@ const memoStyles = _.memoStyles(_ => ({
     left: _._wind
   },
   avatar: {
+    marginLeft: -_.sm,
     backgroundColor: _.tSelect(_._colorDarkModeLevel2, _.colorTinygrailBg)
   },
   sacrifice: {

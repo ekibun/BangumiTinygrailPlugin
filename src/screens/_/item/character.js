@@ -2,7 +2,7 @@
  * @Author: czy0729
  * @Date: 2020-05-21 17:08:10
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-06-26 16:56:53
+ * @Last Modified time: 2020-12-18 22:28:36
  */
 import React from 'react'
 import { View } from 'react-native'
@@ -33,19 +33,21 @@ function ItemCharacter(
     actorId,
     actorCover,
     actor,
-    actorCn
+    actorCn,
+    children
   },
   { navigation }
 ) {
   const styles = memoStyles()
   const isFirst = index === 0
   const onPress = () => {
+    const monoId = String(id).includes(type) ? id : `${type}/${id}`
     t(event.id, {
       to: 'Mono',
-      monoId: `${type}/${id}`
+      monoId
     })
     navigation.push('Mono', {
-      monoId: `${type}/${id}`,
+      monoId,
       _name: nameCn,
       _jp: name,
       _image: cover
@@ -85,7 +87,7 @@ function ItemCharacter(
                         </Text>
                       )}
                       {!!replies && (
-                        <Text type='main' size={13} lineHeight={15}>
+                        <Text type='main' size={12} lineHeight={15}>
                           {' '}
                           {replies}
                         </Text>
@@ -95,7 +97,7 @@ function ItemCharacter(
                   {!!position && <Tag style={_.ml.sm} value={position} />}
                 </Flex>
                 {!!info && (
-                  <Text style={_.mt.sm} size={12}>
+                  <Text style={_.mt.xs} size={12}>
                     {HTMLDecode(info)}
                   </Text>
                 )}
@@ -106,13 +108,16 @@ function ItemCharacter(
             <Touchable
               style={_.mt.md}
               onPress={() => {
+                const monoId = String(actorId).includes('person')
+                  ? actorId
+                  : `person/${actorId}`
                 t(event.id, {
                   to: 'Mono',
-                  monoId: `person/${actorId}`
+                  monoId
                 })
 
                 navigation.push('Mono', {
-                  monoId: `person/${actorId}`
+                  monoId
                 })
               }}
             >
@@ -122,7 +127,7 @@ function ItemCharacter(
                   <Text size={12} numberOfLines={1} bold lineHeight={13}>
                     {actor}
                   </Text>
-                  {!!actorCn && (
+                  {!!actorCn && actorCn !== actor && (
                     <Text size={12} type='sub' numberOfLines={1}>
                       {actorCn}
                     </Text>
@@ -133,6 +138,7 @@ function ItemCharacter(
           )}
         </Flex.Item>
       </Flex>
+      {children}
     </View>
   )
 }

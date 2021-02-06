@@ -2,76 +2,49 @@
  * @Author: czy0729
  * @Date: 2019-03-29 10:38:12
  * @Last Modified by: ekibun
- * @Last Modified time: 2020-07-17 11:03:58
+ * @Last Modified time: 2021-01-22 11:49:37
  */
+// import React from 'react'
 import {
-  createAppContainer,
-  createStackNavigator
+  // createAppContainer,
+  createStackNavigator,
+  // getActiveChildNavigationOptions
 } from 'react-navigation'
 import { BackHandler, NativeModules } from 'react-native';
-import { log } from '@utils/dev';
+import createAppContainer from '@components/@/react-navigation/createAppContainer'
+// import { createBottomTabNavigator } from 'react-navigation-tabs'
+// import { observer } from 'mobx-react'
+import * as Screens from '@screens'
+import navigationsParams, { initialRouteName } from '@/config'
+// import TabBarComponent from './tab-bar-component'
+import config from './config'
+// import HomeScreen from './home-screen'
+import { navigateOnce } from './utils'
 
-import {
-  Qiafan,
-  Setting,
-  Tinygrail,
-  TinygrailAdvance,
-  TinygrailAdvanceAsk,
-  TinygrailAdvanceAuction,
-  TinygrailAdvanceAuction2,
-  TinygrailAdvanceBid,
-  TinygrailAdvanceSacrifice,
-  TinygrailBid,
-  TinygrailCharaAssets,
-  TinygrailDeal,
-  TinygrailICO,
-  TinygrailICODeal,
-  TinygrailItems,
-  TinygrailLogs,
-  TinygrailNew,
-  TinygrailOverview,
-  TinygrailRich,
-  TinygrailSacrifice,
-  TinygrailSearch,
-  TinygrailTemples,
-  TinygrailTopWeek,
-  TinygrailTrade,
-  TinygrailTree,
-  TinygrailTreeRich,
-  TinygrailValhall
-} from '@screens'
-import navigationsParams from '@/config'
-import config from './stacks/config'
+// const HomeTab = observer(
+//   createBottomTabNavigator(
+//     {
+//       Discovery: Screens.Discovery,
+//       Timeline: Screens.Timeline,
+//       Home: HomeScreen,
+//       Rakuen: Screens.Rakuen,
+//       User: Screens.User
+//     },
+//     {
+//       initialRouteName,
+//       tabBarComponent: props => <TabBarComponent {...props} />,
+//       navigationOptions: ({ navigation, screenProps }) =>
+//         getActiveChildNavigationOptions(navigation, screenProps),
+//       animationEnabled: false
+//       // lazy: false
+//     }
+//   )
+// )
 
 const HomeStack = createStackNavigator(
   {
-    Qiafan,
-    Setting,
-    Tinygrail,
-    TinygrailAdvance,
-    TinygrailAdvanceAsk,
-    TinygrailAdvanceAuction,
-    TinygrailAdvanceAuction2,
-    TinygrailAdvanceBid,
-    TinygrailAdvanceSacrifice,
-    TinygrailBid,
-    TinygrailCharaAssets,
-    TinygrailDeal,
-    TinygrailICO,
-    TinygrailICODeal,
-    TinygrailItems,
-    TinygrailLogs,
-    TinygrailNew,
-    TinygrailOverview,
-    TinygrailRich,
-    TinygrailSacrifice,
-    TinygrailSearch,
-    TinygrailTemples,
-    TinygrailTopWeek,
-    TinygrailTrade,
-    TinygrailTree,
-    TinygrailTreeRich,
-    TinygrailValhall
+    ...Screens,
+    // HomeTab
   },
   {
     ...navigationsParams,
@@ -108,5 +81,9 @@ HomeStack.router.getStateForAction = (action, state) => {
   return defaultGetStateForAction(action, state)
 }
 
+const MainNavigator = createAppContainer(HomeStack)
+MainNavigator.router.getStateForAction = navigateOnce(
+  MainNavigator.router.getStateForAction
+)
 
-export default createAppContainer(HomeStack)
+export default MainNavigator

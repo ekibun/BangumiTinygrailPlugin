@@ -2,13 +2,13 @@
  * @Author: czy0729
  * @Date: 2019-09-20 00:46:18
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-05-03 04:19:37
+ * @Last Modified time: 2020-11-01 18:22:25
  */
 import { observable, computed } from 'mobx'
-import { tinygrailStore, userStore } from '@stores'
+import { tinygrailStore, userStore, systemStore } from '@stores'
 import { getTimestamp } from '@utils'
 import store from '@utils/store'
-import { info } from '@utils/ui'
+import { info, feedback } from '@utils/ui'
 import { t } from '@utils/fetch'
 
 export default class ScreenTinygrailICODeal extends store {
@@ -43,6 +43,10 @@ export default class ScreenTinygrailICODeal extends store {
   }
 
   // -------------------- get --------------------
+  @computed get short() {
+    return systemStore.setting.xsbShort
+  }
+
   @computed get monoId() {
     const { monoId = '' } = this.params
     return monoId.replace('character/', '')
@@ -94,6 +98,7 @@ export default class ScreenTinygrailICODeal extends store {
       id: icoId,
       amount
     })
+    feedback()
 
     if (!result) {
       info('注资失败')

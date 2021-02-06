@@ -2,7 +2,7 @@
  * @Author: czy0729
  * @Date: 2019-06-22 15:44:31
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-05-23 22:43:57
+ * @Last Modified time: 2020-12-04 14:02:25
  */
 import { observable } from 'mobx'
 import { getTimestamp } from '@utils'
@@ -10,7 +10,7 @@ import store from '@utils/store'
 import { fetchHTML } from '@utils/fetch'
 import { log } from '@utils/dev'
 import { HTMLDecode } from '@utils/html'
-import { LIST_EMPTY, HOST_NING_MOE, HOST_ANITAMA } from '@constants'
+import { HOST, LIST_EMPTY, HOST_NING_MOE, HOST_ANITAMA } from '@constants'
 import {
   HTML_TAGS,
   HTML_CATALOG,
@@ -116,7 +116,9 @@ class Discovery extends store {
       game: INIT_CHANNEL,
       music: INIT_CHANNEL,
       real: INIT_CHANNEL
-    }
+    },
+
+    online: 0
   })
 
   init = () =>
@@ -128,7 +130,8 @@ class Discovery extends store {
         'catalogDetail',
         'blog',
         'blogReaded',
-        'channel'
+        'channel',
+        'online'
       ],
       NAMESPACE
     )
@@ -140,7 +143,7 @@ class Discovery extends store {
    */
   fetchRandom = async refresh => {
     const url = `${HOST_NING_MOE}/api/get_random_bangumi`
-    log(`[fetch] 柠萌动漫随便看看 ${url}`)
+    log(`⚡️ 柠萌动漫随便看看 ${url}`)
 
     try {
       const { list, pagination } = this.random
@@ -194,7 +197,7 @@ class Discovery extends store {
    */
   fetchNingMoeDetailBySearch = async ({ keyword }) => {
     const url = `${HOST_NING_MOE}/api/search`
-    log(`[fetch] 搜索柠萌动漫信息 ${url}, ${keyword}`)
+    log(`⚡️ 搜索柠萌动漫信息 ${url}, ${keyword}`)
 
     try {
       const data = await fetch(url, {
@@ -243,7 +246,7 @@ class Discovery extends store {
    */
   fetchNingMoeDetail = async ({ id, bgmId }) => {
     const url = `${HOST_NING_MOE}/api/get_bangumi`
-    log(`[fetch] 查询柠萌动漫信息 ${url}`)
+    log(`⚡️ 查询柠萌动漫信息 ${url}`)
 
     try {
       const data = await fetch(url, {
@@ -289,7 +292,7 @@ class Discovery extends store {
    */
   fetchNingMoeRealYunUrl = async ({ url }) => {
     const _url = `${HOST_NING_MOE}/api/get_real_yun_url`
-    log(`[fetch] 查询真正的云盘地址 ${_url}`)
+    log(`⚡️ 查询真正的云盘地址 ${_url}`)
 
     try {
       const data = await fetch(_url, {
@@ -318,7 +321,7 @@ class Discovery extends store {
    */
   fetchAnitamaTimeline = async (page = 1) => {
     const url = `${HOST_ANITAMA}/timeline?pageNo=${page}`
-    log(`[fetch] Anitama文章列表 ${url}`)
+    log(`⚡️ Anitama文章列表 ${url}`)
 
     let animataTimeline = INIT_ANITAMA_TIMELINE_ITEM
     try {
@@ -480,6 +483,23 @@ class Discovery extends store {
     this.setStorage(key, undefined, NAMESPACE)
 
     return this.channel(type)
+  }
+
+  fetchOnline = async () => {
+    const key = 'online'
+    const html = await fetchHTML({
+      url: HOST
+    })
+
+    const match = html.match(/<small class="grey rr">online: (\d+)<\/small>/)
+    if (match && match[1]) {
+      this.setState({
+        [key]: parseInt(match[1])
+      })
+      this.setStorage(key, undefined, NAMESPACE)
+    }
+
+    return this.online
   }
 
   // -------------------- page --------------------

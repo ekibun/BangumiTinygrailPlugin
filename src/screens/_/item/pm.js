@@ -2,15 +2,17 @@
  * @Author: czy0729
  * @Date: 2020-02-02 04:15:38
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-06-14 16:58:27
+ * @Last Modified time: 2021-01-30 14:38:03
  */
 import React from 'react'
 import { observer } from 'mobx-react'
 import { Flex, Text, Touchable } from '@components'
 import { _ } from '@stores'
 import { t } from '@utils/fetch'
+import { HTMLDecode } from '@utils/html'
 import { EVENT } from '@constants'
 import Avatar from '../base/avatar'
+import Name from '../base/name'
 
 function ItemPM({
   navigation,
@@ -37,7 +39,9 @@ function ItemPM({
         src={avatar}
         event={event}
       />
-      <Flex.Item style={[styles.item, !!index && styles.border, _.ml.sm]}>
+      <Flex.Item
+        style={[styles.item, !!index && !_.flat && styles.border, _.ml.sm]}
+      >
         <Touchable
           onPress={() => {
             t(event.id, {
@@ -58,17 +62,26 @@ function ItemPM({
         >
           <Flex>
             <Flex.Item>
-              <Text size={13} type='title' bold>
-                {name}{' '}
-                <Text size={11} lineHeight={13} type='sub'>
-                  {time}
-                </Text>
-              </Text>
-              <Text style={_.mt.xs} lineHeight={1.8} type='main' bold>
+              <Name
+                userId={userId}
+                showFriend
+                size={13}
+                type='title'
+                bold
+                right={
+                  <Text size={11} lineHeight={13} type='sub'>
+                    {' '}
+                    {time}
+                  </Text>
+                }
+              >
+                {name}
+              </Name>
+              <Text style={_.mt.xs} type='main' bold>
                 {title}
               </Text>
-              <Text size={13} lineHeight={1.8} type='title'>
-                {content}
+              <Text style={_.mt.sm} size={13} lineHeight={16} type='title'>
+                {HTMLDecode(content)}
               </Text>
             </Flex.Item>
             {isNew && (

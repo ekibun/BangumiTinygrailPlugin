@@ -2,18 +2,26 @@
  * @Author: czy0729
  * @Date: 2019-05-01 16:57:57
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-06-26 17:41:48
+ * @Last Modified time: 2021-01-25 11:23:27
  */
 import React from 'react'
 import { View } from 'react-native'
 import { computed } from 'mobx'
 import PropTypes from 'prop-types'
-import { StatusBarEvents, Popover, Menu, Flex, Iconfont, UM } from '@components'
+import {
+  StatusBarEvents,
+  Popover,
+  Menu,
+  Flex,
+  Iconfont,
+  UM,
+  Heatmap
+} from '@components'
 import { IconBack } from '@screens/_'
 import { _ } from '@stores'
 import { gradientColor } from '@utils'
 import { IOS, BARE } from '@constants'
-import observer from './observer'
+import ob from './observer-props'
 
 const defaultHeaderStyle = {
   backgroundColor: 'transparent'
@@ -33,9 +41,10 @@ const withTransitionHeader = ({
   colorStart,
   colorEnd = _.colorTitleRaw, // 黑暗模式, end也是白色
   transparent = false,
-  barStyle
+  barStyle,
+  hm
 } = {}) => ComposedComponent =>
-  observer(
+  ob(
     class withTransitionHeaderComponent extends React.Component {
       static navigationOptions = ({ navigation }) => {
         const headerStyle = navigation.getParam('headerStyle')
@@ -48,6 +57,7 @@ const withTransitionHeader = ({
 
         let headerRight
         const extra = navigation.getParam('extra')
+        const heatmap = navigation.getParam('heatmap')
         const popover = navigation.getParam('popover', {
           data: [],
           onSelect: Function.prototype
@@ -79,6 +89,7 @@ const withTransitionHeader = ({
                 {...popoverProps}
               >
                 <Iconfont size={24} name='more' color={headerTintColor} />
+                {!!heatmap && <Heatmap id={heatmap} />}
               </Popover>
             </Flex>
           )
@@ -234,6 +245,9 @@ const withTransitionHeader = ({
               navigation={navigation}
               onScroll={this.headerTransitionCallback}
             />
+            {!!hm?.[1] && (
+              <Heatmap bottom={_.bottom + _.sm} id={screen} screen={hm[1]} />
+            )}
           </>
         )
       }

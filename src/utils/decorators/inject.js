@@ -3,13 +3,14 @@
  * @Author: czy0729
  * @Date: 2019-03-27 13:18:04
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-07-06 14:17:42
+ * @Last Modified time: 2021-01-25 11:28:04
  */
 import React from 'react'
-import PropTypes from 'prop-types'
-import { observer } from 'mobx-react'
+import { NavigationEvents } from 'react-navigation'
 import Stores from '@stores'
+import { DEV, contextTypes } from '@constants'
 import { urlStringify } from '../index'
+import observer from './observer'
 
 /**
  * App HOC
@@ -21,10 +22,7 @@ const Inject = (Store, { cache = true } = {}) => ComposedComponent =>
     class InjectComponent extends React.Component {
       static navigationOptions = ComposedComponent.navigationOptions
 
-      static childContextTypes = {
-        $: PropTypes.object,
-        navigation: PropTypes.object
-      }
+      static childContextTypes = contextTypes
 
       constructor(props) {
         super(props)
@@ -45,7 +43,7 @@ const Inject = (Store, { cache = true } = {}) => ComposedComponent =>
         // storeKey约定为路由名字 + 参数(排除_开头的key)的序列化
         const screenKey = `${state.routeName}?${urlStringify(params)}`
         this.$ = Stores.get(screenKey)
-        if (!this.$) {
+        if (!this.$ || DEV) {
           this.$ = new Store() // 新建store
           // this.$.setup() // store约定初始化
 
@@ -60,6 +58,10 @@ const Inject = (Store, { cache = true } = {}) => ComposedComponent =>
         }
       }
 
+      state = {
+        isFocused: true
+      }
+
       $ // 页面独立状态机引用
 
       getChildContext() {
@@ -70,8 +72,33 @@ const Inject = (Store, { cache = true } = {}) => ComposedComponent =>
         }
       }
 
+      onWillFocus = () => {
+        if (!this.state.isFocused) {
+          this.setState({
+            isFocused: true
+          })
+        }
+      }
+
+      onWillBlur = () => {
+        if (this.state.isFocused) {
+          this.setState({
+            isFocused: false
+          })
+        }
+      }
+
       render() {
-        return <ComposedComponent />
+        const { isFocused } = this.state
+        return (
+          <>
+            <ComposedComponent isFocused={isFocused} />
+            <NavigationEvents
+              onWillFocus={this.onWillFocus}
+              onWillBlur={this.onWillBlur}
+            />
+          </>
+        )
       }
     }
   )

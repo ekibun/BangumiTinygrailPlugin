@@ -2,15 +2,22 @@
  * @Author: czy0729
  * @Date: 2019-11-17 12:11:10
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-05-03 04:17:52
+ * @Last Modified time: 2020-11-26 17:52:40
  */
 import { Alert } from 'react-native'
 import { observable, computed } from 'mobx'
-import { tinygrailStore } from '@stores'
-import { setStorage, getTimestamp, formatNumber, toFixed } from '@utils'
+import { tinygrailStore, systemStore } from '@stores'
+import {
+  setStorage,
+  getStorage,
+  getTimestamp,
+  formatNumber,
+  toFixed
+} from '@utils'
 import store from '@utils/store'
 import { queue, t } from '@utils/fetch'
-import { info } from '@utils/ui'
+import { info, feedback } from '@utils/ui'
+import XSBRelationData from '@constants/json/xsb-relation'
 
 const namespace = 'ScreenTinygrailSacrifice'
 const excludeState = {
@@ -21,20 +28,30 @@ const excludeState = {
   auctionAmount: 0,
   auctionPrice: 0
 }
+const initLastAuction = {
+  price: '',
+  amount: '',
+  time: 0
+}
+const initLastSacrifice = {
+  amount: '',
+  total: '',
+  time: 0
+}
 
 export default class ScreenTinygrailSacrifice extends store {
   state = observable({
+    // 页面全局
     showCover: true, // 显示封面
     showLogs: true, // 显示记录
     showTemples: true, // 显示圣殿
     showUsers: true, // 显示董事会
     ...excludeState,
-    lastAuction: {
-      price: '',
-      amount: '',
-      time: 0
-    },
-    loading: false
+    loading: false,
+
+    // 角色独立
+    lastAuction: initLastAuction,
+    lastSacrifice: initLastSacrifice
   })
 
   init = async () => {
@@ -42,19 +59,17 @@ export default class ScreenTinygrailSacrifice extends store {
     const current = getTimestamp()
     const needFetch = !_loaded || current - _loaded > 60
 
-    const state = await this.getStorage(undefined, namespace)
-    const lastAuction = (await this.getStorage(
-      undefined,
-      `${namespace}|lastAuction|${this.monoId}`
-    )) || {
-      price: '',
-      amount: '',
-      time: 0
-    }
+    const state = (await this.getStorage(undefined, namespace)) || {}
+    const lastAuction =
+      (await getStorage(this.namespaceLastAuction)) || initLastAuction
+    const lastSacrifice =
+      (await getStorage(this.namespaceLastSacrifice)) || initLastSacrifice
+
     this.setState({
       ...state,
       ...excludeState,
       lastAuction,
+      lastSacrifice,
       _loaded: needFetch ? current : _loaded
     })
 
@@ -64,23 +79,36 @@ export default class ScreenTinygrailSacrifice extends store {
     return true
   }
 
-  refresh = () =>
-    queue([
-      () => tinygrailStore.fetchCharacters([this.monoId]), // 角色小圣杯信息
+  refresh = async update => {
+    if (!update) {
+      return queue([
+        () => tinygrailStore.fetchCharacters([this.monoId]), // 角色小圣杯信息
+        () => tinygrailStore.fetchUserLogs(this.monoId), // 本角色我的交易信息
+        () => tinygrailStore.fetchAssets(), // 自己的资产
+        () => tinygrailStore.fetchIssuePrice(this.monoId), // 角色发行价
+        () => this.fetchValhallChara(), // 本次拍卖信息
+        () => tinygrailStore.fetchCharaTemple(this.monoId), // 所有人固定资产
+        () => tinygrailStore.fetchAuctionStatus(this.monoId), // 当前拍卖状态
+        () => tinygrailStore.fetchAuctionList(this.monoId), // 上周拍卖信息
+        () => tinygrailStore.fetchUsers(this.monoId) // 董事会
+      ])
+    }
+
+    await queue([
       () => tinygrailStore.fetchUserLogs(this.monoId), // 本角色我的交易信息
-      () => tinygrailStore.fetchCharaTemple(this.monoId), // 固定资产
       () => tinygrailStore.fetchAssets(), // 自己的资产
-      () => tinygrailStore.fetchIssuePrice(this.monoId),
-      () => this.fetchValhallChara(),
-      () => tinygrailStore.fetchAuctionStatus(this.monoId),
-      () => tinygrailStore.fetchAuctionList(this.monoId), // 上周拍卖信息
-      () => tinygrailStore.fetchUsers(this.monoId.replace('character/', '')) // 董事会
+      () => tinygrailStore.fetchAuctionStatus(this.monoId) // 当前拍卖状态
     ])
+
+    // 更新我的资产
+    const { amount = 0, sacrifices = 0 } = this.userLogs
+    return tinygrailStore.updateMyCharaAssets(this.monoId, amount, sacrifices)
+  }
 
   fetchValhallChara = async () => {
     let res
     try {
-      res = tinygrailStore.fetchValhallChara(this.monoId) // 本次拍卖信息
+      res = tinygrailStore.fetchValhallChara(this.monoId)
       const { price } = await res
       if (price) {
         this.setState({
@@ -94,6 +122,18 @@ export default class ScreenTinygrailSacrifice extends store {
   }
 
   // -------------------- get --------------------
+  @computed get short() {
+    return systemStore.setting.xsbShort
+  }
+
+  @computed get namespaceLastAuction() {
+    return `${namespace}|lastAuction|${this.monoId}`
+  }
+
+  @computed get namespaceLastSacrifice() {
+    return `${namespace}|lastSacrifice|${this.monoId}`
+  }
+
   @computed get monoId() {
     const { monoId = '' } = this.params
     return monoId.replace('character/', '')
@@ -136,12 +176,33 @@ export default class ScreenTinygrailSacrifice extends store {
   }
 
   @computed get users() {
-    return tinygrailStore.users(this.monoId.replace('character/', ''))
+    return tinygrailStore.users(this.monoId)
   }
 
   @computed get myTemple() {
     const { list } = this.charaTemple
     return list.find(item => item.name === this.hash) || {}
+  }
+
+  /**
+   * 测试献祭效率最少数量
+   */
+  @computed get testAmount() {
+    const { sacrifices = 0 } = this.myTemple
+    const { amount } = this.userLogs
+    if (sacrifices >= 500) {
+      return 1
+    }
+    return amount >= 100 ? 100 : amount
+  }
+
+  @computed get relation() {
+    const { s, r = [] } = XSBRelationData.data[this.monoId] || {}
+    return {
+      s,
+      subject: s ? XSBRelationData.name[s] : '',
+      r: [Number(this.monoId), ...r]
+    }
   }
 
   // -------------------- action --------------------
@@ -178,6 +239,7 @@ export default class ScreenTinygrailSacrifice extends store {
       amount,
       isSale
     })
+    feedback()
 
     if (State !== 0) {
       info(Message)
@@ -205,7 +267,48 @@ export default class ScreenTinygrailSacrifice extends store {
     this.setState({
       loading: false
     })
-    this.refresh()
+    this.cacheLastSacrifice(amount, Value.Balance)
+    this.refresh(true)
+  }
+
+  /**
+   * 测试献祭效率
+   */
+  doTestSacrifice = async () => {
+    const { loading } = this.state
+    if (loading) {
+      return
+    }
+
+    this.setState({
+      loading: true
+    })
+
+    t('资产重组.测试效率', {
+      monoId: this.monoId,
+      amount: this.testAmount
+    })
+
+    const { State, Value, Message } = await tinygrailStore.doSacrifice({
+      monoId: this.monoId,
+      amount: this.testAmount,
+      isSale: false
+    })
+    feedback()
+
+    if (State !== 0) {
+      info(Message)
+      this.setState({
+        loading: false
+      })
+      return
+    }
+
+    this.setState({
+      loading: false
+    })
+    this.cacheLastSacrifice(this.testAmount, Value.Balance)
+    this.refresh(true)
   }
 
   /**
@@ -247,6 +350,7 @@ export default class ScreenTinygrailSacrifice extends store {
       price: auctionPrice,
       amount: auctionAmount
     })
+    feedback()
 
     if (State !== 0) {
       info(Message)
@@ -262,7 +366,7 @@ export default class ScreenTinygrailSacrifice extends store {
       auctionLoading: false,
       auctionAmount: 0
     })
-    this.refresh()
+    this.refresh(true)
   }
 
   // -------------------- page --------------------
@@ -420,17 +524,32 @@ export default class ScreenTinygrailSacrifice extends store {
    * 记忆上次出价
    */
   cacheLastAuction = (price, amount) => {
-    const data = {
+    const lastAuction = {
       price,
       amount,
       time: getTimestamp()
     }
     this.setState({
-      lastAuction: data
+      lastAuction
     })
 
-    const key = `${namespace}|lastAuction|${this.monoId}`
-    setStorage(key, data)
+    setStorage(this.namespaceLastAuction, lastAuction)
+  }
+
+  /**
+   * 记忆上次献祭
+   */
+  cacheLastSacrifice = (amount, total) => {
+    const lastSacrifice = {
+      amount,
+      total,
+      time: getTimestamp()
+    }
+    this.setState({
+      lastSacrifice
+    })
+
+    setStorage(this.namespaceLastSacrifice, lastSacrifice)
   }
 
   /**

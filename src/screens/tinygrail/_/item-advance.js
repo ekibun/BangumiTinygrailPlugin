@@ -2,7 +2,7 @@
  * @Author: czy0729
  * @Date: 2020-01-08 15:21:49
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-06-27 14:06:23
+ * @Last Modified time: 2020-11-10 20:18:48
  */
 import React from 'react'
 import PropTypes from 'prop-types'
@@ -44,7 +44,7 @@ function Item(props, { navigation }) {
       <Avatar
         style={styles.avatar}
         src={tinygrailOSS(icon)}
-        size={40}
+        size={36}
         name={name}
         borderColor='transparent'
         onPress={() => {
@@ -55,11 +55,12 @@ function Item(props, { navigation }) {
           })
 
           navigation.push('Mono', {
-            monoId: `character/${id}`
+            monoId: `character/${id}`,
+            _name: name
           })
         }}
       />
-      <Flex.Item style={!isTop && styles.border}>
+      <Flex.Item style={!isTop && !_.flat && styles.border}>
         <Touchable
           style={styles.item}
           onPress={() => {
@@ -90,7 +91,12 @@ function Item(props, { navigation }) {
         >
           <Flex>
             <Flex.Item>
-              <Text type='tinygrailPlain' size={15} bold>
+              <Text
+                type='tinygrailPlain'
+                size={name.length > 16 ? 12 : name.length > 13 ? 12 : 15}
+                lineHeight={15}
+                bold
+              >
                 {index + 1}.{name}
                 {!!bonus && (
                   <Text size={12} lineHeight={15} type='warning'>
@@ -166,7 +172,6 @@ const memoStyles = _.memoStyles(_ => ({
     backgroundColor: _.colorTinygrailActive
   },
   avatar: {
-    marginRight: _.xs,
     marginTop: _.md,
     backgroundColor: _.tSelect(_._colorDarkModeLevel2, _.colorTinygrailBg)
   },

@@ -1,25 +1,23 @@
 /*
  * @Author: czy0729
  * @Date: 2019-12-23 12:07:36
- * @Last Modified by: ekibun
- * @Last Modified time: 2020-05-01 23:01:25
+ * @Last Modified by: czy0729
+ * @Last Modified time: 2021-01-27 10:15:30
  */
 import React from 'react'
 import { Alert } from 'react-native'
-import PropTypes from 'prop-types'
 import { Button } from '@components'
 import { Popover } from '@screens/_'
-import { _, tinygrailStore } from '@stores'
-import { observer } from '@utils/decorators'
+import { _ } from '@stores'
+import { obc } from '@utils/decorators'
 import { APP_ID_SAY_TINYGRAIL } from '@constants'
 
-const dataToday = ['刮刮乐', '幻想乡刮刮乐', '每周分红', '每日签到', '节日福利']
-const dataMore = ['重新授权', '人物直达', '意见反馈', '设置']
+const dataMore = ['重新授权', '意见反馈', '设置']
 
 function Btns(props, { $, navigation }) {
   const styles = memoStyles()
-  const { loading, loadingBonus } = $.state
-  if (!tinygrailStore.cookie) {
+  const { loading, count = 0, _loaded } = $.state
+  if (!_loaded) {
     return (
       <Button
         style={styles.btn}
@@ -33,19 +31,24 @@ function Btns(props, { $, navigation }) {
     )
   }
 
+  const price = 2000 * 2 ** count
   return (
     <>
       <Popover
-        data={dataToday}
+        data={[
+          '刮刮乐',
+          `幻想乡刮刮乐(${price})`,
+          '每周分红',
+          '每日签到',
+          '节日福利'
+        ]}
         onSelect={title => {
           setTimeout(() => {
             switch (title) {
               case '刮刮乐':
                 $.doLottery(navigation)
                 break
-              case '幻想乡刮刮乐':
-                $.doLottery(navigation, true)
-                break
+
               case '每周分红':
                 Alert.alert('警告', '确定领取每周分红? (每周日0点刷新)', [
                   {
@@ -58,13 +61,17 @@ function Btns(props, { $, navigation }) {
                   }
                 ])
                 break
+
               case '每日签到':
                 $.doGetBonusDaily()
                 break
+
               case '节日福利':
                 $.doGetBonusHoliday()
                 break
+
               default:
+                $.doLottery(navigation, true)
                 break
             }
           }, 400)
@@ -74,7 +81,7 @@ function Btns(props, { $, navigation }) {
           style={styles.btn}
           styleText={styles.text}
           size='sm'
-          loading={loadingBonus}
+          // loading={loadingBonus}
         >
           每日
         </Button>
@@ -87,17 +94,17 @@ function Btns(props, { $, navigation }) {
               case '重新授权':
                 $.doAuth()
                 break
-              case '人物直达':
-                navigation.push('TinygrailSearch')
-                break
+
               case '意见反馈':
                 navigation.push('Say', {
                   id: APP_ID_SAY_TINYGRAIL
                 })
                 break
+
               case '设置':
                 navigation.push('Setting')
                 break
+
               default:
                 break
             }
@@ -108,7 +115,7 @@ function Btns(props, { $, navigation }) {
           style={styles.btn}
           styleText={styles.text}
           size='sm'
-          loading={loading}
+          // loading={loading}
         >
           更多
         </Button>
@@ -117,16 +124,11 @@ function Btns(props, { $, navigation }) {
   )
 }
 
-Btns.contextTypes = {
-  $: PropTypes.object,
-  navigation: PropTypes.object
-}
-
-export default observer(Btns)
+export default obc(Btns)
 
 const memoStyles = _.memoStyles(_ => ({
   btn: {
-    width: 68,
+    width: 60,
     marginLeft: _.sm,
     backgroundColor: _.tSelect(_.colorTinygrailIcon, _.colorTinygrailBg),
     borderColor: _.tSelect(_.colorTinygrailIcon, _.colorTinygrailBg)

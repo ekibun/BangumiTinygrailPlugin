@@ -2,14 +2,13 @@
  * @Author: czy0729
  * @Date: 2019-12-23 13:55:48
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-04-19 21:30:35
+ * @Last Modified time: 2021-01-27 10:22:31
  */
 import React from 'react'
 import { View } from 'react-native'
-import PropTypes from 'prop-types'
 import { ListView, Loading } from '@components'
 import { _ } from '@stores'
-import { inject, withHeader, observer } from '@utils/decorators'
+import { inject, withHeader, obc } from '@utils/decorators'
 import { withHeaderParams } from '../styles'
 import StatusBarEvents from '../_/status-bar-events'
 import ItemTemple from '../_/item-temple'
@@ -27,15 +26,10 @@ export default
   hm: ['tinygrail/temples', 'TinygrailTemples'],
   withHeaderParams
 })
-@observer
+@obc
 class TinygrailTemples extends React.Component {
   static navigationOptions = {
     title
-  }
-
-  static contextTypes = {
-    $: PropTypes.object,
-    navigation: PropTypes.object
   }
 
   componentDidMount() {
@@ -60,12 +54,13 @@ class TinygrailTemples extends React.Component {
             footerTextType='tinygrailText'
             numColumns={3}
             data={$.templeLast}
+            scrollToTop
             renderItem={renderItem}
             onHeaderRefresh={$.onHeaderRefresh}
             onFooterRefresh={$.fetchTempleLast}
           />
         ) : (
-          <Loading />
+          <Loading color={_.colorTinygrailText} />
         )}
       </View>
     )
@@ -82,7 +77,8 @@ const memoStyles = _.memoStyles(_ => ({
     backgroundColor: _.colorTinygrailContainer
   },
   contentContainerStyle: {
-    paddingHorizontal: _.wind - _._wind
+    paddingHorizontal: _.wind - _._wind,
+    paddingBottom: _.bottom
   }
 }))
 

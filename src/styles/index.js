@@ -2,7 +2,7 @@
  * @Author: czy0729
  * @Date: 2019-03-14 06:02:03
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-06-27 02:29:14
+ * @Last Modified time: 2021-01-30 23:01:10
  */
 import { Dimensions, StyleSheet } from 'react-native'
 import Constants from 'expo-constants'
@@ -20,7 +20,7 @@ export const window = {
 export const logoWidth = 124 // logo宽度
 export const isPad = width > 616
 export const statusBarHeight = Constants.statusBarHeight
-export const appBarHeight = IOS ? 44 : 56 // 单独头部高度
+export const appBarHeight = IOS ? Constants.statusBarHeight : 56 //  单独头部高度, iOS 44
 export const headerHeight = appBarHeight + statusBarHeight // 整个头部高度
 export const tabsHeight = 42 // 标签页的标签栏高度
 export const tabsHeaderHeight = headerHeight + tabsHeight // 带标签栏的头部高度
@@ -67,21 +67,22 @@ export const colorSub = 'rgb(128, 128, 128)'
 export const colorDisabled = 'rgb(150, 150, 150)'
 export const colorIcon = 'rgb(200, 200, 200)'
 
-export const colorMainRaw = colorMain.match(/\d+/g)
-export const colorPrimaryRaw = colorPrimary.match(/\d+/g)
-export const colorSuccessRaw = colorSuccess.match(/\d+/g)
-export const colorWarningRaw = colorWarning.match(/\d+/g)
-export const colorPlainRaw = colorPlain.match(/\d+/g)
-export const colorTitleRaw = colorTitle.match(/\d+/g)
+const regColor = /\d+/g
+export const colorMainRaw = colorMain.match(regColor)
+export const colorPrimaryRaw = colorPrimary.match(regColor)
+export const colorSuccessRaw = colorSuccess.match(regColor)
+export const colorWarningRaw = colorWarning.match(regColor)
+export const colorPlainRaw = colorPlain.match(regColor)
+export const colorTitleRaw = colorTitle.match(regColor)
 export const colorMainLight = `rgba(${colorMainRaw.join()}, 0.1)`
 export const colorSuccessLight = `rgba(${colorSuccessRaw.join()}, 0.1)`
 export const colorWarningLight = `rgba(${colorWarningRaw.join()}, 0.1)`
 
 // -------------------- dark --------------------
 // 架高层, 参考 https://www.zcool.com.cn/article/ZMTAwMzI4OA==.html
-export const _colorDarkModeLevel1 = 'rgb(62, 62, 64)'
-export const _colorDarkModeLevel1Hex = '#3e3e40'
-export const _colorDarkModeLevel2 = 'rgb(88, 88, 90)'
+export const _colorDarkModeLevel1 = 'rgb(52, 52, 52)' // 'rgb(62, 62, 64)'
+export const _colorDarkModeLevel1Hex = '#343434' // '#3e3e40'
+export const _colorDarkModeLevel2 = 'rgb(64, 64, 64)' // 'rgb(88, 88, 90)'
 
 // 基础层
 export const _colorMain = 'rgb(254, 138, 149)'
@@ -90,9 +91,10 @@ export const _colorPrimary = 'rgb(35, 149, 233)'
 export const _colorSuccess = 'rgb(50, 209, 96)'
 export const _colorYellow = 'rgb(255, 214, 50)'
 export const _colorWarning = 'rgb(255, 160, 12)'
-export const _colorPlain = 'rgb(46, 46, 48)'
+export const _colorPlain = 'rgb(36, 36, 36)' // 'rgb(46, 46, 48)'
+export const _colorPlainHex = '#242424'
 export const _colorWait = 'rgb(78, 78, 80)'
-export const _colorBg = 'rgb(34, 34, 36)'
+export const _colorBg = 'rgb(24, 24, 24)' // 'rgb(34, 34, 36)'
 export const _colorBorder = 'rgba(255, 255, 255, 0.16)'
 
 // 文字
@@ -102,15 +104,19 @@ export const _colorSub = 'rgba(255, 255, 255, 0.52)'
 export const _colorDisabled = 'rgba(255, 255, 255, 0.38)'
 export const _colorIcon = 'rgba(255, 255, 255, 0.38)'
 
-export const _colorDarkModeLevel1Raw = _colorDarkModeLevel1.match(/\d+/g)
-export const _colorPlainRaw = _colorPlain.match(/\d+/g)
+export const _colorDarkModeLevel1Raw = _colorDarkModeLevel1.match(regColor)
+export const _colorPlainRaw = _colorPlain.match(regColor)
 export const _colorTitleRaw = [255, 255, 255]
 
 // -------------------- 小圣杯 --------------------
 export const colorBid = 'rgb(0, 173, 146)'
+export const colorBidWeb = 'rgb(228, 111, 161)'
 export const colorDepthBid = 'rgb(15, 61, 67)'
+export const colorDepthBidWeb = 'rgb(255, 208, 227)'
 export const colorAsk = 'rgb(209, 77, 100)'
+export const colorAskWeb = 'rgb(34, 163, 222)'
 export const colorDepthAsk = 'rgb(39, 36, 52)'
+export const colorDepthAskWeb = 'rgb(183, 232, 254)'
 export const colorTinygrailPlain = 'rgba(255, 255, 255, 0.8)'
 export const colorTinygrailPrimary = 'rgb(9, 153, 223)'
 export const colorTinygrailBg = 'rgb(14, 25, 36)'
@@ -154,15 +160,32 @@ export const shadow = {
   },
   shadowOpacity: 0.12,
   shadowRadius: 6,
-  elevation: 8
+  elevation: 10
+}
+export const scale = {
+  transform: [
+    {
+      scale: 0.64
+    }
+  ]
+}
+export const rotate = {
+  transform: [
+    {
+      rotate: '180deg'
+    }
+  ]
+}
+export const short = {
+  marginVertical: -md
 }
 
 // --------------------  函数 --------------------
 export const fontSizeAdjust = 0
 export function fontSize(pt, fontSizeAdjust = 0) {
   return {
-    fontSize: pt + fontSizeAdjust,
-    lineHeight: (pt + fontSizeAdjust) * lineHeightRatio
+    fontSize: parseInt(pt + fontSizeAdjust),
+    lineHeight: parseInt((pt + fontSizeAdjust) * lineHeightRatio)
   }
 }
 

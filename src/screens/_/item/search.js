@@ -2,7 +2,7 @@
  * @Author: czy0729
  * @Date: 2019-05-15 16:26:34
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-07-16 22:10:36
+ * @Last Modified time: 2021-01-29 16:40:25
  */
 import React from 'react'
 import { View } from 'react-native'
@@ -30,11 +30,13 @@ function ItemSearch({
   total,
   rank,
   type,
+  typeCn,
   collection, // 动画才有, 具体收藏状态
   collected, // 是否收藏
   comments,
   position = [],
-  event
+  event,
+  children
 }) {
   const styles = memoStyles()
 
@@ -69,12 +71,12 @@ function ItemSearch({
           <Cover
             style={styles.image}
             src={cover}
-            resizeMode={isMono ? 'contain' : undefined}
             placeholder={!isMono}
             width={IMG_WIDTH}
-            height={IMG_HEIGHT}
+            height={isMono ? IMG_WIDTH : IMG_HEIGHT}
             radius
             shadow
+            type={typeCn}
           />
         </View>
         <Flex.Item style={_.ml.wind}>
@@ -101,18 +103,17 @@ function ItemSearch({
                         {comments}
                       </Text>
                     )}
-                    {!!name && name !== nameCn && (
-                      <Katakana
-                        type='sub'
-                        size={11}
-                        lineHeight={15}
-                        numberOfLines={1}
-                      >
-                        {' '}
-                        {HTMLDecode(name)}
-                      </Katakana>
-                    )}
                   </Katakana.Provider>
+                )}
+                {!!name && name !== nameCn && (
+                  <Katakana
+                    type='sub'
+                    size={12}
+                    lineHeight={15}
+                    numberOfLines={1}
+                  >
+                    {HTMLDecode(name)}
+                  </Katakana>
                 )}
               </Flex.Item>
               <Flex style={_.mt.xxs}>
@@ -139,11 +140,11 @@ function ItemSearch({
             )}
             <Flex style={_.mt.md}>
               <Stars style={_.mr.xs} value={score} color='warning' />
-              <Text style={_.mr.sm} type='sub' size={12}>
-                {total}
+              <Text style={_.mr.sm} type='sub' size={11}>
+                {total.replace('人评分', '')}
               </Text>
               {!!rank && (
-                <Text type='primary' size={12} bold>
+                <Text type='primary' size={11} bold>
                   #{rank}{' '}
                 </Text>
               )}
@@ -151,6 +152,7 @@ function ItemSearch({
           </Flex>
         </Flex.Item>
       </Flex>
+      {children}
     </Touchable>
   )
 }

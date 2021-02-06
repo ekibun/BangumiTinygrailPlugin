@@ -4,16 +4,19 @@
  * @Author: czy0729
  * @Date: 2019-09-19 00:35:13
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-07-08 09:57:30
+ * @Last Modified time: 2020-11-30 19:44:03
  */
-import { Alert } from 'react-native'
+import { Alert, Clipboard } from 'react-native'
 import { observable, computed } from 'mobx'
 import { tinygrailStore } from '@stores'
 import { toFixed, getTimestamp } from '@utils'
 import store from '@utils/store'
 import { t } from '@utils/fetch'
-import { confirm, info } from '@utils/ui'
+import { confirm, info, feedback } from '@utils/ui'
 import {
+  relation,
+  levelList,
+  sortList,
   SORT_SC,
   SORT_GX,
   SORT_GXB,
@@ -37,21 +40,21 @@ export const tabs = [
     key: 'chara'
   },
   {
-    title: '圣殿',
-    key: 'temple'
-  },
-  {
     title: 'ICO',
     key: 'ico'
+  },
+  {
+    title: '圣殿',
+    key: 'temple'
   }
 ]
 export const sortDS = [
   SORT_SC,
-  SORT_HYD,
-  SORT_DQJ,
-  SORT_DJ,
   SORT_CGS,
+  SORT_DQJ,
+  SORT_HYD,
   SORT_GDZC,
+  SORT_DJ,
   SORT_GX,
   SORT_SDGX,
   SORT_SCJ,
@@ -63,15 +66,21 @@ export const sortDS = [
   SORT_SDGXB
 ]
 const namespace = 'ScreenTinygrailCharaAssets'
+const excludeState = {
+  editing: false, // 是否批量选择中
+  editingIds: {}, // 选中的角色id
+  batchAction: '' // 批量动作
+}
+const perBatchCount = 10
 
 export default class ScreenTinygrailCharaAssets extends store {
   state = observable({
     page: 0,
+    level: '',
     sort: '',
     direction: '', // void | down | up
     go: '卖出',
-    editing: false, // 是否批量选择中
-    editingIds: {}, // 选中的角色id
+    ...excludeState,
     _loaded: false
   })
 
@@ -84,7 +93,7 @@ export default class ScreenTinygrailCharaAssets extends store {
     const state = await res
     this.setState({
       ...state,
-      editing: false,
+      ...excludeState,
       _loaded: needFetch ? current : _loaded
     })
     this.clearState('editingIds', {})
@@ -162,12 +171,10 @@ export default class ScreenTinygrailCharaAssets extends store {
   }
 
   // -------------------- fetch --------------------
-  fetchMyCharaAssets = () => {
-    if (this.userId) {
-      return tinygrailStore.fetchCharaAssets(this.userId)
-    }
-    return tinygrailStore.fetchMyCharaAssets()
-  }
+  fetchMyCharaAssets = () =>
+    this.userId
+      ? tinygrailStore.fetchCharaAssets(this.userId)
+      : tinygrailStore.fetchMyCharaAssets()
 
   fetchTemple = () => tinygrailStore.fetchTemple(this.userId)
 
@@ -189,14 +196,14 @@ export default class ScreenTinygrailCharaAssets extends store {
       const { characters, initials } = tinygrailStore.charaAssets(this.userId)
       const _loaded = getTimestamp()
       return {
-        chara: {
+        chara: relation({
           list: characters,
           pagination: {
             page: 1,
             pageTotal: 1
           },
           _loaded
-        },
+        }),
         ico: {
           list: initials,
           pagination: {
@@ -208,7 +215,11 @@ export default class ScreenTinygrailCharaAssets extends store {
         _loaded
       }
     }
-    return tinygrailStore.myCharaAssets
+
+    return {
+      ...tinygrailStore.myCharaAssets,
+      chara: relation(tinygrailStore.myCharaAssets.chara)
+    }
   }
 
   @computed get temple() {
@@ -226,8 +237,38 @@ export default class ScreenTinygrailCharaAssets extends store {
     return users
   }
 
+  @computed get charaList() {
+    const { chara } = this.myCharaAssets
+    const { sort, level, direction } = this.state
+    let data = chara
+    if (level) {
+      data = {
+        ...data,
+        list: levelList(level, data.list)
+      }
+    }
+
+    if (sort) {
+      data = {
+        ...data,
+        list: sortList(sort, direction, data.list)
+      }
+    }
+
+    return data
+  }
+
+  @computed get levelMap() {
+    const { chara } = this.myCharaAssets
+    const data = {}
+    chara.list.forEach(item =>
+      data[item.level] ? (data[item.level] += 1) : (data[item.level] = 1)
+    )
+    return data
+  }
+
   // -------------------- page --------------------
-  onChange = (item, page) => {
+  onChange = page => {
     if (page === this.state.page) {
       return
     }
@@ -274,6 +315,14 @@ export default class ScreenTinygrailCharaAssets extends store {
     }
   }
 
+  onLevelSelect = level => {
+    this.setState({
+      level
+    })
+
+    this.setStorage(undefined, undefined, namespace)
+  }
+
   onSortPress = item => {
     const { sort, direction } = this.state
     if (item === sort) {
@@ -310,10 +359,11 @@ export default class ScreenTinygrailCharaAssets extends store {
     this.setStorage(undefined, undefined, namespace)
   }
 
-  toggleBatchEdit = () => {
+  toggleBatchEdit = (batchAction = '') => {
     const { editing } = this.state
     this.setState({
-      editing: !editing
+      editing: !editing,
+      batchAction
     })
     this.clearState('editingIds', {})
   }
@@ -333,31 +383,73 @@ export default class ScreenTinygrailCharaAssets extends store {
     this.clearState('editingIds', _editingIds)
   }
 
+  increaseBatchSelect = () => {
+    const { editingIds } = this.state
+    const { list } = this.charaList
+
+    const _editingIds = {
+      ...editingIds
+    }
+    const ids = Object.keys(_editingIds)
+    let startIndex = -1
+    let count = 0
+    if (ids.length) {
+      // 多选模式选择要从最后选择的角色索引处开始
+      startIndex = Math.max(
+        ...ids.map(id => list.findIndex(item => item.id == id))
+      )
+    }
+
+    list
+      .filter((item, index) => index > startIndex)
+      .forEach(item => {
+        if (count >= perBatchCount) return
+        _editingIds[item.id] = item.state || 0
+        count += 1
+      })
+    this.setState({
+      editingIds: _editingIds
+    })
+
+    const start = startIndex === -1 ? 1 : startIndex + 2
+    info(`已选 ${start} - ${start + perBatchCount - 1}`)
+  }
+
   // -------------------- action --------------------
-  doBatchSacrifice = () => {
+  /**
+   * 批量献祭
+   * @param {*} isSale
+   */
+  doBatchSacrifice = (isSale = false) => {
     const { editingIds } = this.state
     const ids = Object.keys(editingIds)
     if (!ids.length) {
       return
     }
 
+    const action = isSale ? '出售' : '献祭'
     confirm(
-      `批量献祭${ids.length}个角色的所有流动股份, 该操作不能撤回, 确定? (若角色当前有挂单, 可用数与显示数对不上时, 不会自动献祭成功)`,
+      `批量 (${action}) (${ids.length}) 个角色的所有流动股份, 该操作不能撤回, 确定? (若角色当前有挂单, 可用数与显示数对不上时, 操作会失败)`,
       async () => {
         t('我的持仓.批量献祭', {
-          length: ids.length
+          length: ids.length,
+          isSale
         })
 
+        const successIds = []
         const errorIds = []
         for (const id of ids) {
           try {
             const { State } = await tinygrailStore.doSacrifice({
               monoId: id,
               amount: editingIds[id],
-              isSale: false
+              isSale
             })
+
             if (State === 1) {
               errorIds.push(id)
+            } else {
+              successIds.push(id)
             }
           } catch (error) {
             errorIds.push(id)
@@ -366,14 +458,25 @@ export default class ScreenTinygrailCharaAssets extends store {
             `正在献祭 ${ids.findIndex(item => item === id) + 1} / ${ids.length}`
           )
         }
+        feedback()
 
-        this.fetchMyCharaAssets()
+        // 当成功数量少于20个, 使用局部更新
+        if (successIds.length <= 20) {
+          tinygrailStore.batchUpdateMyCharaAssetsByIds(successIds)
+        } else {
+          this.fetchMyCharaAssets()
+        }
+
         if (errorIds.length) {
-          Alert.alert('小圣杯助手', `共有${errorIds.length}个角色献祭失败`, [
-            {
-              text: '知道了'
-            }
-          ])
+          Alert.alert(
+            '小圣杯助手',
+            `共有 (${errorIds.length}) 个角色 (${action}) 失败`,
+            [
+              {
+                text: '知道了'
+              }
+            ]
+          )
         } else {
           info('操作完成')
         }
@@ -381,5 +484,115 @@ export default class ScreenTinygrailCharaAssets extends store {
       },
       '警告'
     )
+  }
+
+  /**
+   * 批量以当前价挂卖单
+   */
+  doBatchAsk = async () => {
+    const { editingIds } = this.state
+    const ids = Object.keys(editingIds)
+    if (!ids.length) {
+      return
+    }
+
+    confirm(
+      `批量对 (${ids.length}) 个角色以当前价 (挂卖单), 确定? (若角色当前有挂单, 可用数与显示数对不上时, 操作会失败)`,
+      async () => {
+        t('我的持仓.批量挂单', {
+          length: ids.length
+        })
+
+        const { list } = this.charaList
+        const successIds = []
+        const errorIds = []
+        for (const id of ids) {
+          try {
+            const item = list.find(item => item.id == id)
+            if (item) {
+              const { current, state } = item
+              const { State } = await tinygrailStore.doAsk({
+                monoId: id,
+                price: current,
+                amount: state
+              })
+
+              if (State === 1) {
+                errorIds.push(id)
+              } else {
+                successIds.push(id)
+              }
+            }
+          } catch (error) {
+            errorIds.push(id)
+          }
+          info(
+            `正在挂卖单 ${ids.findIndex(item => item === id) + 1} / ${
+              ids.length
+            }`
+          )
+        }
+        feedback()
+
+        // 当成功数量少于20个, 使用局部更新
+        if (successIds.length <= 20) {
+          tinygrailStore.batchUpdateMyCharaAssetsByIds(successIds)
+        } else {
+          this.fetchMyCharaAssets()
+        }
+
+        if (errorIds.length) {
+          Alert.alert(
+            '小圣杯助手',
+            `共有 (${errorIds.length}) 个角色 (挂卖单) 失败`,
+            [
+              {
+                text: '知道了'
+              }
+            ]
+          )
+        } else {
+          info('操作完成')
+        }
+        this.toggleBatchEdit()
+      },
+      '警告'
+    )
+  }
+
+  /**
+   * 批量生成分享粘贴板
+   */
+  doBatchShare = async () => {
+    const { editingIds } = this.state
+    const ids = Object.keys(editingIds)
+    if (!ids.length) {
+      return
+    }
+
+    const { page } = this.state
+    const list = page === 1 ? this.myCharaAssets.ico : this.charaList
+    const items = []
+    for (const id of ids) {
+      try {
+        const item = list.list.find(item => item.id == id)
+        if (item) {
+          items.push(item)
+        }
+      } catch (error) {
+        warn(error)
+      }
+    }
+
+    Clipboard.setString(
+      items
+        .map(
+          item =>
+            `https://bgm.tv/character/${item.monoId || item.id}\n${item.name}`
+        )
+        .join('\n')
+    )
+    info(`已复制 ${items.length} 个角色的分享链接`)
+    this.toggleBatchEdit()
   }
 }

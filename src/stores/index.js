@@ -3,11 +3,13 @@
  * @Author: czy0729
  * @Date: 2019-03-02 06:14:49
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-06-10 23:59:46
+ * @Last Modified time: 2021-01-13 20:29:05
  */
-import { AsyncStorage, Alert } from 'react-native'
+import { Alert } from 'react-native'
+import AsyncStorage from '@react-native-community/async-storage'
 import { CacheManager } from 'react-native-expo-image-cache'
 import { info } from '@utils/ui'
+import { DEV } from '@constants'
 import calendarStore from './calendar'
 import collectionStore from './collection'
 import discoveryStore from './discovery'
@@ -32,18 +34,22 @@ class Stores {
    */
   async init() {
     try {
-      if (inited) {
+      if (!DEV && inited) {
         return false
+      }
+
+      if (DEV) {
+        await userStore.init()
       }
       inited = true
 
       // [同步加载]APP最重要Stores
+      await systemStore.init()
       await themeStore.init()
       await userStore.init()
       const res = Promise.all([
         collectionStore.init(),
         subjectStore.init(),
-        systemStore.init(),
         tinygrailStore.init()
       ])
       await res
@@ -74,7 +80,7 @@ class Stores {
    * @param {*} store
    */
   add(key, store) {
-    if (!this[key]) {
+    if (!this[key] || DEV) {
       this[key] = store
     }
   }

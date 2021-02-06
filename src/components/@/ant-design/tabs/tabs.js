@@ -3,7 +3,10 @@ import React from 'react'
 import {
   Animated,
   Dimensions,
-  View
+  Platform,
+  ViewPagerAndroid,
+  View,
+  Text
 } from 'react-native'
 import Flex from '../../../flex'
 import { WithTheme } from '../style'
@@ -103,6 +106,46 @@ export class Tabs extends React.PureComponent {
       )
     })
 
+    if (Platform.OS === 'android') {
+      return (
+        <View
+          key='$content'
+          style={{
+            flex: 1
+          }}
+        >
+          {renderContentHeaderComponent}
+          <ViewPagerAndroid
+            keyboardDismissMode='on-drag'
+            initialPage={currentTab}
+            scrollEnabled={this.props.swipeable || usePaged}
+            onPageScroll={e => {
+              this.state.scrollX.setValue(
+                e.nativeEvent.position * this.state.containerWidth
+              )
+            }}
+            style={{ flex: 1 }}
+            onPageSelected={e => {
+              const index = e.nativeEvent.position
+              this.setState(
+                {
+                  currentTab: index
+                },
+                () => {
+                  // tslint:disable-next-line:no-unused-expression
+                  this.props.onChange && this.props.onChange(tabs[index], index)
+                }
+              )
+              this.nextCurrentTab = index
+            }}
+            ref={ref => (this.viewPager = ref)}
+          >
+            {content}
+          </ViewPagerAndroid>
+        </View>
+      )
+    }
+
     return (
       <View
         key='$content'
@@ -163,6 +206,16 @@ export class Tabs extends React.PureComponent {
   }
 
   scrollTo = (index, animated = true) => {
+    if (Platform.OS === 'android') {
+      if (this.viewPager) {
+        if (animated) {
+          this.viewPager.setPage(index)
+        } else {
+          this.viewPager.setPageWithoutAnimation(index)
+        }
+        return
+      }
+    }
     const { containerWidth } = this.state
     if (containerWidth) {
       const offset = index * containerWidth

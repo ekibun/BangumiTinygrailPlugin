@@ -2,8 +2,8 @@
  * 支持各种属性设置的文本
  * @Author: czy0729
  * @Date: 2019-03-15 06:11:55
- * @Last Modified by: ekibun
- * @Last Modified time: 2020-07-09 13:50:30
+ * @Last Modified by: czy0729
+ * @Last Modified time: 2020-12-15 15:20:06
  */
 import React from 'react'
 import { Text as RNText, StyleSheet } from 'react-native'
@@ -86,7 +86,10 @@ function Text(
       style={_style}
       allowFontScaling={false}
       selectable={selectable}
+      numberOfLines={0}
       {...other}
+      textBreakStrategy='simple'
+      android_hyphenationFrequency='none'
     >
       {children}
     </RNText>
@@ -114,9 +117,13 @@ Text.StandardText = StandardText
 export default observer(Text)
 
 const memoStyles = _.memoStyles(_ => ({
-  text: {
-    fontWeight: 'normal'
-  },
+  text: IOS
+    ? {
+        fontWeight: 'normal'
+      }
+    : {
+        fontFamily: ''
+      },
   underline: {
     textDecorationLine: 'underline',
     textDecorationColor: _.select(_.colorMain, _.colorSub)
@@ -134,6 +141,9 @@ const memoStyles = _.memoStyles(_ => ({
   // theme
   plain: {
     color: _.colorPlain
+  },
+  __plain__: {
+    color: _.__colorPlain__
   },
   main: {
     color: _.colorMain

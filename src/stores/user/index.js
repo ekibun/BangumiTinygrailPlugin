@@ -5,7 +5,7 @@
  * @Author: czy0729
  * @Date: 2019-02-21 20:40:30
  * @Last Modified by: ekibun
- * @Last Modified time: 2020-07-16 11:31:34
+ * @Last Modified time: 2020-12-19 13:48:33
  */
 import { observable, computed } from 'mobx'
 import { getTimestamp } from '@utils'
@@ -41,7 +41,8 @@ import {
   HTML_PM_OUT,
   HTML_PM_DETAIL,
   HTML_PM_CREATE,
-  HTML_PM_PARAMS
+  HTML_PM_PARAMS,
+  HTML_USER_SETTING
 } from '@constants/html'
 import RakuenStore from '../rakuen'
 import {
@@ -49,9 +50,15 @@ import {
   DEFAULT_SCOPE,
   INIT_ACCESS_TOKEN,
   INIT_USER_INFO,
-  INIT_USER_COOKIE
+  INIT_USER_COOKIE,
+  INIT_USER_SETTING
 } from './init'
-import { cheerioPM, cheerioPMDetail, cheerioPMParams } from './common'
+import {
+  cheerioPM,
+  cheerioPMDetail,
+  cheerioPMParams,
+  cheerioUserSetting
+} from './common'
 
 class User extends store {
   state = observable({
@@ -75,6 +82,11 @@ class User extends store {
      * 会随请求一直更新, 并带上请求防止一段时候后掉登陆
      */
     setCookie: '',
+
+    /**
+     * hm.js请求cookie, 区分唯一用户, 一旦获取通常不再变更
+     */
+    hmCookie: '',
 
     /**
      * 在看收藏
@@ -161,7 +173,12 @@ class User extends store {
     /**
      * 登出地址
      */
-    logout: ''
+    logout: '',
+
+    /**
+     * 个人设置
+     */
+    userSetting: INIT_USER_SETTING
   })
 
   init = async () => {
@@ -175,9 +192,11 @@ class User extends store {
         'userCollectionsStatus',
         'userCookie',
         'setCookie',
+        'hmCookie',
         'userInfo',
         'userProgress',
-        'usersInfo'
+        'usersInfo',
+        'userSetting'
       ],
       NAMESPACE
     )
@@ -191,11 +210,13 @@ class User extends store {
         this.fetchUsersInfo()
       }
 
-      try {
-        this.doCheckCookie()
-      } catch (ex) {
-        // do nothing
-      }
+      setTimeout(() => {
+        try {
+          this.doCheckCookie()
+        } catch (error) {
+          // do nothing
+        }
+      }, 4000)
     }
     return true
   }
@@ -571,6 +592,26 @@ class User extends store {
     return Promise.resolve(data)
   }
 
+  /**
+   * 个人设置
+   */
+  fetchUserSetting = async () => {
+    const HTML = await fetchHTML({
+      url: HTML_USER_SETTING()
+    })
+
+    const key = 'userSetting'
+    const data = {
+      ...cheerioUserSetting(HTML),
+      _loaded: getTimestamp()
+    }
+
+    this.setState({
+      [key]: data
+    })
+    return Promise.resolve(data)
+  }
+
   // -------------------- page --------------------
   /**
    * 登出
@@ -631,6 +672,13 @@ class User extends store {
     this.setStorage('userCookie', undefined, NAMESPACE)
   }
 
+  updateHmCookie = hmCookie => {
+    this.setState({
+      hmCookie
+    })
+    this.setStorage('hmCookie', undefined, NAMESPACE)
+  }
+
   /**
    * 打印游客登陆sercet
    */
@@ -677,23 +725,27 @@ class User extends store {
     const res = RakuenStore.fetchNotify()
     const { setCookie = '', html } = await res
     if (html.includes('抱歉，当前操作需要您') && !DEV) {
-      confirm('检测到登陆状态好像过期了, 是否登出?', () =>
-        this.updateUserCookie()
+      confirm(
+        '检测到登陆状态好像过期了, 是否登出? 注意若使用了科学上网, 请保证App在使用过程中始终保持在同一网段, 否则很容易触发源站登出逻辑, 可尝试把软件加入白名单',
+        () => {
+          this.updateUserCookie()
+        }
       )
-    } else {
-      const matchLogout = html.match(/.tv\/logout(.+?)">登出<\/a>/)
-      if (Array.isArray(matchLogout) && matchLogout[1]) {
-        this.setState({
-          logout: `${HOST}/logout${matchLogout[1]}`
-        })
-      }
+      return res
+    }
 
-      if (setCookie) {
-        this.setState({
-          setCookie
-        })
-        this.setStorage('setCookie', undefined, NAMESPACE)
-      }
+    const matchLogout = html.match(/.tv\/logout(.+?)">登出<\/a>/)
+    if (Array.isArray(matchLogout) && matchLogout[1]) {
+      this.setState({
+        logout: `${HOST}/logout${matchLogout[1]}`
+      })
+    }
+
+    if (setCookie) {
+      this.setState({
+        setCookie
+      })
+      this.setStorage('setCookie', undefined, NAMESPACE)
     }
     return res
   }
@@ -718,6 +770,22 @@ class User extends store {
       {
         url: HTML_PM_CREATE(),
         data
+      },
+      success,
+      fail
+    )
+
+  /**
+   * 更新个人设置
+   */
+  doUpdateUserSetting = async (data, success, fail) =>
+    xhr(
+      {
+        url: HTML_USER_SETTING(),
+        data: {
+          ...data,
+          submit: '保存修改'
+        }
       },
       success,
       fail

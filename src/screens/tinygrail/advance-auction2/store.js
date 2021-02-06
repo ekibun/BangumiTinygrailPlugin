@@ -2,15 +2,25 @@
  * @Author: czy0729
  * @Date: 2020-01-09 19:43:29
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-05-01 22:24:44
+ * @Last Modified time: 2020-11-17 15:05:06
  */
-import { computed } from 'mobx'
+import { observable, computed } from 'mobx'
 import { tinygrailStore, userStore } from '@stores'
 import { getTimestamp } from '@utils'
 import store from '@utils/store'
 import { info } from '@utils/ui'
+import { levelList, sortList, SORT_GF } from '../_/utils'
+
+export const sortDS = [SORT_GF]
+const namespace = 'ScreenTinygrailAdvanceAuction2'
 
 export default class ScreenTinygrailAdvanceAuction2 extends store {
+  state = observable({
+    level: '',
+    sort: '',
+    _loaded: false
+  })
+
   init = async () => {
     const { _loaded } = this.advanceAuctionList
     tinygrailStore.fetchAuction()
@@ -50,6 +60,10 @@ export default class ScreenTinygrailAdvanceAuction2 extends store {
   fetchCharaAll = () => tinygrailStore.fetchCharaAll()
 
   // -------------------- get --------------------
+  @computed get myUserId() {
+    return userStore.myUserId
+  }
+
   @computed get advance() {
     return tinygrailStore.advance
   }
@@ -58,8 +72,38 @@ export default class ScreenTinygrailAdvanceAuction2 extends store {
     return tinygrailStore.advanceAuctionList2
   }
 
-  @computed get myUserId() {
-    return userStore.myUserId
+  @computed get computedList() {
+    const { level, sort } = this.state
+    const list = this.advanceAuctionList
+    if (!list._loaded) {
+      return list
+    }
+
+    let _list = list
+    if (level) {
+      _list = {
+        ..._list,
+        list: levelList(level, _list.list)
+      }
+    }
+
+    if (sort) {
+      _list = {
+        ..._list,
+        list: sortList(sort, 'down', _list.list)
+      }
+    }
+
+    return _list
+  }
+
+  @computed get levelMap() {
+    const { list } = this.advanceAuctionList
+    const data = {}
+    list.forEach(item =>
+      data[item.level] ? (data[item.level] += 1) : (data[item.level] = 1)
+    )
+    return data
   }
 
   @computed get auctioningMap() {
@@ -81,5 +125,20 @@ export default class ScreenTinygrailAdvanceAuction2 extends store {
       }
     })
     return map
+  }
+
+  // -------------------- page --------------------
+  onLevelSelect = level => {
+    this.setState({
+      level
+    })
+  }
+
+  onSortPress = item => {
+    const { sort } = this.state
+    this.setState({
+      sort: item === sort ? '' : item
+    })
+    this.setStorage(undefined, undefined, namespace)
   }
 }

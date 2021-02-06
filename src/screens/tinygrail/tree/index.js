@@ -2,15 +2,14 @@
  * @Author: czy0729
  * @Date: 2019-11-20 17:58:34
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-03-21 15:08:27
+ * @Last Modified time: 2021-01-27 10:28:03
  */
 import React from 'react'
 import { Alert, View } from 'react-native'
-import PropTypes from 'prop-types'
 import { Loading, Text } from '@components'
 import { IconHeader } from '@screens/_'
 import { _ } from '@stores'
-import { inject, withHeader, observer } from '@utils/decorators'
+import { inject, withHeader, obc } from '@utils/decorators'
 import { t } from '@utils/fetch'
 import { info } from '@utils/ui'
 import StatusBarEvents from '../_/status-bar-events'
@@ -28,13 +27,8 @@ export default
   hm: ['tinygrail/tree', 'TinygrailTree'],
   withHeaderParams
 })
-@observer
+@obc
 class TinygrailTree extends React.Component {
-  static contextTypes = {
-    $: PropTypes.object,
-    navigation: PropTypes.object
-  }
-
   componentDidMount() {
     const { $ } = this.context
     $.init()
@@ -148,7 +142,8 @@ class TinygrailTree extends React.Component {
         return
       default:
         navigation.push('Mono', {
-          monoId: `character/${id}`
+          monoId: `character/${id}`,
+          _name: name
         })
     }
   }
@@ -161,7 +156,7 @@ class TinygrailTree extends React.Component {
         <StatusBarEvents />
         <ToolBar />
         {loading ? (
-          <Loading style={this.styles.container} />
+          <Loading style={this.styles.container} color={_.colorTinygrailText} />
         ) : (
           <Chart
             data={data}

@@ -2,15 +2,33 @@
  * @Author: czy0729
  * @Date: 2019-05-07 19:45:59
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-06-10 14:15:47
+ * @Last Modified time: 2020-12-04 11:23:47
  */
-import {
-  Alert
-  // ToastAndroid
-} from 'react-native'
-import { Toast } from '@ant-design/react-native'
+import { Alert, Vibration } from 'react-native'
+import Toast from '@components/@/ant-design/toast'
 import ActionSheet from '@components/@/ant-design/action-sheet'
-// import { IOS } from '@constants'
+import { DEV } from '@constants'
+import { getSystemStoreAsync } from './async'
+
+function getSetting() {
+  return getSystemStoreAsync().setting
+}
+
+/**
+ * 轻震动反馈
+ */
+export function feedback() {
+  const { vibration } = getSetting()
+  if (!vibration) {
+    return false
+  }
+
+  if (DEV) {
+    log('vibration')
+  }
+
+  return Vibration.vibrate(8)
+}
 
 /**
  * 确定框
@@ -85,11 +103,23 @@ export function showActionSheet(
  * 显示ImageViewer
  * @param {*} imageUrls
  */
-export function showImageViewer(imageUrls = []) {
+export function showImageViewer(imageUrls = [], index = 0) {
   if (!Array.isArray(imageUrls) && imageUrls.length === 0) {
     return
   }
 
-  const systemStore = require('../stores/system').default
-  systemStore.showImageViewer(imageUrls)
+  getSystemStoreAsync().showImageViewer(
+    imageUrls.map(item => ({
+      ...item,
+      url:
+        typeof item.url === 'string'
+          ? item.url.replace('http://', 'https://')
+          : item.url,
+      _url:
+        typeof item._url === 'string'
+          ? item._url.replace('http://', 'https://')
+          : item._url
+    })),
+    index
+  )
 }

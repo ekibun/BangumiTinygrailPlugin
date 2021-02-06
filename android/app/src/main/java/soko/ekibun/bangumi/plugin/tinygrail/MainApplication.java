@@ -6,10 +6,12 @@ import android.net.Uri;
 
 import com.facebook.react.PackageList;
 import com.facebook.react.ReactApplication;
+import com.facebook.react.ReactInstanceManager;
 import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
 import com.facebook.react.shell.MainReactPackage;
 import com.facebook.soloader.SoLoader;
+import soko.ekibun.bangumi.plugin.tinygrail.generated.BasePackageList;
 
 import org.unimodules.adapters.react.ReactAdapterPackage;
 import org.unimodules.adapters.react.ModuleRegistryAdapter;
@@ -19,19 +21,19 @@ import org.unimodules.core.interfaces.SingletonModule;
 import expo.modules.constants.ConstantsPackage;
 import expo.modules.permissions.PermissionsPackage;
 import expo.modules.filesystem.FileSystemPackage;
-import expo.modules.updates.UpdatesController;
+// import expo.modules.updates.UpdatesController;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.List;
 import javax.annotation.Nullable;
 
-import soko.ekibun.bangumi.plugin.tinygrail.generated.BasePackageList;
 import soko.ekibun.bangumi.plugin.tinygrail.main.TinygrailPackage;
 
+// 友盟
+import com.umeng.commonsdk.UMConfigure;
 import soko.ekibun.bangumi.plugin.tinygrail.umeng.DplusReactPackage;
 import soko.ekibun.bangumi.plugin.tinygrail.umeng.RNUMConfigure;
-import com.umeng.commonsdk.UMConfigure;
 
 public class MainApplication extends Application implements ReactApplication {
   private final ReactModuleRegistryProvider mModuleRegistryProvider = new ReactModuleRegistryProvider(
@@ -48,8 +50,8 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       List<ReactPackage> packages = new PackageList(this).getPackages();
       packages.add(new TinygrailPackage());
-      packages.add(new DplusReactPackage());
       packages.add(new ModuleRegistryAdapter(mModuleRegistryProvider));
+      packages.add(new DplusReactPackage());
       return packages;
     }
 
@@ -60,20 +62,22 @@ public class MainApplication extends Application implements ReactApplication {
 
     @Override
     protected @Nullable String getJSBundleFile() {
-      if (BuildConfig.DEBUG) {
-        return super.getJSBundleFile();
-      } else {
-        return UpdatesController.getInstance().getLaunchAssetFile();
-      }
+      return super.getJSBundleFile();
+      // if (BuildConfig.DEBUG) {
+      //   return super.getJSBundleFile();
+      // } else {
+      //   return UpdatesController.getInstance().getLaunchAssetFile();
+      // }
     }
 
     @Override
     protected @Nullable String getBundleAssetName() {
-      if (BuildConfig.DEBUG) {
-        return super.getBundleAssetName();
-      } else {
-        return UpdatesController.getInstance().getBundleAssetName();
-      }
+      return super.getBundleAssetName();
+      // if (BuildConfig.DEBUG) {
+      //   return super.getBundleAssetName();
+      // } else {
+      //   return UpdatesController.getInstance().getBundleAssetName();
+      // }
     }
   };
 
@@ -86,29 +90,36 @@ public class MainApplication extends Application implements ReactApplication {
   public void onCreate() {
     super.onCreate();
     SoLoader.init(this, /* native exopackage */ false);
-    initializeFlipper(this); // Remove this line if you don't want Flipper enabled
 
     if (!BuildConfig.DEBUG) {
-      UpdatesController.initialize(this);
+      // UpdatesController.initialize(this);
     }
 
-    RNUMConfigure.init(this, "5f0893db978eea0850afaa9d", "Umeng", UMConfigure.DEVICE_TYPE_PHONE, null);
+    initializeFlipper(this, getReactNativeHost().getReactInstanceManager());
+
+    // UMConfigure.setLogEnabled(true);
+    // UMConfigure.init(this, "5ddceaa10cafb2ea9900066a", "Umeng", UMConfigure.DEVICE_TYPE_PHONE, null);
   }
 
   /**
-   * Loads Flipper in React Native templates.
+   * Loads Flipper in React Native templates. Call this in the onCreate method with something like
+   * initializeFlipper(this, getReactNativeHost().getReactInstanceManager());
    *
    * @param context
+   * @param reactInstanceManager
    */
-  private static void initializeFlipper(Context context) {
+  private static void initializeFlipper(
+      Context context, ReactInstanceManager reactInstanceManager) {
     if (BuildConfig.DEBUG) {
       try {
         /*
          We use reflection here to pick up the class that initializes Flipper,
         since Flipper library is not available in release mode
         */
-        Class<?> aClass = Class.forName("com.facebook.flipper.ReactNativeFlipper");
-        aClass.getMethod("initializeFlipper", Context.class).invoke(null, context);
+        Class<?> aClass = Class.forName("com.rndiffapp.ReactNativeFlipper");
+        aClass
+            .getMethod("initializeFlipper", Context.class, ReactInstanceManager.class)
+            .invoke(null, context, reactInstanceManager);
       } catch (ClassNotFoundException e) {
         e.printStackTrace();
       } catch (NoSuchMethodException e) {

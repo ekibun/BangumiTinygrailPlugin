@@ -2,19 +2,19 @@
  * @Author: czy0729
  * @Date: 2020-01-09 19:50:20
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-05-01 22:44:13
+ * @Last Modified time: 2021-01-27 10:05:48
  */
 import React from 'react'
 import { Alert, View } from 'react-native'
-import PropTypes from 'prop-types'
 import { IconHeader } from '@screens/_'
 import { _ } from '@stores'
-import { inject, withHeader, observer } from '@utils/decorators'
+import { inject, withHeader, obc } from '@utils/decorators'
 import { t } from '@utils/fetch'
 import { withHeaderParams } from '../styles'
 import StatusBarEvents from '../_/status-bar-events'
+import ToolBar from '../_/tool-bar'
 import List from './list'
-import Store from './store'
+import Store, { sortDS } from './store'
 
 const title = '拍卖推荐 (按流动)'
 
@@ -25,15 +25,10 @@ export default
   hm: ['tinygrail/advance-auction', 'TinygrailAdvanceAuction'],
   withHeaderParams
 })
-@observer
+@obc
 class TinygrailAdvanceAuction extends React.Component {
   static navigationOptions = {
     title
-  }
-
-  static contextTypes = {
-    $: PropTypes.object,
-    navigation: PropTypes.object
   }
 
   componentDidMount() {
@@ -52,7 +47,7 @@ class TinygrailAdvanceAuction extends React.Component {
 
             Alert.alert(
               '当前计算方式',
-              '从英灵殿里面查找前2000条\n流动股息 > 2 且 数量 > 100\n流动股息 / 竞拍底价 * 10 = 分数',
+              '从英灵殿里面查找前2000条\n流动股息 > 2 且 数量 > 80\n流动股息 / 竞拍底价 * 10 = 分数',
               [
                 {
                   text: '知道了'
@@ -66,9 +61,20 @@ class TinygrailAdvanceAuction extends React.Component {
   }
 
   render() {
+    const { $ } = this.context
+    const { level, sort } = $.state
     return (
       <View style={this.styles.container}>
         <StatusBarEvents />
+        <ToolBar
+          level={level}
+          levelMap={$.levelMap}
+          data={sortDS}
+          sort={sort}
+          direction={sort ? 'down' : undefined}
+          onLevelSelect={$.onLevelSelect}
+          onSortPress={$.onSortPress}
+        />
         <List />
       </View>
     )

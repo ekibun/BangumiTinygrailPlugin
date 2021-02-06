@@ -2,25 +2,23 @@
  * @Author: czy0729
  * @Date: 2019-08-25 19:50:36
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-03-21 11:50:23
+ * @Last Modified time: 2021-01-27 10:20:22
  */
 import React from 'react'
-import PropTypes from 'prop-types'
 import { toJS } from 'mobx'
 import { Loading, ListView } from '@components'
 import { _ } from '@stores'
-import { observer } from '@utils/decorators'
+import { obc } from '@utils/decorators'
 import Item from './item'
+import { tabs } from './store'
 
-function List({ index }, { $ }) {
-  const key = $.key(index)
-  const rich = $.rich(key)
+function List({ id, title }, { $ }) {
+  const rich = $.rich(id)
   if (!rich._loaded) {
-    return <Loading style={_.container.flex} />
+    return <Loading style={_.container.flex} color={_.colorTinygrailText} />
   }
 
-  const [page, limit] = key.split('/')
-  const title = $.title(index)
+  const [page, limit] = id.split('/')
 
   // top100 余额最多处理
   let data = rich
@@ -39,31 +37,28 @@ function List({ index }, { $ }) {
   return (
     <ListView
       style={_.container.flex}
+      contentContainerStyle={_.container.bottom}
       keyExtractor={item => String(item.userId)}
       refreshControlProps={{
         color: _.colorTinygrailText
       }}
       footerTextType='tinygrailText'
       data={data}
+      scrollToTop={tabs[$.state.page].title === title}
       renderItem={({ item, index }) => (
         <Item
           index={index}
+          title={title}
           page={parseInt(page)}
           limit={parseInt(limit)}
           {...item}
         />
       )}
-      onHeaderRefresh={() => $.fetchRich(key)}
+      onHeaderRefresh={() => $.fetchRich(id)}
     />
   )
 }
 
-List.defaultProps = {
+export default obc(List, {
   title: '全部'
-}
-
-List.contextTypes = {
-  $: PropTypes.object
-}
-
-export default observer(List)
+})

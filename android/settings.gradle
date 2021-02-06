@@ -8,4 +8,4 @@ applyNativeModulesSettingsGradle(settings)
 
 include ':app'
 include ':pluginlibrary'
-project(':pluginlibrary').projectDir = new File(rootProject.projectDir, '../../../../idea/BangumiPlugin/pluginlibrary')
+project(':pluginlibrary').projectDir = new File(rootProject.projectDir, '../../BangumiPlugin/pluginlibrary')

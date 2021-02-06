@@ -3,15 +3,17 @@
  * @Author: czy0729
  * @Date: 2019-03-23 09:21:16
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-07-17 11:05:23
+ * @Last Modified time: 2021-01-17 21:25:41
  */
 import * as WebBrowser from 'expo-web-browser'
-import bangumiData from 'bangumi-data'
+import bangumiData from '@constants/json/thirdParty/bangumiData.min.json'
 import * as ReactNativeScreens from 'react-native-screens'
-import { DEV, HOST, HOST_2, SDK } from '@constants'
-import { SUBJECT_CN } from '@constants/cn'
-import x from '@constants/18x'
+import { HTMLDecode } from '@utils/html'
+import { DEV, HOST, HOST_2 } from '@constants'
+import cnData from '@constants/json/cn.json'
+import x18data from '@constants/json/18x.json'
 import { t } from './fetch'
+import { getSystemStoreAsync } from './async'
 import { globalLog, globalWarn } from './dev'
 
 const HOST_IMAGE = '//lain.bgm.tv'
@@ -26,17 +28,12 @@ export function bootApp() {
   /**
    * https://reactnavigation.org/docs/zh-Hans/react-native-screens.html
    */
-  if (SDK >= 36) {
-    ReactNativeScreens.enableScreens()
-  } else {
-    ReactNativeScreens.useScreens()
-  }
+  ReactNativeScreens.enableScreens()
 
   if (DEV) {
-    console.disableYellowBox = true
-
     // 不想在开发时看见满屏的不能解决的warning
     console.warn = Function.prototype
+    console.error = Function.prototype
   } else {
     global.console = {
       ...global.console,
@@ -54,18 +51,15 @@ export function bootApp() {
  * 获取设置
  */
 export function getSetting() {
-  const systemStore = require('../stores/system').default
-  const { setting } = systemStore
-  return setting
+  return getSystemStoreAsync().setting
 }
 
 /**
- * 获取设置
+ * 适配系统中文优先返回合适字符串
  */
-export function getOTA() {
-  const systemStore = require('../stores/system').default
-  const { ota } = systemStore
-  return ota
+export function cnjp(cn, jp) {
+  const { cnFirst } = getSetting()
+  return cnFirst ? cn || jp : jp || cn
 }
 
 /**
@@ -77,12 +71,12 @@ export function x18(subjectId, title) {
   if (!subjectId) return false
   let filter =
     typeof subjectId === 'string'
-      ? parseInt(subjectId.replace('/subject/', '')) in x
-      : parseInt(subjectId) in x
+      ? parseInt(subjectId.replace('/subject/', '')) in x18data
+      : parseInt(subjectId) in x18data
   if (!filter && title) {
     filter = ['乳', '妻', '淫'].some(item => title.includes(item))
   }
-  if (DEV && filter) console.log(subjectId, filter)
+  // if (DEV && filter) console.log(subjectId, filter)
   return filter
 }
 
@@ -126,8 +120,7 @@ export function navigationReference(navigation) {
  */
 const cache = {}
 export function findSubjectCn(jp = '', subjectId) {
-  const systemStore = require('../stores/system').default
-  if (!systemStore.setting.cnFirst) {
+  if (!getSetting()?.cnFirst) {
     return jp
   }
 
@@ -139,7 +132,7 @@ export function findSubjectCn(jp = '', subjectId) {
    * 若带id使用本地SUBJECT_CN加速查找
    */
   if (subjectId) {
-    const cn = SUBJECT_CN[subjectId]
+    const cn = cnData[subjectId]
     if (cn) {
       cache[jp] = cn
       return cn
@@ -149,12 +142,15 @@ export function findSubjectCn(jp = '', subjectId) {
   /**
    * 没有id则使用jp在bangumi-data里面匹配
    */
-  const item = bangumiData.items.find(item => item.title === jp)
+  const item = bangumiData.find(
+    item => subjectId == item.id || item.j === HTMLDecode(jp)
+  )
   if (item) {
+    const _item = unzipBangumiData(item)
     const cn =
-      (item.titleTranslate &&
-        item.titleTranslate['zh-Hans'] &&
-        item.titleTranslate['zh-Hans'][0]) ||
+      (_item.titleTranslate &&
+        _item.titleTranslate['zh-Hans'] &&
+        _item.titleTranslate['zh-Hans'][0]) ||
       jp
     cache[jp] = cn
     return cn
@@ -201,7 +197,13 @@ export function keyExtractor(item = {}) {
  * @param {*} passParams 传递的参数
  * @param {*} event      { id, data }
  */
-export function appNavigate(url = '', navigation, passParams = {}, event = {}) {
+export function appNavigate(
+  url = '',
+  navigation,
+  passParams = {},
+  event = {},
+  openWebBrowser = true
+) {
   try {
     const { id, data = {} } = event
     let _url = url
@@ -223,13 +225,15 @@ export function appNavigate(url = '', navigation, passParams = {}, event = {}) {
 
     // 没路由对象或者非本站
     if (!navigation || !_url.includes(HOST)) {
-      t(id, {
-        to: 'WebBrowser',
-        url: _url,
-        ...data
-      })
+      if (openWebBrowser) {
+        t(id, {
+          to: 'WebBrowser',
+          url: _url,
+          ...data
+        })
 
-      WebBrowser.openBrowserAsync(_url)
+        WebBrowser.openBrowserAsync(_url)
+      }
       return false
     }
 
@@ -393,7 +397,9 @@ export function appNavigate(url = '', navigation, passParams = {}, event = {}) {
 
     // 吐槽
     if (_url.includes('/timeline/status/')) {
-      const _id = _url.split('/timeline/status/')[1]
+      const splits = _url.split('/timeline/status/')
+      const _userId = splits[0].replace('https://bgm.tv/user/', '')
+      const _id = splits[1]
       t(id, {
         to: 'Say',
         id: _id,
@@ -402,6 +408,7 @@ export function appNavigate(url = '', navigation, passParams = {}, event = {}) {
 
       navigation.push('Say', {
         id: _id,
+        userId: _userId,
         ...passParams
       })
       return true
@@ -439,13 +446,15 @@ export function appNavigate(url = '', navigation, passParams = {}, event = {}) {
       return true
     }
 
-    t(id, {
-      to: 'WebBrowser',
-      url: _url,
-      ...data
-    })
+    if (openWebBrowser) {
+      t(id, {
+        to: 'WebBrowser',
+        url: _url,
+        ...data
+      })
 
-    WebBrowser.openBrowserAsync(_url)
+      WebBrowser.openBrowserAsync(_url)
+    }
     return false
   } catch (error) {
     warn('utils/app', 'appNavigate', error)
@@ -508,22 +517,40 @@ export function getBangumiUrl(item) {
   switch (site) {
     case 'bangumi':
       return url || `${HOST}/subject/${id}`
+
+    case 'acfun':
+      return url || `https://www.acfun.cn/bangumi/aa${id}`
+
     case 'bilibili':
-      return url || `https://www.bilibili.com/bangumi/media/md${id}`
-    case 'iqiyi':
-      return url || `https://www.iqiyi.com/${id}.html`
-    case 'pptv':
-      return url || `http://v.pptv.com/page/${id}.html`
+      return url || `https://www.bilibili.com/bangumi/media/md${id}/`
+
+    case 'sohu':
+      return url || `https://tv.sohu.com/${id}`
+
     case 'youku':
       return url || `https://list.youku.com/show/id_z${id}.html`
-    case 'acfun':
-      return url || `http://www.acfun.cn/v/ab${id}`
-    case 'nicovideo':
-      return url || `https://ch.nicovideo.jp/${id}`
+
     case 'qq':
       return url || `https://v.qq.com/detail/${id}.html`
+
+    case 'iqiyi':
+      return url || `https://www.iqiyi.com/${id}.html`
+
+    case 'letv':
+      return url || `https://www.le.com/comic/${id}.html`
+
+    case 'pptv':
+      return url || `http://v.pptv.com/page/${id}.html`
+
     case 'mgtv':
       return url || `https://www.mgtv.com/h/${id}.html`
+
+    case 'nicovideo':
+      return url || `https://ch.nicovideo.jp/${id}`
+
+    case 'netflix':
+      return url || `https://www.netflix.com/title/${id}`
+
     default:
       return ''
   }
@@ -707,4 +734,57 @@ export function tinygrailOSS(str, w = 150) {
  */
 export function tinygrailFixedTime(time) {
   return (time || '').replace('T', ' ').split('+')[0].split('.')[0]
+}
+
+/**
+ * bangumi-data的min转换成正常item
+ * @param {*} item
+ *
+ * {
+ *   id: 132734,
+ *   j: '冴えない彼女の育てかた♭',
+ *   c: '路人女主的养成方法 ♭',
+ *   s: {
+ *     p: 'SP3XVb0jk9E0sho',
+ *     i: 'a_19rrh9f1yl',
+ *     ni: 'saenai2',
+ *     b: 28228738
+ *   }
+ *   [t: 'tv']
+ * }
+ */
+const sitesMap = {
+  a: 'acfun',
+  b: 'bilibili',
+  s: 'sohu',
+  y: 'youku',
+  q: 'qq',
+  i: 'iqiyi',
+  l: 'letv',
+  p: 'pptv',
+  m: 'mgtv',
+  ni: 'nicovideo',
+  n: 'netflix'
+}
+export function unzipBangumiData(item = {}) {
+  const sites = [
+    {
+      site: 'bangumi',
+      id: String(item.id)
+    }
+  ]
+  Object.keys(item.s || {}).forEach(s =>
+    sites.push({
+      site: sitesMap[s],
+      id: String(item.s[s])
+    })
+  )
+  return {
+    title: item.j,
+    type: item.t || 'tv',
+    sites,
+    titleTranslate: {
+      'zh-Hans': [item.c]
+    }
+  }
 }

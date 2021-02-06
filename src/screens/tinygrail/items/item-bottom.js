@@ -2,20 +2,22 @@
  * @Author: czy0729
  * @Date: 2020-07-03 15:08:59
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-07-08 11:28:48
+ * @Last Modified time: 2021-01-27 10:16:52
  */
 import React from 'react'
-import { observer } from 'mobx-react'
 import { Touchable, Flex, Text } from '@components'
 import { Avatar } from '@screens/_'
 import { _ } from '@stores'
+import { ob } from '@utils/decorators'
 import { tinygrailOSS } from '@utils/app'
 
 function ItemBottom({ src, name, level, change, type, onPress }) {
+  const styles = memoStyles()
   return (
     <Touchable onPress={onPress}>
       <Flex>
         <Avatar
+          style={styles.avatar}
           src={tinygrailOSS(src)}
           size={28}
           name={name}
@@ -37,4 +39,10 @@ function ItemBottom({ src, name, level, change, type, onPress }) {
   )
 }
 
-export default observer(ItemBottom)
+export default ob(ItemBottom)
+
+const memoStyles = _.memoStyles(_ => ({
+  avatar: {
+    backgroundColor: _.tSelect(_._colorDarkModeLevel2, _.colorTinygrailBg)
+  }
+}))

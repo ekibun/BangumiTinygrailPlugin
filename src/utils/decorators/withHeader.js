@@ -2,15 +2,23 @@
  * @Author: czy0729
  * @Date: 2019-05-18 00:32:48
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-06-26 17:41:23
+ * @Last Modified time: 2021-01-25 11:22:11
  */
 import React from 'react'
-import { StatusBarEvents, Flex, Popover, Menu, Iconfont, UM } from '@components'
-import { IconBack } from '@screens/_'
+import {
+  StatusBarEvents,
+  Flex,
+  Popover,
+  Menu,
+  Iconfont,
+  UM,
+  Heatmap
+} from '@components'
 import { _ } from '@stores'
 import { hm as utilsHM } from '@utils/fetch'
 import { IOS, BARE } from '@constants'
-import observer from './observer'
+import { IconBack } from '@screens/_'
+import ob from './observer-props'
 
 const defaultHeaderStyle = {}
 if (!IOS && BARE) {
@@ -20,6 +28,7 @@ if (!IOS && BARE) {
 
 const withHeader = ({
   screen,
+  alias,
   headerStyle,
   headerTitleStyle,
   iconBackColor,
@@ -27,7 +36,7 @@ const withHeader = ({
   hm,
   withHeaderParams // function
 } = {}) => ComposedComponent =>
-  observer(
+  ob(
     class withHeaderComponent extends React.Component {
       static navigationOptions = ({ navigation }) => {
         let headerRight
@@ -39,6 +48,7 @@ const withHeader = ({
           'element',
           <Iconfont size={24} name='more' color={_.colorTitle} />
         )
+        const heatmap = navigation.getParam('heatmap')
         const extra = navigation.getParam('extra')
         if (popover.data.length) {
           const popoverProps = IOS
@@ -67,6 +77,7 @@ const withHeader = ({
                 {...popoverProps}
               >
                 {element}
+                {!!heatmap && <Heatmap id={heatmap} />}
               </Popover>
             </Flex>
           )
@@ -98,7 +109,8 @@ const withHeader = ({
                 ...(_params.headerStyle || headerStyle)
               }
             : {
-                backgroundColor: _.select(_.colorPlain, _._colorDarkModeLevel1),
+                // backgroundColor: _.select(_.colorPlain, _._colorDarkModeLevel1),
+                backgroundColor: _.colorPlain,
                 borderBottomColor: _.colorBorder,
                 borderBottomWidth: _.flat ? 0 : _.select(_.hairlineWidth, 0),
                 elevation: 0,
@@ -135,7 +147,7 @@ const withHeader = ({
         const { navigation } = this.props
         let backgroundColor
         if (!IOS && _.isDark) {
-          backgroundColor = _._colorDarkModeLevel1Hex
+          backgroundColor = _._colorPlainHex
         }
 
         // withHeaderParams动态生成的params优先级最高
@@ -154,6 +166,13 @@ const withHeader = ({
               <StatusBarEvents backgroundColor={backgroundColor} />
             )}
             <ComposedComponent navigation={navigation} />
+            {!!hm?.[1] && (
+              <Heatmap
+                bottom={_.bottom + _.sm}
+                id={alias || screen}
+                screen={hm[1]}
+              />
+            )}
           </>
         )
       }

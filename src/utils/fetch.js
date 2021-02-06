@@ -1,35 +1,36 @@
-/* eslint-disable space-before-function-paren */
-/* eslint-disable func-names */
+/* eslint-disable space-before-function-paren, func-names */
 /*
  * 请求相关
  * @Author: czy0729
  * @Date: 2019-03-14 05:08:45
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-07-16 11:24:50
+ * @Last Modified time: 2021-01-17 14:42:55
  */
 import { NativeModules, InteractionManager } from 'react-native'
-import Constants from 'expo-constants'
-import { Portal, Toast } from '@ant-design/react-native'
+import { Portal } from '@ant-design/react-native'
+import Toast from '@components/@/ant-design/toast'
 import {
-  IOS,
   APP_ID,
   APP_ID_BAIDU,
-  HOST_NAME,
+  DEV,
   HOST,
-  VERSION_GITHUB_RELEASE,
-  DEV
+  HOST_NAME,
+  IOS,
+  VERSION_GITHUB_RELEASE
 } from '@constants'
+import { HOST_CDN } from '@constants/cdn'
 import events from '@constants/events'
 import { BAIDU_KEY } from '@constants/secret'
 import fetch from './thirdParty/fetch-polyfill'
 import md5 from './thirdParty/md5'
 import { urlStringify, sleep, getTimestamp, randomn, debounce } from './index'
-import { log } from './dev'
+import { getUserStoreAsync, getThemeStoreAsync } from './async'
 import { info as UIInfo } from './ui'
+import { log } from './dev'
 
-const UMAnalyticsModule = NativeModules.UMAnalyticsModule
+const { UMAnalyticsModule } = NativeModules
 const SHOW_LOG = true // 开发显示请求信息
-const FETCH_TIMEOUT = 8000 // api超时时间
+const FETCH_TIMEOUT = 6400 // api超时时间
 const FETCH_RETRY = 4 // get请求失败自动重试次数
 
 const defaultHeaders = {
@@ -42,7 +43,6 @@ const defaultHeaders = {
   Pragma: 'no-cache',
   Referer: HOST
 }
-let ua = '' // 缓存userAgent
 
 /**
  * 统一请求方法
@@ -59,7 +59,7 @@ export default async function fetchAPI({
   noConsole = false
 } = {}) {
   const isGet = method === 'GET'
-  const userStore = require('../stores/user').default
+  const userStore = getUserStoreAsync()
   const { accessToken } = userStore
   const _config = {
     timeout: FETCH_TIMEOUT,
@@ -84,13 +84,14 @@ export default async function fetchAPI({
     _config.method = 'POST'
     _config.headers['Content-Type'] = 'application/x-www-form-urlencoded'
     _config.body = urlStringify(body)
+
     if (!noConsole) {
-      toastId = Toast.loading('Loading...', 0)
+      toastId = Toast.loading('Loading...', 0, () => {
+        if (toastId) Portal.remove(toastId)
+      })
     }
   }
-  if (SHOW_LOG) {
-    log(`[fetchAPI] ${info} ${_url}`)
-  }
+  if (SHOW_LOG) log(`🌐 ${info} ${_url}`)
 
   return fetch(_url, _config)
     .then(response => {
@@ -138,9 +139,12 @@ export default async function fetchAPI({
 
 /**
  * 请求获取HTML
- * chii_cookietime=2592000
+ *  - chii_cookietime=2592000
+ *  - 2021/01/17 拦截瞬间多次完全同样的请求
+ *
  * @param {*} param
  */
+const lastFetchHTML = {}
 export async function fetchHTML({
   method = 'GET',
   url,
@@ -150,7 +154,30 @@ export async function fetchHTML({
   raw = false
 } = {}) {
   const isGet = method === 'GET'
-  const userStore = require('../stores/user').default
+
+  // 拦截瞬间多次完全同样的请求
+  if (isGet) {
+    const cacheKey = JSON.stringify({
+      url,
+      data,
+      headers,
+      cookie
+    })
+    const ts = new Date().valueOf()
+    if (!lastFetchHTML[cacheKey]) {
+      lastFetchHTML[cacheKey] = ts
+    } else {
+      const distance = ts - lastFetchHTML[cacheKey]
+      if (distance <= 2000) {
+        log(`[prevent] ⚡️ ${url} ${distance}ms`)
+        return Promise.reject(new Error('prevent fetchHTML'))
+      }
+
+      lastFetchHTML[cacheKey] = ts
+    }
+  }
+
+  const userStore = getUserStoreAsync()
   const { cookie: userCookie, setCookie, userAgent } = userStore.userCookie
   const _config = {
     timeout: FETCH_TIMEOUT,
@@ -197,11 +224,11 @@ export async function fetchHTML({
     _config.method = 'POST'
     _config.headers['Content-Type'] = 'application/x-www-form-urlencoded'
     _config.body = urlStringify(body)
-    toastId = Toast.loading('Loading...', 8)
+    toastId = Toast.loading('Loading...', 8, () => {
+      if (toastId) Portal.remove(toastId)
+    })
   }
-  if (SHOW_LOG) {
-    log(`[fetchHTML] ${_url}`)
-  }
+  if (SHOW_LOG) log(`⚡️ ${_url}`)
 
   return fetch(_url, _config)
     .then(res => {
@@ -227,21 +254,15 @@ export function xhr(
   success = Function.prototype,
   fail = Function.prototype
 ) {
-  // 避免userStore循环引用
-  const userStore = require('../stores/user').default
+  const userStore = getUserStoreAsync()
   const { cookie: userCookie, userAgent } = userStore.userCookie
-
-  const toastId = Toast.loading('Loading...', 0)
+  const toastId = Toast.loading('Loading...', 0, () => {
+    if (toastId) Portal.remove(toastId)
+  })
   const request = new XMLHttpRequest()
   request.onreadystatechange = () => {
-    if (request.readyState !== 4) {
-      return
-    }
-
-    if (toastId) {
-      Portal.remove(toastId)
-    }
-
+    if (request.readyState !== 4) return
+    if (toastId) Portal.remove(toastId)
     if (request.status === 200) {
       success(request.responseText)
     } else {
@@ -269,13 +290,14 @@ export function xhrCustom({
   data,
   headers = {},
   responseType,
-  withCredentials = false
+  withCredentials = false,
+  showLog = true
 } = {}) {
   return new Promise((resolve, reject) => {
     const request = new XMLHttpRequest()
     request.onreadystatechange = function () {
       if (this.readyState === 4) {
-        if (this.status === 200) {
+        if (this.status === 200 || this.status === 201) {
           resolve(this)
           return
         }
@@ -304,14 +326,20 @@ export function xhrCustom({
     if (responseType) {
       request.responseType = responseType
     }
-    Object.keys(headers).forEach(key => {
+
+    const _headers = headers
+    if (url.includes(HOST_CDN) && !_headers.Referer) {
+      _headers.Referer = HOST
+    }
+    Object.keys(_headers).forEach(key => {
       request.setRequestHeader(key, headers[key])
     })
 
     const body = data ? urlStringify(data) : null
     request.send(body)
-    if (SHOW_LOG) {
-      log(`[xhrCustom] ${url}`)
+
+    if (SHOW_LOG && showLog) {
+      log(`🔍 ${url}`)
     }
   })
 }
@@ -330,6 +358,7 @@ export function sax({
 } = {}) {
   return new Promise((resolve, reject) => {
     const request = new XMLHttpRequest()
+
     // eslint-disable-next-line prefer-arrow-callback
     const cb = debounce(function (response) {
       if (response.length < 1000) {
@@ -387,42 +416,46 @@ export function sax({
 }
 
 /**
- * hm v5.0
+ * hm v6.0
  * @param {*} url
  * @param {*} screen
  */
+let lastHm = ''
 export function hm(url, screen) {
-  if (DEV) {
-    log(`[hm] ${url} ${screen}`)
-    return
+  if (screen) {
+    t('其他.查看', {
+      screen
+    })
   }
 
   try {
     // 保证这种低优先级的操作在UI响应之后再执行
-    InteractionManager.runAfterInteractions(async () => {
-      if (!ua) {
-        ua = await Constants.getWebViewUserAgentAsync()
+    InteractionManager.runAfterInteractions(() => {
+      const fullUrl =
+        String(url).indexOf('http') === -1 ? `${HOST}/${url}` : url
+      const query = {
+        v: VERSION_GITHUB_RELEASE
       }
-
-      const themeStore = require('../stores/theme').default
-      let u = String(url).indexOf('http') === -1 ? `${HOST}/${url}` : url
-      u += `${u.includes('?') ? '&' : '?'}v=${VERSION_GITHUB_RELEASE}`
-      u += `${themeStore.isDark ? '&dark=1' : ''}`
-
-      if (
-        screen &&
-        screen.includes('Tinygrail') &&
-        themeStore.isTinygrailDark
-      ) {
-        u += '&tdark=1'
+      const { isDark, isTinygrailDark } = getThemeStoreAsync()
+      if (isDark) query.dark = 1
+      if (screen) {
+        if (screen.includes('Tinygrail') && isTinygrailDark) {
+          query.tdark = 1
+        }
+        query.s = screen
       }
-      u += `${screen ? `&s=${screen}` : ''}`
+      const u = `${fullUrl}${fullUrl.includes('?') ? '&' : '?'}${urlStringify(
+        query
+      )}`
+      lastHm = u
+      if (DEV) log(`📌 ${u}`)
 
       const request = new XMLHttpRequest()
       request.open(
         'GET',
         `https://hm.baidu.com/hm.gif?${urlStringify({
           rnd: randomn(10),
+          lt: getTimestamp(),
           si: IOS
             ? '8f9e60c6b1e92f2eddfd2ef6474a0d11'
             : '2dcb6644739ae08a1748c45fb4cea087',
@@ -432,11 +465,7 @@ export function hm(url, screen) {
         })}`,
         true
       )
-      request.withCredentials = false
-      request.setRequestHeader(
-        'User-Agent',
-        ua || require('../stores/user').default.userCookie.userAgent
-      )
+      request.withCredentials = true
       request.send(null)
     })
   } catch (error) {
@@ -449,18 +478,14 @@ export function hm(url, screen) {
  * @param {*} u
  */
 export function t(desc, eventData) {
-  if (!desc) {
-    return
-  }
+  if (!desc) return
 
   if (IOS) {
-    if (!DEV) {
-      return
-    }
+    if (!DEV) return
 
     const eventId = events[desc]
     log(
-      `${eventId ? '' : '找不到eventId '}[track] ${desc} ${
+      `${eventId ? '' : '找不到eventId '}🏷️  ${desc} ${
         eventData ? JSON.stringify(eventData) : ''
       }`
     )
@@ -473,10 +498,26 @@ export function t(desc, eventData) {
       const eventId = events[desc]
       if (eventId) {
         if (eventData) {
-          UMAnalyticsModule.onEventWithMap(eventId, eventData)
+          UMAnalyticsModule.onEventWithMap(
+            eventId,
+            eventId === '其他.崩溃'
+              ? {
+                  ...eventData,
+                  url: lastHm
+                }
+              : eventData
+          )
         } else {
           UMAnalyticsModule.onEvent(eventId)
         }
+      }
+
+      if (DEV) {
+        log(
+          `${eventId ? '' : '找不到eventId '}🏷️ ${desc} ${
+            eventData ? JSON.stringify(eventData) : ''
+          }`
+        )
       }
     })
   } catch (error) {
@@ -489,9 +530,7 @@ export function t(desc, eventData) {
  * @param {*} fetchs
  */
 export async function queue(fetchs, num = 2) {
-  if (!fetchs.length) {
-    return false
-  }
+  if (!fetchs.length) return false
 
   await Promise.all(
     new Array(num).fill(0).map(async () => {
@@ -544,7 +583,3 @@ function safe(data) {
   }
   return data === null ? '' : data
 }
-
-// function safe(data) {
-//   return JSON.parse(JSON.stringify(data).replace(/:null/g, ':""'))
-// }

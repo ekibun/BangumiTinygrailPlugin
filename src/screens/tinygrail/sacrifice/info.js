@@ -2,19 +2,16 @@
  * @Author: czy0729
  * @Date: 2019-11-17 12:10:59
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-06-27 14:01:39
+ * @Last Modified time: 2021-01-27 10:21:04
  */
 import React from 'react'
 import { View } from 'react-native'
-import PropTypes from 'prop-types'
 import { Flex, Text, Image, Iconfont, Touchable } from '@components'
 import { _ } from '@stores'
 import { formatNumber, toFixed } from '@utils'
-import { observer } from '@utils/decorators'
+import { obc } from '@utils/decorators'
 import { tinygrailOSS, getCoverLarge } from '@utils/app'
 import { t } from '@utils/fetch'
-
-const maxSize = _.window.width / 3
 
 function Info(props, { $, navigation }) {
   const styles = memoStyles()
@@ -44,6 +41,7 @@ function Info(props, { $, navigation }) {
     fluctuationText = `${toFixed(fluctuation, 2)}%`
   }
 
+  const { s, subject, r } = $.relation
   return (
     <View style={styles.container}>
       {showCover && !!icon && (
@@ -51,7 +49,7 @@ function Info(props, { $, navigation }) {
           <Image
             style={styles.image}
             src={tinygrailOSS(getCoverLarge(icon))}
-            autoSize={maxSize}
+            autoSize={160}
             shadow
             placholder={false}
             imageViewer
@@ -75,63 +73,93 @@ function Info(props, { $, navigation }) {
             })
 
             navigation.push('Mono', {
-              monoId: `character/${id}`
+              monoId: `character/${id}`,
+              _name: name
             })
           }}
         >
           <Flex justify='center'>
-            <Text type='tinygrailPlain' size={16} bold>
+            <Text type='tinygrailPlain' size={15} align='center' bold>
               #{id} - {name}
               {!!bonus && (
-                <Text type='warning' size={16}>
+                <Text type='warning' size={15}>
                   {' '}
                   x{bonus}
                 </Text>
               )}
-              <Text type='ask' size={16}>
+              <Text type='ask' size={15}>
                 {' '}
                 lv{level}
               </Text>
             </Text>
             <Iconfont
-              style={_.ml.sm}
+              style={_.ml.xs}
               name='right'
-              size={16}
+              size={14}
               color={_.colorTinygrailText}
             />
           </Flex>
         </Touchable>
-        <Touchable style={_.ml.md} onPress={$.toggleCover}>
-          <Text type='tinygrailText' size={16}>
-            [{showCover ? '隐藏' : '显示'}封面]
-          </Text>
-        </Touchable>
       </Flex>
       <Flex
-        style={[_.container.wind, _.mt.md]}
+        style={[_.container.wind, _.mt.sm]}
         justify='center'
         align='baseline'
       >
-        <Text type='tinygrailText' align='center'>
-          市值{formatNumber(marketValue, 0)} / 量{formatNumber(total, 0)} /
-          发行价 {toFixed($.issuePrice, 1)} /{' '}
-          <Text type='tinygrailPlain'>{current && toFixed(current, 2)}</Text>
-          <Text type={color} align='center'>
+        <Text type='tinygrailText' align='center' size={13}>
+          市值{formatNumber(marketValue, 0, $.short)} / 量
+          {formatNumber(total, 0, $.short)} / 发行价 {toFixed($.issuePrice, 1)}{' '}
+          /{' '}
+          <Text type='tinygrailPlain' size={13}>
+            {current && toFixed(current, 1)}
+          </Text>
+          <Text type={color} align='center' size={13}>
             {' '}
             {fluctuationText}
           </Text>
         </Text>
       </Flex>
+      <Flex style={_.mt.sm} justify='center'>
+        {!!subject && (
+          <>
+            <Touchable
+              style={_.mr.sm}
+              onPress={() =>
+                navigation.push('Subject', {
+                  subjectId: s
+                })
+              }
+            >
+              <Text type='tinygrailText' size={13}>
+                [{subject}]
+              </Text>
+            </Touchable>
+            <Touchable
+              style={_.mr.sm}
+              onPress={() =>
+                navigation.push('TinygrailRelation', {
+                  ids: r,
+                  name: `${subject} (${r.length})`
+                })
+              }
+            >
+              <Text type='tinygrailText' size={13}>
+                [关联角色]
+              </Text>
+            </Touchable>
+          </>
+        )}
+        <Touchable onPress={$.toggleCover}>
+          <Text type='tinygrailText' size={13}>
+            [{showCover ? '隐藏' : '显示'}封面]
+          </Text>
+        </Touchable>
+      </Flex>
     </View>
   )
 }
 
-Info.contextTypes = {
-  $: PropTypes.object,
-  navigation: PropTypes.object
-}
-
-export default observer(Info)
+export default obc(Info)
 
 const memoStyles = _.memoStyles(_ => ({
   image: {
@@ -139,6 +167,6 @@ const memoStyles = _.memoStyles(_ => ({
   },
   container: {
     paddingVertical: _.space,
-    paddingHorizontal: _.wind
+    paddingHorizontal: _.wind - _._wind
   }
 }))

@@ -2,14 +2,12 @@
  * @Author: czy0729
  * @Date: 2019-09-14 20:37:21
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-03-19 20:59:02
+ * @Last Modified time: 2021-01-27 10:16:00
  */
 import React from 'react'
-import { StyleSheet } from 'react-native'
-import PropTypes from 'prop-types'
-import { Flex } from '@components'
+import { Flex, Text } from '@components'
 import { _ } from '@stores'
-import { observer } from '@utils/decorators'
+import { obc } from '@utils/decorators'
 import MenuItem from './menu-item'
 import Assets from './assets'
 
@@ -26,20 +24,21 @@ function Menus(props, { $ }) {
       <MenuItem title='英灵殿' pathname='TinygrailValhall' icon='app' />
       <MenuItem title='最新圣殿' pathname='TinygrailTemples' icon='break' />
       <MenuItem title='每周萌王' pathname='TinygrailTopWeek' icon='like' />
-      <MenuItem
-        title='小组讨论'
-        pathname='Group'
-        config={{
-          groupId: 'tinygrail'
-        }}
-        icon='planet'
-      />
+      <MenuItem title='人物查询' pathname='TinygrailSearch' icon='search' />
       <Assets />
       <MenuItem
         style={{
           backgroundColor: _.colorDepthBid
         }}
-        title={`我的买单 ${bids ? `(${bids})` : ''}`}
+        title={
+          <>
+            我的买单
+            <Text type='tinygrailPlain' size={15} lineHeight={19} bold>
+              {'  '}
+              {bids || ''}
+            </Text>
+          </>
+        }
         pathname='TinygrailBid'
         config={{
           type: 'bid'
@@ -50,7 +49,15 @@ function Menus(props, { $ }) {
         style={{
           backgroundColor: _.colorDepthAsk
         }}
-        title={`我的卖单 ${asks ? `(${asks})` : ''}`}
+        title={
+          <>
+            我的卖单
+            <Text type='tinygrailPlain' size={15} lineHeight={19} bold>
+              {'  '}
+              {asks || ''}
+            </Text>
+          </>
+        }
         pathname='TinygrailBid'
         config={{
           type: 'asks'
@@ -58,7 +65,15 @@ function Menus(props, { $ }) {
         icon='ask'
       />
       <MenuItem
-        title={`我的拍卖 ${auction ? `(${auction})` : ''}`}
+        title={
+          <>
+            我的拍卖
+            <Text type='tinygrailPlain' size={15} lineHeight={19} bold>
+              {'  '}
+              {auction || ''}
+            </Text>
+          </>
+        }
         pathname='TinygrailBid'
         config={{
           type: 'auction'
@@ -71,12 +86,12 @@ function Menus(props, { $ }) {
         icon='package'
       />
       <MenuItem title='资金日志' pathname='TinygrailLogs' icon='ri-zhi' />
-      <MenuItem title='资金分析' pathname='TinygrailTree' icon='fen-xi' />
+      <MenuItem title='粘贴板' pathname='TinygrailClipboard' icon='star-list' />
       <MenuItem
         style={{
           backgroundColor: _.colorTinygrailActive
         }}
-        title='高级分析'
+        title='高级功能'
         pathname='TinygrailAdvance'
         icon='meeting'
       />
@@ -85,13 +100,9 @@ function Menus(props, { $ }) {
   )
 }
 
-Menus.contextTypes = {
-  $: PropTypes.object
-}
+export default obc(Menus)
 
-export default observer(Menus)
-
-const styles = StyleSheet.create({
+const styles = _.create({
   section: {
     paddingBottom: _.sm,
     marginLeft: _.wind

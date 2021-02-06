@@ -2,16 +2,15 @@
  * @Author: czy0729
  * @Date: 2019-08-25 19:12:19
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-03-21 11:48:05
+ * @Last Modified time: 2021-01-27 10:18:55
  */
 import React from 'react'
 import { View } from 'react-native'
-import PropTypes from 'prop-types'
 import { _ } from '@stores'
-import { inject, withHeader, observer } from '@utils/decorators'
+import { inject, withHeader, obc } from '@utils/decorators'
 import { withHeaderParams } from '../styles'
 import StatusBarEvents from '../_/status-bar-events'
-import Tabs from '../_/tabs'
+import Tabs from '../_/tabs-v2'
 import ToolBar from '../_/tool-bar'
 import IconGo from '../_/icon-go'
 import List from './list'
@@ -26,15 +25,10 @@ export default
   hm: ['tinygrail/overview', 'TinygrailOverview'],
   withHeaderParams
 })
-@observer
+@obc
 class TinygrailOverview extends React.Component {
   static navigationOptions = {
     title
-  }
-
-  static contextTypes = {
-    $: PropTypes.object,
-    navigation: PropTypes.object
   }
 
   componentDidMount() {
@@ -48,12 +42,15 @@ class TinygrailOverview extends React.Component {
 
   renderContentHeaderComponent() {
     const { $ } = this.context
-    const { sort, direction } = $.state
+    const { level, sort, direction } = $.state
     return (
       <ToolBar
         data={sortDS}
+        level={level}
+        levelMap={$.levelMap}
         sort={sort}
         direction={direction}
+        onLevelSelect={$.onLevelSelect}
         onSortPress={$.onSortPress}
       />
     )
@@ -67,13 +64,10 @@ class TinygrailOverview extends React.Component {
         <StatusBarEvents />
         {!!_loaded && (
           <Tabs
-            tabs={tabs}
+            routes={tabs}
             renderContentHeaderComponent={this.renderContentHeaderComponent()}
-          >
-            {tabs.map((item, index) => (
-              <List key={item.key} index={index} />
-            ))}
-          </Tabs>
+            renderItem={item => <List key={item.key} id={item.key} />}
+          />
         )}
       </View>
     )

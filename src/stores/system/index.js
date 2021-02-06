@@ -2,17 +2,20 @@
  * @Author: czy0729
  * @Date: 2019-05-17 21:53:14
  * @Last Modified by: ekibun
- * @Last Modified time: 2020-07-02 21:00:02
+ * @Last Modified time: 2021-01-18 22:20:54
  */
 import { observable, computed } from 'mobx'
 import { getTimestamp } from '@utils'
+import { xhrCustom } from '@utils/fetch'
 import store from '@utils/store'
 import { info } from '@utils/ui'
+import { put, read } from '@utils/db'
 import {
   DEV,
   IOS,
   GITHUB_DATA,
   GITHUB_RELEASE_REPOS,
+  GITHUB_ADVANCE,
   VERSION_GITHUB_RELEASE
 } from '@constants'
 import {
@@ -22,9 +25,11 @@ import {
   MODEL_SETTING_HOME_LAYOUT,
   MODEL_SETTING_HOME_SORTING
 } from '@constants/model'
+import UserStore from '../user'
 import {
   NAMESPACE,
   INIT_SETTING,
+  INIT_DEV_EVENT,
   INIT_RELEASE,
   INIT_IMAGE_VIEWER
 } from './init'
@@ -35,6 +40,11 @@ class System extends store {
      * 云端配置数据
      */
     ota: {},
+
+    /**
+     * 高级会员
+     */
+    advance: false,
 
     /**
      * 基本设置
@@ -62,24 +72,48 @@ class System extends store {
     dev: false,
 
     /**
+     * 是否显示埋点统计
+     */
+    devEvent: INIT_DEV_EVENT,
+
+    /**
      * iOS首次进入, 观看用户产生内容需有同意规则选项, 否则不能过审
      */
-    iosUGCAgree: false
+    iosUGCAgree: false,
+
+    /**
+     * 用于标记APP启动后是否进入静止期
+     */
+    rendered: false
   })
 
   init = async () => {
     await this.readStorage(
-      ['ota', 'setting', 'release', 'dev', 'iosUGCAgree'],
+      [
+        'ota',
+        'advance',
+        'setting',
+        'release',
+        'dev',
+        'devEvent',
+        'iosUGCAgree'
+      ],
       NAMESPACE
     )
 
     // 检查新版本
+    this.fetchOTA()
     if (!DEV) {
       setTimeout(() => {
-        this.fetchOTA()
         // this.fetchRelease()
       }, 4000)
     }
+
+    setTimeout(() => {
+      this.setState({
+        rendered: true
+      })
+    }, 10000)
 
     return true
   }
@@ -147,6 +181,38 @@ class System extends store {
       // do nothing
     }
     return res
+  }
+
+  /**
+   * 判断是否高级用户
+   */
+  fetchAdvance = async () => {
+    // 永久性质
+    if (this.advance) {
+      return true
+    }
+
+    if (!UserStore.myId) {
+      return false
+    }
+
+    try {
+      const { _response } = await xhrCustom({
+        url: `${GITHUB_ADVANCE}?t=${getTimestamp()}`
+      })
+      const advanceUserMap = JSON.parse(_response)
+
+      if (advanceUserMap[UserStore.myId]) {
+        const key = 'advance'
+        this.setState({
+          advance: true
+        })
+        this.setStorage(key, undefined, NAMESPACE)
+      }
+    } catch (error) {
+      warn(NAMESPACE, 'fetchAdvance', error)
+    }
+    return true
   }
 
   // -------------------- page --------------------
@@ -261,14 +327,55 @@ class System extends store {
   }
 
   /**
+   * 上传当前设置到云端
+   */
+  uploadSetting = () => {
+    const { id } = UserStore.userInfo
+    return put({
+      path: `setting/${id}.json`,
+      content: JSON.stringify(this.setting)
+    })
+  }
+
+  /**
+   * 恢复到云端的设置
+   */
+  downloadSetting = async () => {
+    const { id } = UserStore.userInfo
+    const { content } = await read({
+      path: `setting/${id}.json`
+    })
+
+    if (!content) {
+      return false
+    }
+
+    try {
+      const setting = JSON.parse(content)
+      const key = 'setting'
+      this.setState({
+        [key]: {
+          ...this.setting,
+          ...setting
+        }
+      })
+      this.setStorage(key, undefined, NAMESPACE)
+      return true
+    } catch (error) {
+      return false
+    }
+  }
+
+  /**
    * 显示ImageViewer
    * @param {*} imageUrls Image Source
    */
-  showImageViewer = (imageUrls = []) => {
+  showImageViewer = (imageUrls = [], index) => {
     this.setState({
       imageViewer: {
         visible: true,
-        imageUrls
+        imageUrls,
+        index
       }
     })
   }
@@ -290,6 +397,21 @@ class System extends store {
     const key = 'dev'
     this.setState({
       [key]: !dev
+    })
+    this.setStorage(key, undefined, NAMESPACE)
+  }
+
+  /**
+   * 切换显示埋点统计
+   */
+  toggleDevEvent = (value = 'enabled') => {
+    const { devEvent } = this.state
+    const key = 'devEvent'
+    this.setState({
+      [key]: {
+        ...devEvent,
+        [value]: !devEvent[value]
+      }
     })
     this.setStorage(key, undefined, NAMESPACE)
   }

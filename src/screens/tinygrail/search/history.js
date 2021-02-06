@@ -2,14 +2,13 @@
  * @Author: czy0729
  * @Date: 2019-09-03 22:06:19
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-03-20 18:38:23
+ * @Last Modified time: 2021-01-27 10:22:01
  */
 import React from 'react'
 import { View } from 'react-native'
-import PropTypes from 'prop-types'
 import { Touchable, Flex, Text, Iconfont } from '@components'
 import { _ } from '@stores'
-import { observer } from '@utils/decorators'
+import { obc } from '@utils/decorators'
 import { t } from '@utils/fetch'
 
 function History({ style }, { $, navigation }) {
@@ -30,7 +29,7 @@ function History({ style }, { $, navigation }) {
                     monoId: item
                   })
 
-                  $.doSearch(navigation, item)
+                  $.doSearchNumber(navigation, item)
                 }}
               >
                 {$.chara(item).name || item}
@@ -50,12 +49,7 @@ function History({ style }, { $, navigation }) {
   )
 }
 
-History.contextTypes = {
-  $: PropTypes.object,
-  navigation: PropTypes.object
-}
-
-export default observer(History)
+export default obc(History)
 
 const memoStyles = _.memoStyles(_ => ({
   item: {

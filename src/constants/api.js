@@ -6,14 +6,22 @@
  * @Author: czy0729
  * @Date: 2019-02-21 21:30:44
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-07-03 14:07:22
+ * @Last Modified time: 2020-11-06 17:00:45
  */
 import { HOST } from './index'
 
 export const API_HOST = 'https://api.bgm.tv'
 export const API_HOST_TINYGRAIL = 'https://tinygrail.com'
-export const TINYGRAIL_ASSETS_LIMIT = 1800
+export const TINYGRAIL_ASSETS_LIMIT = 2000
 const TINYGRAIL_LIMIT = 200
+
+/**
+ * 瓷砖进度接口
+ * @param {*} username
+ * @param {*} type
+ */
+export const API_MOSAIC_TILE = (username, type = 'progress') =>
+  `https://bangumi-mosaic-tile.now.sh/users/${username}/timelines/${type}.json`
 
 /**
  * @todo correct
@@ -290,8 +298,8 @@ export const API_TINYGRAIL_BALANCE = () =>
 /**
  * ICO参与者
  */
-export const API_TINYGRAIL_INITIAL = icoId =>
-  `${API_HOST_TINYGRAIL}/api/chara/initial/users/${icoId}/1`
+export const API_TINYGRAIL_INITIAL = (icoId, page = 1) =>
+  `${API_HOST_TINYGRAIL}/api/chara/initial/users/${icoId}/${page}`
 
 /**
  * 参与ICO
@@ -345,7 +353,7 @@ export const API_TINYGRAIL_TEMPLE_LAST = (page = 1, limit = 24) =>
  * 环保刮刮乐
  */
 export const API_TINYGRAIL_SCRATCH = () =>
-  `${API_HOST_TINYGRAIL}/api/event/scratch/bonus`
+  `${API_HOST_TINYGRAIL}/api/event/scratch/bonus2`
 
 /**
  * 幻想乡刮刮乐
@@ -492,3 +500,16 @@ export const API_TINYGRAIL_USER_CHARA_TOTAL = hash =>
  */
 export const API_TINYGRAIL_SEARCH = keyword =>
   `${API_HOST_TINYGRAIL}/api/chara/search?keyword=${keyword}`
+
+/**
+ * 查询今天刮刮乐刮了多少次
+ */
+export const API_TINYGRAIL_DAILY_COUNT = () =>
+  `${API_HOST_TINYGRAIL}/api/event/daily/count/10`
+
+/**
+ * 启动ICO
+ * @param {*} monoId
+ */
+export const API_TINYGRAIL_INIT = monoId =>
+  `${API_HOST_TINYGRAIL}/api/chara/init/${monoId}/10000`

@@ -2,11 +2,10 @@
  * @Author: czy0729
  * @Date: 2019-11-17 15:33:52
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-05-04 01:41:08
+ * @Last Modified time: 2021-01-27 10:20:54
  */
 import React from 'react'
 import { View } from 'react-native'
-import PropTypes from 'prop-types'
 import {
   Flex,
   Input,
@@ -18,7 +17,7 @@ import {
 import { Popover } from '@screens/_'
 import { _ } from '@stores'
 import { formatNumber, lastDate, toFixed } from '@utils'
-import { observer } from '@utils/decorators'
+import { obc } from '@utils/decorators'
 import Stepper from './stepper'
 
 const countDS = ['到500', '到2500', '到12500', '最大']
@@ -29,10 +28,11 @@ function Auction({ style }, { $ }) {
   const { price = 0, amount } = $.valhallChara
   const { balance } = $.assets
   const { state, type } = $.auctionStatus
+  const { current } = $.chara
   return (
     <View style={[styles.container, style]}>
       <Flex>
-        <Flex.Item flex={1.4}>
+        <Flex.Item flex={1.5}>
           <Text type='tinygrailPlain'>
             竞拍
             <Text type='tinygrailText' size={12} lineHeight={14}>
@@ -46,10 +46,14 @@ function Auction({ style }, { $ }) {
             数量 ({amount ? formatNumber(amount, 0) : '-'}股)
           </Text>
         </Flex.Item>
-        <View style={[styles.btnSubmit, _.ml.sm]} />
+        <View style={[styles.btnSubmit, _.ml.sm]}>
+          <Text type='tinygrailText' size={12}>
+            当前 {current && toFixed(current, 1)}
+          </Text>
+        </View>
       </Flex>
       <Flex style={_.mt.sm}>
-        <Flex.Item flex={1.4}>
+        <Flex.Item flex={1.5}>
           <View style={styles.inputWrap}>
             <Stepper />
           </View>
@@ -94,9 +98,9 @@ function Auction({ style }, { $ }) {
         </View>
       </Flex>
       {!!lastAuction.time && (
-        <Text style={_.mt.sm} type='warning' size={12}>
-          上次出价 ({lastAuction.price} / {formatNumber(lastAuction.amount, 0)}
-          股 / {lastDate(lastAuction.time)})
+        <Text style={_.mt.md} type='warning' size={12}>
+          最近 ({lastAuction.price} / {formatNumber(lastAuction.amount, 0)}股 /{' '}
+          {lastDate(lastAuction.time)})
         </Text>
       )}
       <Flex style={_.mt.md}>
@@ -104,7 +108,7 @@ function Auction({ style }, { $ }) {
           <Text type='tinygrailPlain' size={12}>
             合计{' '}
             <Text type='ask' size={12}>
-              -{toFixed(auctionAmount * auctionPrice, 2)}
+              -{formatNumber(auctionAmount * auctionPrice, 2, true)}
             </Text>
           </Text>
         </Flex.Item>
@@ -132,19 +136,14 @@ function Auction({ style }, { $ }) {
           </Text>
         </Flex.Item>
         <Text type='tinygrailText' size={12}>
-          {formatNumber(balance, 2)}
+          {formatNumber(balance, 2, $.short)}
         </Text>
       </Flex>
     </View>
   )
 }
 
-Auction.contextTypes = {
-  $: PropTypes.object,
-  navigation: PropTypes.object
-}
-
-export default observer(Auction)
+export default obc(Auction)
 
 const memoStyles = _.memoStyles(_ => ({
   container: {
@@ -181,6 +180,6 @@ const memoStyles = _.memoStyles(_ => ({
     opacity: 0.8
   },
   btnSubmit: {
-    width: 64
+    width: 72
   }
 }))

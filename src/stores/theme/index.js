@@ -2,20 +2,20 @@
  * @Author: czy0729
  * @Date: 2019-11-30 10:30:17
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-07-17 11:05:55
+ * @Last Modified time: 2021-01-29 15:02:03
  */
-import { StyleSheet, InteractionManager } from 'react-native'
+import { StyleSheet, InteractionManager, Appearance } from 'react-native'
 import changeNavigationBarColor from 'react-native-navigation-bar-color'
 import { observable, computed } from 'mobx'
 import store from '@utils/store'
-import { DEV, IOS } from '@constants'
+import { DEV, IOS, IS_BEFORE_ANDROID_10 } from '@constants'
 import _ from '@styles'
 import { initialDevDark } from '@/config'
 import systemStore from '../system'
 
 const NAMESPACE = 'Theme'
 const DEFAULT_MODE = 'light'
-const DEFAULT_TINYGRAIL_MODE = 'green' // green: 绿涨红跌 | red: 红涨绿跌
+const DEFAULT_TINYGRAIL_MODE = 'green' // green: 绿涨红跌 | red: 红涨绿跌 | web: 网页一致
 const DEFAULT_TINYGRAIL_THEME_MODE = 'dark'
 const lightStyles = {
   // theme
@@ -96,9 +96,17 @@ class Theme extends store {
   })
 
   init = async () => {
-    const res = this.getStorage('mode', NAMESPACE, DEFAULT_MODE)
-    const mode = await res
-    if (mode !== DEFAULT_MODE) {
+    const mode = await this.getStorage('mode', NAMESPACE, DEFAULT_MODE)
+
+    // 遗漏问题, 版本前有部分用户安卓9启用了跟随系统设置, 需要排除掉
+    if (!IS_BEFORE_ANDROID_10 && this.autoColorScheme) {
+      // 主题是否跟随系统
+      const sysMode = Appearance.getColorScheme()
+      if (sysMode !== mode) {
+        this.toggleMode(sysMode)
+      }
+    } else if (mode !== DEFAULT_MODE) {
+      // 默认是白天模式, 若初始化不是白天切换主题
       this.toggleMode(mode)
     }
 
@@ -112,6 +120,7 @@ class Theme extends store {
       NAMESPACE,
       DEFAULT_TINYGRAIL_MODE
     )
+
     const fontSizeAdjust = await this.getStorage('fontSizeAdjust', NAMESPACE, 0)
     this.setState({
       tinygrailMode,
@@ -119,8 +128,10 @@ class Theme extends store {
       fontSizeAdjust
     })
 
-    return res
+    return true
   }
+
+  create = style => StyleSheet.create(style)
 
   // -------------------- mode styles --------------------
   @computed get mode() {
@@ -129,6 +140,11 @@ class Theme extends store {
 
   @computed get isDark() {
     return this.mode === 'dark'
+  }
+
+  @computed get autoColorScheme() {
+    const { autoColorScheme } = systemStore.setting
+    return autoColorScheme
   }
 
   @computed get flat() {
@@ -226,14 +242,21 @@ class Theme extends store {
     return tinygrailMode === DEFAULT_TINYGRAIL_MODE
   }
 
+  @computed get isWeb() {
+    const { tinygrailMode } = this.state
+    return tinygrailMode === 'web'
+  }
+
   @computed get colorBid() {
-    if (this.isGreen) {
-      return this.isTinygrailDark ? _.colorBid : _._colorBid
-    }
+    if (this.isWeb) return _.colorBidWeb
+    if (this.isGreen) return this.isTinygrailDark ? _.colorBid : _._colorBid
     return this.isTinygrailDark ? _.colorAsk : _._colorAsk
   }
 
   @computed get colorDepthBid() {
+    if (this.isWeb) {
+      return _.colorDepthBidWeb
+    }
     if (this.isGreen) {
       return this.isTinygrailDark ? _.colorDepthBid : _._colorDepthBid
     }
@@ -241,13 +264,13 @@ class Theme extends store {
   }
 
   @computed get colorAsk() {
-    if (this.isGreen) {
-      return this.isTinygrailDark ? _.colorAsk : _._colorAsk
-    }
+    if (this.isWeb) return _.colorAskWeb
+    if (this.isGreen) return this.isTinygrailDark ? _.colorAsk : _._colorAsk
     return this.isTinygrailDark ? _.colorBid : _._colorBid
   }
 
   @computed get colorDepthAsk() {
+    if (this.isWeb) return _.colorDepthAskWeb
     if (this.isGreen) {
       return this.isTinygrailDark ? _.colorDepthAsk : _._colorDepthAsk
     }
@@ -302,7 +325,7 @@ class Theme extends store {
 
   // -------------------- tool styles --------------------
   @computed get container() {
-    return StyleSheet.create({
+    return this.create({
       /**
        * 特殊布局, background与item应配合使用
        * 安卓为了防止过渡绘制, 全局底色为白色, 所以Item为白色时可以使用透明
@@ -497,6 +520,22 @@ class Theme extends store {
     return this.fontSize(30)
   }
 
+  /**
+   * RenderHTML 的 baseFontStyle 通用封装
+   */
+  @computed get baseFontStyle() {
+    return computed(() => ({
+      sm: {
+        fontSize: 12 + this.fontSizeAdjust,
+        lineHeight: 20
+      },
+      md: {
+        fontSize: 14 + this.fontSizeAdjust,
+        lineHeight: 22
+      }
+    })).get()
+  }
+
   // -------------------- page --------------------
   /**
    * 主题选择
@@ -514,12 +553,25 @@ class Theme extends store {
   /**
    * 切换模式
    */
-  toggleMode = () => {
+  toggleMode = mode => {
     const key = 'mode'
-    this.setState({
-      [key]: this.select('dark', 'light'),
-      ...this.select(darkStyles, lightStyles)
-    })
+    if (mode === 'light') {
+      this.setState({
+        [key]: 'light',
+        ...lightStyles
+      })
+    } else if (mode === 'dark') {
+      this.setState({
+        [key]: 'dark',
+        ...darkStyles
+      })
+    } else {
+      this.setState({
+        [key]: this.select('dark', 'light'),
+        ...this.select(darkStyles, lightStyles)
+      })
+    }
+
     this.setStorage(key, undefined, NAMESPACE)
     this.changeNavigationBarColor()
   }
@@ -538,11 +590,12 @@ class Theme extends store {
   /**
    * 切换小圣杯涨跌颜色
    */
-  toggleTinygrailMode = () => {
+  toggleTinygrailMode = type => {
     const { tinygrailMode } = this.state
     const key = 'tinygrailMode'
     this.setState({
-      [key]: tinygrailMode === 'green' ? 'red' : 'green'
+      [key]:
+        type === 'web' ? 'web' : tinygrailMode === 'green' ? 'red' : 'green'
     })
     this.setStorage(key, undefined, NAMESPACE)
   }
@@ -602,6 +655,8 @@ class Theme extends store {
    * 生成记忆styles函数
    * 原理: 通过闭包使每一个组件里面的StyleSheet.create都被记忆
    * 只有mode改变了, 才会重新StyleSheet.create, 配合mobx的observer触发重新渲染
+   *
+   *  - 支持key名为current的对象懒计算
    */
   memoStyles = (styles, dev) => {
     const memoId = getMemoStylesId()
@@ -616,7 +671,15 @@ class Theme extends store {
         memoId._mode = this.mode
         memoId._tMode = this.tinygrailThemeMode
         memoId._flat = this.flat
-        memoId._styles = StyleSheet.create(styles(this))
+
+        const computedStyles = styles(this)
+        if (computedStyles.current) {
+          const { current, ...otherStyles } = computedStyles
+          memoId._styles = this.create(otherStyles)
+          memoId._styles.current = current
+        } else {
+          memoId._styles = this.create(computedStyles)
+        }
 
         if (dev) {
           log(memoId)

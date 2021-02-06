@@ -2,7 +2,7 @@
  * @Author: czy0729
  * @Date: 2019-05-25 23:00:45
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-07-16 22:17:56
+ * @Last Modified time: 2021-01-10 22:48:49
  */
 import React from 'react'
 import { View } from 'react-native'
@@ -37,7 +37,8 @@ function ItemCollections({
   isDo,
   isOnHold,
   isDropped,
-  event
+  event,
+  children
 }) {
   const styles = memoStyles()
   const isFirst = index === 0
@@ -57,9 +58,9 @@ function ItemCollections({
   if (tags) {
     info.push(
       tags
-        .replace(' ', '')
         .split(' ')
-        .filter((item, index) => index < 2)
+        .filter(item => !!item)
+        .filter((item, index) => index < 4)
         .join(' ')
     )
   }
@@ -70,9 +71,9 @@ function ItemCollections({
   const indent = _collection ? (collection ? '　　 ' : '　　　') : ''
   return (
     <Touchable
-      style={[_.container.item, styles.container]}
+      style={[_.container.plain, styles.container]}
       onPress={() => {
-        const { eventId, eventData } = event
+        const { id: eventId, data: eventData } = event
         t(eventId, {
           to: 'Subject',
           subjectId: id,
@@ -100,6 +101,7 @@ function ItemCollections({
             height={IMG_HEIGHT}
             radius
             shadow
+            type={type}
           />
         </View>
         <Flex.Item style={_.ml.wind}>
@@ -158,6 +160,7 @@ function ItemCollections({
           )}
         </Flex.Item>
       </Flex>
+      {children}
     </Touchable>
   )
 }

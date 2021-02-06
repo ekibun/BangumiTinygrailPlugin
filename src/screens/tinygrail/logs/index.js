@@ -2,16 +2,15 @@
  * @Author: czy0729
  * @Date: 2019-09-19 00:35:21
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-03-21 11:44:36
+ * @Last Modified time: 2021-01-27 10:17:52
  */
 import React from 'react'
 import { View } from 'react-native'
-import PropTypes from 'prop-types'
 import { _ } from '@stores'
-import { inject, withHeader, observer } from '@utils/decorators'
+import { inject, withHeader, obc } from '@utils/decorators'
 import { withHeaderParams } from '../styles'
 import StatusBarEvents from '../_/status-bar-events'
-import Tabs from '../_/tabs'
+import Tabs from '../_/tabs-v2'
 import IconGo from '../_/icon-go'
 import List from './list'
 import Store, { tabs } from './store'
@@ -25,15 +24,10 @@ export default
   hm: ['tinygrail/logs', 'TinygrailLogs'],
   withHeaderParams
 })
-@observer
+@obc
 class TinygrailLogs extends React.Component {
   static navigationOptions = {
     title
-  }
-
-  static contextTypes = {
-    $: PropTypes.object,
-    navigation: PropTypes.object
   }
 
   componentDidMount() {
@@ -52,11 +46,11 @@ class TinygrailLogs extends React.Component {
       <View style={this.styles.container}>
         <StatusBarEvents />
         {!!_loaded && (
-          <Tabs tabs={tabs}>
-            {tabs.map((item, index) => (
-              <List key={item.key} index={index} />
-            ))}
-          </Tabs>
+          <Tabs
+            routes={tabs}
+            tabBarLength={5.6}
+            renderItem={item => <List key={item.key} title={item.title} />}
+          />
         )}
       </View>
     )

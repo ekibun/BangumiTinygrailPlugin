@@ -2,15 +2,13 @@
  * @Author: czy0729
  * @Date: 2020-05-03 14:48:00
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-06-27 13:53:58
+ * @Last Modified time: 2021-01-27 10:10:18
  */
 import React from 'react'
-import { StyleSheet } from 'react-native'
-import PropTypes from 'prop-types'
-import { Flex, Touchable } from '@components'
-import { IconTouchable } from '@screens/_'
+import { View } from 'react-native'
+import { Flex, Touchable, Iconfont } from '@components'
 import { _ } from '@stores'
-import { observer } from '@utils/decorators'
+import { obc } from '@utils/decorators'
 import Item from '../_/item'
 
 function ItemEdit({ index, item, type, users, event }, { $ }) {
@@ -28,12 +26,12 @@ function ItemEdit({ index, item, type, users, event }, { $ }) {
     >
       <Flex style={editing && styles.item}>
         {!!editing && (
-          <IconTouchable
-            style={_.mr.sm}
-            name={isActive ? 'radio-select' : 'radio'}
-            size={20}
-            color={isActive ? _.colorBid : _.colorTinygrailText}
-          />
+          <View style={[styles.icon, _.mr.sm]}>
+            <Iconfont
+              name={isActive ? 'radio-select' : 'radio'}
+              color={isActive ? _.colorBid : _.colorTinygrailText}
+            />
+          </View>
         )}
         <Flex.Item pointerEvents={editing ? 'none' : undefined}>
           <Item
@@ -52,18 +50,17 @@ function ItemEdit({ index, item, type, users, event }, { $ }) {
   )
 }
 
-ItemEdit.contextTypes = {
-  $: PropTypes.object
-}
+export default obc(ItemEdit)
 
-export default observer(ItemEdit)
-
-const styles = StyleSheet.create({
+const styles = _.create({
   item: {
     paddingLeft: _.wind - _._wind + _.sm,
     paddingRight: _.sm + 2
   },
   edit: {
     paddingLeft: 0
+  },
+  icon: {
+    padding: _.sm
   }
 })

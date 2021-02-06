@@ -2,7 +2,7 @@
  * @Author: czy0729
  * @Date: 2019-08-25 19:40:56
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-05-03 03:55:49
+ * @Last Modified time: 2020-11-10 17:26:05
  */
 import { observable, computed } from 'mobx'
 import { tinygrailStore } from '@stores'
@@ -10,6 +10,9 @@ import { getTimestamp } from '@utils'
 import store from '@utils/store'
 import { t } from '@utils/fetch'
 import {
+  levelList,
+  sortList,
+  relation,
   SORT_SC,
   SORT_GX,
   SORT_GXB,
@@ -50,21 +53,22 @@ export const sortDS = [
   SORT_SC,
   SORT_HYD,
   SORT_GX,
-  SORT_GXB,
   SORT_SDGX,
-  SORT_SDGXB,
   SORT_DQJ,
   SORT_SCJ,
   SORT_DQZD,
   SORT_DJ,
   SORT_XFJL,
-  SORT_FHL
+  SORT_FHL,
+  SORT_GXB,
+  SORT_SDGXB
 ]
 const namespace = 'ScreenTinygrailOverview'
 
 export default class ScreenTinygrailOverview extends store {
   state = observable({
     page: 0,
+    level: '',
     sort: '',
     direction: '',
     go: '卖出',
@@ -84,8 +88,7 @@ export default class ScreenTinygrailOverview extends store {
     })
 
     if (needFetch) {
-      const { page } = this.state
-      this.fetchList(tabs[page].key)
+      this.fetchList(this.currentKey)
     }
 
     return res
@@ -95,16 +98,53 @@ export default class ScreenTinygrailOverview extends store {
   fetchList = key => tinygrailStore.fetchList(key)
 
   // -------------------- get --------------------
-  @computed get mvc() {
-    return tinygrailStore.mvc
+  @computed get currentKey() {
+    const { page } = this.state
+    return tabs[page].key
+  }
+
+  @computed get levelMap() {
+    const { list } = this.list(this.currentKey)
+    const data = {}
+    list.forEach(item =>
+      data[item.level] ? (data[item.level] += 1) : (data[item.level] = 1)
+    )
+    return data
   }
 
   list(key = 'recent') {
-    return computed(() => tinygrailStore.list(key)).get()
+    return computed(() => relation(tinygrailStore.list(key))).get()
+  }
+
+  computedList(key) {
+    const { sort, level, direction } = this.state
+    return computed(() => {
+      const list = this.list(key)
+      if (!list._loaded) {
+        return list
+      }
+
+      let _list = list
+      if (level) {
+        _list = {
+          ..._list,
+          list: levelList(level, _list.list)
+        }
+      }
+
+      if (sort) {
+        _list = {
+          ..._list,
+          list: sortList(sort, direction, _list.list)
+        }
+      }
+
+      return _list
+    }).get()
   }
 
   // -------------------- page --------------------
-  onChange = (item, page) => {
+  onChange = page => {
     if (page === this.state.page) {
       return
     }
@@ -114,9 +154,7 @@ export default class ScreenTinygrailOverview extends store {
     })
 
     this.setState({
-      page,
-      sort: '',
-      direction: ''
+      page
     })
     this.setStorage(undefined, undefined, namespace)
     this.tabChangeCallback(page)
@@ -139,6 +177,17 @@ export default class ScreenTinygrailOverview extends store {
     if (!_loaded || title === '最近活跃') {
       this.fetchList(key)
     }
+  }
+
+  onLevelSelect = level => {
+    t('热门榜单.筛选', {
+      level
+    })
+
+    this.setState({
+      level
+    })
+    this.setStorage(undefined, undefined, namespace)
   }
 
   onSortPress = item => {

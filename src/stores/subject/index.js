@@ -3,18 +3,20 @@
  * @Author: czy0729
  * @Date: 2019-02-27 07:47:57
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-04-29 14:45:38
+ * @Last Modified time: 2021-02-05 16:10:24
  */
 import { observable } from 'mobx'
 import { LIST_EMPTY, LIMIT_LIST_COMMENTS } from '@constants'
 import { API_SUBJECT, API_SUBJECT_EP } from '@constants/api'
 import { CDN_SUBJECT, CDN_MONO } from '@constants/cdn'
 import {
+  HTML_EP,
+  HTML_MONO_VOICES,
+  HTML_MONO_WORKS,
   HTML_SUBJECT,
   HTML_SUBJECT_COMMENTS,
-  HTML_EP,
-  HTML_MONO_WORKS,
-  HTML_MONO_VOICES
+  HTML_SUBJECT_CATALOGS,
+  HTML_SUBJECT_RATING
 } from '@constants/html'
 import { getTimestamp } from '@utils'
 import { HTMLTrim, HTMLDecode } from '@utils/html'
@@ -22,6 +24,7 @@ import store from '@utils/store'
 import { fetchHTML, xhrCustom } from '@utils/fetch'
 import {
   NAMESPACE,
+  DEFAULT_RATING_STATUS,
   INIT_SUBJECT,
   INIT_SUBJECT_FROM_HTML_ITEM,
   INIT_SUBJECT_FROM_CDN_ITEM,
@@ -32,7 +35,9 @@ import {
   fetchMono,
   cheerioSubjectFormHTML,
   cheerioMonoWorks,
-  cheerioMonoVoices
+  cheerioMonoVoices,
+  cheerioRating,
+  cheerioSubjectCatalogs
 } from './common'
 
 class Subject extends store {
@@ -67,6 +72,14 @@ class Subject extends store {
      * @param {*} subjectId
      */
     subjectEp: {
+      0: {}
+    },
+
+    /**
+     * 包含条目的目录
+     * @param {*} subjectId
+     */
+    subjectCatalogs: {
       0: {}
     },
 
@@ -127,6 +140,24 @@ class Subject extends store {
      */
     monoVoices: {
       0: INIT_MONO_WORKS
+    },
+
+    /**
+     * 好友评分列表
+     */
+    rating: {
+      _: (subjectId = 0, status = DEFAULT_RATING_STATUS, isFriend = false) =>
+        `${subjectId}|${status}|${isFriend}`,
+      0: {
+        ...LIST_EMPTY,
+        counts: {
+          wishes: 0,
+          collections: 0,
+          doings: 0,
+          on_hold: 0,
+          dropped: 0
+        }
+      }
     }
   })
 
@@ -136,10 +167,12 @@ class Subject extends store {
         'subject',
         'subjectFormHTML',
         'subjectComments',
+        'subjectCatalogs',
         'mono',
         'monoComments',
         'monoWorks',
-        'monoVoices'
+        'monoVoices',
+        'rating'
       ],
       NAMESPACE
     )
@@ -233,6 +266,37 @@ class Subject extends store {
         namespace: NAMESPACE
       }
     )
+
+  /**
+   * 包含条目的目录
+   * @param {*} subjectId
+   */
+  fetchSubjectCatalogs = async ({ subjectId }, refresh) => {
+    const key = 'subjectCatalogs'
+    const limit = 15
+    const { list, pagination } = this[key](subjectId)
+    const page = refresh ? 1 : pagination.page + 1
+
+    const html = await fetchHTML({
+      url: HTML_SUBJECT_CATALOGS(subjectId, page)
+    })
+    const { list: _list } = cheerioSubjectCatalogs(html)
+    this.setState({
+      [key]: {
+        [subjectId]: {
+          list: refresh ? _list : [...list, ..._list],
+          pagination: {
+            page,
+            pageTotal: _list.length === limit ? 100 : page
+          },
+          _loaded: getTimestamp()
+        }
+      }
+    })
+    this.setStorage(key, undefined, NAMESPACE)
+
+    return this[key](subjectId)
+  }
 
   /**
    * 网页获取留言
@@ -523,6 +587,41 @@ class Subject extends store {
     this.setStorage(key, undefined, NAMESPACE)
 
     return this[key](monoId)
+  }
+
+  /**
+   * 所有人评分
+   */
+  fetchRating = async (
+    { subjectId = 0, status = DEFAULT_RATING_STATUS, isFriend = false } = {},
+    refresh
+  ) => {
+    const key = 'rating'
+    const stateKey = `${subjectId}|${status}|${isFriend}`
+    const limit = 20
+    const { list, pagination } = this[key](subjectId, status, isFriend)
+    const page = refresh ? 1 : pagination.page + 1
+
+    const html = await fetchHTML({
+      url: HTML_SUBJECT_RATING(subjectId, status, isFriend, page)
+    })
+    const { list: _list, counts } = cheerioRating(html)
+    this.setState({
+      [key]: {
+        [stateKey]: {
+          list: refresh ? _list : [...list, ..._list],
+          pagination: {
+            page,
+            pageTotal: _list.length === limit ? 100 : page
+          },
+          counts,
+          _loaded: getTimestamp()
+        }
+      }
+    })
+    this.setStorage(key, undefined, NAMESPACE)
+
+    return this[key](subjectId, status, isFriend)
   }
 }
 

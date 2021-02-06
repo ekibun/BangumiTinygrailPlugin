@@ -2,9 +2,12 @@
  * @Author: czy0729
  * @Date: 2019-07-15 09:27:59
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-04-28 11:19:34
+ * @Last Modified time: 2020-10-28 15:09:11
  */
 import { LIST_EMPTY } from '@constants'
+import { MODEL_RATING_STATUS } from '@constants/model'
+
+export const DEFAULT_RATING_STATUS = MODEL_RATING_STATUS.getValue('看过')
 
 export const NAMESPACE = 'Subject'
 
@@ -30,6 +33,7 @@ export const INIT_SUBJECT = {
   staff: [],
   summary: '',
   topic: [],
+  catalog: [],
   type: '',
   url: '',
   lock: '',

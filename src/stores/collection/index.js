@@ -4,17 +4,19 @@
  * 收藏
  * @Author: czy0729
  * @Date: 2019-02-21 20:40:40
- * @Last Modified by: ekibun
- * @Last Modified time: 2020-07-16 22:28:45
+ * @Last Modified by: czy0729
+ * @Last Modified time: 2021-02-05 12:09:36
  */
-import { observable } from 'mobx'
+import { observable, toJS } from 'mobx'
 import { getTimestamp, trim, sleep } from '@utils'
 import { HTMLTrim, HTMLToTree, findTreeNode } from '@utils/html'
 import store from '@utils/store'
-import fetch, { fetchHTML, xhr } from '@utils/fetch'
-import { LIST_EMPTY } from '@constants'
+import fetch, { fetchHTML, xhr, xhrCustom } from '@utils/fetch'
+import { info } from '@utils/ui'
+import { LIST_EMPTY, DEV } from '@constants'
 import { MODEL_SUBJECT_TYPE, MODEL_COLLECTION_STATUS } from '@constants/model'
 import {
+  API_MOSAIC_TILE,
   API_COLLECTION,
   API_COLLECTION_ACTION,
   API_SUBJECT_UPDATE_WATCHED
@@ -23,6 +25,7 @@ import {
   HTML_USER_COLLECTIONS,
   HTML_ACTION_SUBJECT_SET_WATCHED
 } from '@constants/html'
+import rateData from '@constants/json/rate.json'
 import userStore from '../user'
 import {
   NAMESPACE,
@@ -68,20 +71,28 @@ class Collection extends store {
      */
     userCollectionsMap: {
       // 0: '看过'
-    }
+    },
+
+    /**
+     * 瓷砖进度
+     */
+    mosaicTile: {}
   })
 
   init = () => {
-    // setTimeout(() => {
-    //   this.fetchUserCollectionsQueue()
-    // }, 16000)
+    if (!DEV) {
+      setTimeout(() => {
+        this.fetchUserCollectionsQueue()
+      }, 16000)
+    }
 
     return this.readStorage(
       [
         'collection',
         'userCollections',
         'userCollectionsTags',
-        'userCollectionsMap'
+        'userCollectionsMap',
+        'mosaicTile'
       ],
       NAMESPACE
     )
@@ -277,7 +288,7 @@ class Collection extends store {
    * 排队获取自己的所有动画收藏列表记录
    *  - 每种最多取10页240条数据
    */
-  fetchUserCollectionsQueue = async () => {
+  fetchUserCollectionsQueue = async refresh => {
     try {
       const { username } = userStore.usersInfo(userStore.myUserId)
       const userId = username || userStore.myUserId
@@ -293,7 +304,7 @@ class Collection extends store {
           subjectType,
           item.value
         )
-        if (!_loaded || now - _loaded > 60 * 24) {
+        if (refresh || !_loaded || now - _loaded > 60 * 60) {
           await this.fetchUserCollections(
             {
               userId,
@@ -340,6 +351,51 @@ class Collection extends store {
     }
   }
 
+  /**
+   * 瓷砖进度数据
+   */
+  fetchMosaicTile = async ({ userId } = {}) => {
+    const key = 'mosaicTile'
+    const _username = userId || userStore.myId
+    if (
+      this.mosaicTile._loaded &&
+      getTimestamp() - this.mosaicTile._loaded <= 60 &&
+      _username === this.mosaicTile._username
+    ) {
+      return this[key]
+    }
+
+    try {
+      // refresh online data
+      await xhrCustom({
+        url: API_MOSAIC_TILE(_username).replace('/timelines/progress.json', '')
+      })
+      await sleep(2400)
+
+      const { _response } = await xhrCustom({
+        url: `${API_MOSAIC_TILE(
+          _username
+        )}?begin=2019-07-01&end=2020-12-31&state=${getTimestamp()}`
+      })
+
+      const data = JSON.parse(_response)
+      if (!Object.keys(data || {}).length) {
+        info('时间瓷砖数据生成中，请稍等一下再试')
+        return false
+      }
+
+      data._username = _username
+      data._loaded = getTimestamp()
+
+      this.clearState(key, data)
+      this.setStorage(key, undefined, NAMESPACE)
+    } catch (error) {
+      info('时间瓷砖数据生成中，请稍等一下再试')
+      console.log('CollectionStore', 'fetchMosaicTile', error)
+    }
+    return this[key]
+  }
+
   // -------------------- page --------------------
   /**
    * 只本地化自己的收藏概览
@@ -355,7 +411,6 @@ class Collection extends store {
         data[key] = userCollections[key]
       }
     })
-
     this.setStorage('userCollections', data, NAMESPACE)
   }
 
@@ -371,6 +426,35 @@ class Collection extends store {
       }
     })
     this.setStorage('userCollectionsTags', data, NAMESPACE)
+  }
+
+  /**
+   * 用户收藏按网站评分本地排序后入库
+   */
+  sortUserCollectionsByScore = (userId, subjectType, type) => {
+    const data = this.userCollections(userId, subjectType, type)
+    const list = data.list.sort(
+      (a, b) => Number(rateData[b.id] || 0) - Number(rateData[a.id] || 0)
+    )
+
+    const key = 'userCollections'
+    const stateKey = `${userId}|${subjectType}|${type}`
+    this.setState({
+      [key]: {
+        [stateKey]: {
+          ...data,
+          list: toJS(list)
+        }
+      }
+    })
+
+    // 只本地化自己的收藏概览
+    if (
+      userId === userStore.userInfo.username ||
+      userId === userStore.myUserId
+    ) {
+      this.setUserCollectionsStroage()
+    }
   }
 
   // -------------------- action --------------------

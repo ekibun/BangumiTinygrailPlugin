@@ -4,23 +4,34 @@
  * @Author: czy0729
  * @Date: 2019-05-23 18:57:26
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-05-01 15:00:54
+ * @Last Modified time: 2020-10-18 15:05:22
  */
 import React from 'react'
-import { StyleSheet, Modal, View } from 'react-native'
+import { StyleSheet, Modal, View, StatusBar } from 'react-native'
 import RNImageViewer from 'react-native-image-zoom-viewer'
 import { ActivityIndicator } from '@ant-design/react-native'
+import { _ } from '@stores'
 import { open } from '@utils'
 import { showActionSheet } from '@utils/ui'
 import { IOS } from '@constants'
 import Touchable from './touchable'
 import Iconfont from './iconfont'
+import Text from './text'
+
+const actionSheetDS = ['浏览器打开图片', '取消']
 
 export default class ImageViewer extends React.Component {
   static defaultProps = {
+    index: 0,
     visible: false,
     imageUrls: [],
     onCancel: Function.prototype
+  }
+
+  UNSAFE_componentWillReceiveProps(nextProps) {
+    if (!IOS) {
+      StatusBar.setHidden(nextProps.visible)
+    }
   }
 
   onRequestClose = () => {
@@ -28,10 +39,18 @@ export default class ImageViewer extends React.Component {
     onCancel()
   }
 
+  onMenus = () => {
+    const { index, imageUrls, onCancel } = this.props
+    return this.renderMenus(
+      imageUrls[index]._url || imageUrls[index].url,
+      onCancel
+    )
+  }
+
   renderMenus(url, onCancel) {
     // 不想涉及到权限问题, 暂时用浏览器打开图片来处理
     if (IOS) {
-      showActionSheet(['浏览器打开图片', '取消'], index => {
+      showActionSheet(actionSheetDS, index => {
         if (index === 0) {
           const result = open(url)
           if (result) {
@@ -42,7 +61,7 @@ export default class ImageViewer extends React.Component {
     } else {
       // @issue 安卓的ActionSheet在这个Viewer的下面
       onCancel()
-      showActionSheet(['浏览器打开图片', '取消'], index => {
+      showActionSheet(actionSheetDS, index => {
         if (index === 0) {
           open(url)
         }
@@ -52,8 +71,21 @@ export default class ImageViewer extends React.Component {
     return null
   }
 
+  renderIndicator = (currentIndex, allSize) => {
+    const { imageUrls } = this.props
+    if (imageUrls.length <= 1) {
+      return null
+    }
+
+    return (
+      <Text style={styles.indicator} align='center' pointerEvents='none'>
+        {currentIndex} / {allSize}
+      </Text>
+    )
+  }
+
   render() {
-    const { visible, imageUrls, onCancel, ...other } = this.props
+    const { index, visible, imageUrls, onCancel, ...other } = this.props
     return (
       <Modal
         visible={visible}
@@ -70,10 +102,12 @@ export default class ImageViewer extends React.Component {
           </View>
           <RNImageViewer
             style={styles.viewer}
+            index={index}
             imageUrls={imageUrls}
             backgroundColor='transparent'
             enableSwipeDown
-            menus={() => this.renderMenus(imageUrls[0]._url, onCancel)}
+            menus={this.onMenus}
+            renderIndicator={this.renderIndicator}
             onCancel={onCancel}
             {...other}
           />
@@ -89,6 +123,7 @@ export default class ImageViewer extends React.Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    minHeight: _.window.height,
     backgroundColor: 'rgba(0, 0, 0, 0.88)'
   },
   activityIndicator: {
@@ -109,5 +144,12 @@ const styles = StyleSheet.create({
   },
   iconfont: {
     color: '#fff'
+  },
+  indicator: {
+    position: 'absolute',
+    zIndex: 10,
+    top: _.appBarHeight + 14,
+    right: 0,
+    left: 0
   }
 })

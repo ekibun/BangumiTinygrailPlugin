@@ -2,17 +2,16 @@
  * @Author: czy0729
  * @Date: 2019-09-03 21:52:53
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-03-20 18:38:36
+ * @Last Modified time: 2021-01-27 10:22:16
  */
 import React from 'react'
-import PropTypes from 'prop-types'
-import { Flex, Input, Touchable, Text } from '@components'
+import { Flex, Input, Touchable, Text, Activity } from '@components'
 import { _ } from '@stores'
-import { observer } from '@utils/decorators'
+import { obc } from '@utils/decorators'
 
 function SearchBar(props, { $, navigation }) {
   const styles = memoStyles()
-  const { value } = $.state
+  const { value, searching } = $.state
   return (
     <Flex>
       <Flex.Item>
@@ -21,7 +20,7 @@ function SearchBar(props, { $, navigation }) {
           value={value}
           keyboardType='numeric'
           returnKeyType='search'
-          placeholder='输入角色id直达...'
+          placeholder='输入角色名字或id'
           placeholderTextColor={_.colorTinygrailText}
           autoFocus
           onChange={$.onChange}
@@ -31,24 +30,25 @@ function SearchBar(props, { $, navigation }) {
       <Touchable
         style={_.ml.sm}
         size='sm'
-        onPress={() => $.doSearch(navigation)}
+        onPress={() => {
+          if (searching) return
+          $.doSearch(navigation)
+        }}
       >
         <Flex style={styles.btn} justify='center'>
-          <Text type='tinygrailText' size={14}>
-            前往
-          </Text>
+          {searching && (
+            <Flex style={_.scale}>
+              <Activity />
+            </Flex>
+          )}
+          <Text type='tinygrailText'>查询</Text>
         </Flex>
       </Touchable>
     </Flex>
   )
 }
 
-SearchBar.contextTypes = {
-  $: PropTypes.object,
-  navigation: PropTypes.object
-}
-
-export default observer(SearchBar)
+export default obc(SearchBar)
 
 const memoStyles = _.memoStyles(_ => ({
   searchIpt: {

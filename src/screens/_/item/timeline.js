@@ -2,7 +2,7 @@
  * @Author: czy0729
  * @Date: 2019-05-08 17:13:08
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-06-26 16:40:50
+ * @Last Modified time: 2020-12-27 01:00:21
  */
 import React from 'react'
 import { ScrollView, View, Alert } from 'react-native'
@@ -16,6 +16,7 @@ import { HOST, HOST_NAME, EVENT, IMG_WIDTH_SM, IMG_HEIGHT_SM } from '@constants'
 import Avatar from '../base/avatar'
 import Cover from '../base/cover'
 import Stars from '../base/stars'
+import Name from '../base/name'
 
 const avatarWidth = 32
 const avatarCoverWidth = 40
@@ -45,6 +46,25 @@ class ItemTimeline extends React.Component {
     appNavigate(url, navigation, passParams, event)
   }
 
+  onClear = () => {
+    const { clearHref, onDelete } = this.props
+    Alert.alert('警告', '确定删除?', [
+      {
+        text: '取消',
+        style: 'cancel'
+      },
+      {
+        text: '确定',
+        onPress: () => onDelete(clearHref)
+      }
+    ])
+  }
+
+  get userId() {
+    const { avatar } = this.props
+    return matchUserId(String(avatar?.url).replace(HOST, ''))
+  }
+
   renderP3() {
     const { p3, image } = this.props
 
@@ -61,6 +81,7 @@ class ItemTimeline extends React.Component {
           <Katakana
             key={item || index}
             type={isSubject ? 'main' : 'title'}
+            lineHeight={14}
             bold={isSubject}
             onPress={() =>
               this.appNavigate(
@@ -76,7 +97,7 @@ class ItemTimeline extends React.Component {
           >
             {isSubject ? findSubjectCn(item, subjectId) : item}
           </Katakana>,
-          <Text key={`${item}.`} type='sub'>
+          <Text key={`${item}.`} lineHeight={14} type='sub'>
             、
           </Text>
         )
@@ -93,6 +114,7 @@ class ItemTimeline extends React.Component {
       $p3 = (
         <Katakana
           type={isSubject ? 'main' : 'title'}
+          lineHeight={14}
           bold={isSubject}
           onPress={() =>
             this.appNavigate(
@@ -126,10 +148,12 @@ class ItemTimeline extends React.Component {
     }
 
     return (
-      <Katakana.Provider>
+      <Text lineHeight={14}>
         {!!p1.text && (
-          <Katakana
+          <Name
+            userId={this.userId}
             type='title'
+            lineHeight={14}
             bold
             onPress={() =>
               this.appNavigate(p1.url, {
@@ -138,13 +162,21 @@ class ItemTimeline extends React.Component {
               })
             }
           >
-            {p1.text}{' '}
-          </Katakana>
+            {p1.text}
+          </Name>
         )}
-        <Text type='sub'>{p2.text} </Text>
+        <Text type='sub' lineHeight={14}>
+          {' '}
+          {p2.text}{' '}
+        </Text>
         {this.renderP3()}
-        {!!p4.text && <Text type='sub'> {p4.text}</Text>}
-      </Katakana.Provider>
+        {!!p4.text && (
+          <Text type='sub' lineHeight={14}>
+            {' '}
+            {p4.text}
+          </Text>
+        )}
+      </Text>
     )
   }
 
@@ -195,7 +227,7 @@ class ItemTimeline extends React.Component {
     )
   }
 
-  renderImages() {
+  renderImages(type) {
     const { p3, image } = this.props
     if (image.length <= 1) {
       return null
@@ -204,29 +236,33 @@ class ItemTimeline extends React.Component {
     const images = image.map((item, index) => {
       const isAvatar = !String(!!p3.url.length && p3.url[0]).includes('subject')
       return (
-        <Cover
-          key={item || index}
-          style={_.mr.sm}
-          src={item}
-          size={isAvatar ? avatarCoverWidth : IMG_WIDTH_SM}
-          height={isAvatar ? avatarCoverWidth : IMG_HEIGHT_SM}
-          radius
-          shadow
-          onPress={() => {
-            const url = (!!p3.url.length && p3.url[index]) || ''
-            const subjectId = matchSubjectId(url)
-            this.appNavigate(url, {
-              _cn: findSubjectCn(!!p3.text.length && p3.text[index], subjectId),
-              _jp: !!p3.text.length && p3.text[index],
-              _name: !!p3.text.length && p3.text[index],
-              _image: image
-            })
-          }}
-        />
+        <View key={item || index} style={type ? _.mr.md : _.mr.sm}>
+          <Cover
+            src={item}
+            size={isAvatar ? avatarCoverWidth : IMG_WIDTH_SM}
+            height={isAvatar ? avatarCoverWidth : IMG_HEIGHT_SM}
+            radius
+            shadow
+            type={type}
+            onPress={() => {
+              const url = (!!p3.url.length && p3.url[index]) || ''
+              const subjectId = matchSubjectId(url)
+              this.appNavigate(url, {
+                _cn: findSubjectCn(
+                  !!p3.text.length && p3.text[index],
+                  subjectId
+                ),
+                _jp: !!p3.text.length && p3.text[index],
+                _name: !!p3.text.length && p3.text[index],
+                _image: image
+              })
+            }}
+          />
+        </View>
       )
     })
 
-    if (image.length <= 4) {
+    if (image.length <= 3) {
       return (
         <Flex style={_.mt.sm} wrap='wrap'>
           {images}
@@ -236,28 +272,46 @@ class ItemTimeline extends React.Component {
 
     // 有一次性操作很多条目很多图片的情况, 水平滚动比较合适
     return (
-      <ScrollView style={_.mt.sm} horizontal>
+      <ScrollView
+        style={_.mt.sm}
+        contentContainerStyle={this.styles.images}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+      >
         {images}
       </ScrollView>
     )
   }
 
-  render() {
+  renderAvatar() {
+    const { navigation, avatar, p1, event } = this.props
+    return (
+      <View style={this.styles.image}>
+        {!!avatar.src && (
+          <Avatar
+            navigation={navigation}
+            size={avatarWidth}
+            userId={this.userId}
+            name={p1.text}
+            src={avatar.src}
+            event={event}
+          />
+        )}
+      </View>
+    )
+  }
+
+  renderContent() {
     const {
-      navigation,
-      style,
       index,
-      avatar,
-      p1,
+      p2,
       p3,
       star,
       reply,
       comment,
       time,
       image,
-      clearHref,
-      event,
-      onDelete
+      clearHref
     } = this.props
     const _image = !!image.length && image[0]
     const bodyStyle =
@@ -265,6 +319,78 @@ class ItemTimeline extends React.Component {
     const rightCoverIsAvatar = !String(!!p3.url.length && p3.url[0]).includes(
       'subject'
     )
+    const showImages = image.length >= 3
+    const type = p2?.text?.includes('读')
+      ? '书籍'
+      : p2?.text?.includes('听')
+      ? '音乐'
+      : p2?.text?.includes('玩')
+      ? '游戏'
+      : ''
+    return (
+      <Flex.Item
+        style={[
+          showImages ? this.styles.contentNoPaddingRight : this.styles.content,
+          index !== 0 && !_.flat && this.styles.border,
+          _.ml.sm
+        ]}
+      >
+        <Flex align='start'>
+          <Flex.Item>
+            <View style={showImages && this.styles.contentHasPaddingRight}>
+              {this.renderP()}
+              {this.renderDesc()}
+            </View>
+            {this.renderImages(type)}
+            <Flex style={bodyStyle}>
+              {!!reply.count && (
+                <Text
+                  type='primary'
+                  size={12}
+                  onPress={() => this.appNavigate(reply.url)}
+                >
+                  {reply.count}
+                </Text>
+              )}
+              <Text style={_.mr.sm} type='sub' size={12}>
+                {time}
+              </Text>
+              <Stars value={star} />
+            </Flex>
+          </Flex.Item>
+          <Flex align='start'>
+            {image.length === 1 && (
+              <View style={_.ml.md}>
+                <Cover
+                  src={_image}
+                  size={rightCoverIsAvatar ? avatarCoverWidth : IMG_WIDTH_SM}
+                  height={rightCoverIsAvatar ? avatarCoverWidth : IMG_HEIGHT_SM}
+                  radius
+                  shadow
+                  type={type}
+                  onPress={() =>
+                    this.appNavigate(!!p3.url.length && p3.url[0], {
+                      _jp: !!p3.text.length && p3.text[0],
+                      _name: !!p3.text.length && p3.text[0],
+                      _image
+                    })
+                  }
+                />
+              </View>
+            )}
+            {!!clearHref && (
+              <Touchable style={_.ml.sm} onPress={this.onClear}>
+                <Iconfont style={this.styles.del} name='close' size={13} />
+              </Touchable>
+            )}
+          </Flex>
+        </Flex>
+      </Flex.Item>
+    )
+  }
+
+  render() {
+    const { style, avatar, children } = this.props
     return (
       <Flex
         style={[
@@ -275,86 +401,9 @@ class ItemTimeline extends React.Component {
         ]}
         align='start'
       >
-        <View style={this.styles.image}>
-          {!!avatar.src && (
-            <Avatar
-              navigation={navigation}
-              size={avatarWidth}
-              userId={matchUserId(String(avatar.url).replace(HOST, ''))}
-              name={p1.text}
-              src={avatar.src}
-              event={event}
-            />
-          )}
-        </View>
-        <Flex.Item
-          style={[
-            this.styles.content,
-            index !== 0 && !_.flat && this.styles.border,
-            _.ml.sm
-          ]}
-        >
-          <Flex align='start'>
-            <Flex.Item>
-              {this.renderP()}
-              {this.renderDesc()}
-              {this.renderImages()}
-              <Flex style={bodyStyle}>
-                {!!reply.count && (
-                  <Text
-                    type='primary'
-                    size={12}
-                    onPress={() => this.appNavigate(reply.url)}
-                  >
-                    {reply.count}
-                  </Text>
-                )}
-                <Text style={_.mr.sm} type='sub' size={12}>
-                  {time}
-                </Text>
-                <Stars value={star} />
-              </Flex>
-            </Flex.Item>
-            <Flex align='start'>
-              {image.length === 1 && (
-                <Cover
-                  style={_.ml.md}
-                  src={_image}
-                  size={rightCoverIsAvatar ? avatarCoverWidth : IMG_WIDTH_SM}
-                  height={rightCoverIsAvatar ? avatarCoverWidth : IMG_HEIGHT_SM}
-                  radius
-                  shadow
-                  onPress={() =>
-                    this.appNavigate(!!p3.url.length && p3.url[0], {
-                      _jp: !!p3.text.length && p3.text[0],
-                      _name: !!p3.text.length && p3.text[0],
-                      _image
-                    })
-                  }
-                />
-              )}
-              {!!clearHref && (
-                <Touchable
-                  style={_.ml.sm}
-                  onPress={() => {
-                    Alert.alert('警告', '确定删除?', [
-                      {
-                        text: '取消',
-                        style: 'cancel'
-                      },
-                      {
-                        text: '确定',
-                        onPress: () => onDelete(clearHref)
-                      }
-                    ])
-                  }}
-                >
-                  <Iconfont style={this.styles.del} name='close' size={13} />
-                </Touchable>
-              )}
-            </Flex>
-          </Flex>
-        </Flex.Item>
+        {this.renderAvatar()}
+        {this.renderContent()}
+        {children}
       </Flex>
     )
   }
@@ -371,14 +420,27 @@ const memoStyles = _.memoStyles(_ => ({
   flatNoAvatar: {
     marginTop: -_.md
   },
+  images: {
+    paddingTop: _.sm,
+    paddingRight: _.sm,
+    paddingBottom: _.md
+  },
   image: {
     width: avatarWidth,
     marginTop: _.md,
     marginLeft: _.wind
   },
   content: {
+    paddingTop: _.md,
+    paddingRight: _.wind,
+    paddingBottom: _.md
+  },
+  contentNoPaddingRight: {
     paddingVertical: _.md,
-    paddingRight: _.wind
+    paddingRight: _.wind - _._wind
+  },
+  contentHasPaddingRight: {
+    paddingRight: _._wind
   },
   border: {
     borderTopColor: _.colorBorder,

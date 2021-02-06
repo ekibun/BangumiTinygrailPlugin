@@ -4,7 +4,7 @@
  * @Author: czy0729
  * @Date: 2019-12-17 10:27:31
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-07-15 21:03:30
+ * @Last Modified time: 2021-02-04 20:01:32
  */
 
 /**
@@ -16,6 +16,7 @@ export default {
   'Anime.跳转': 'Anime.to',
   'Anime.选择': 'Anime.onSelect',
   'Anime.到顶': 'Anime.scrollToTop',
+  'Anime.切换布局': 'Anime.switchLayout',
 
   // - [x] Anitama
   'Anitama.跳转': 'Anitama.to',
@@ -30,10 +31,11 @@ export default {
   // - [x] 索引
   '索引.跳转': 'Browser.to',
   '索引.右上角菜单': 'Browser.topRightMenu',
-  '索引.标签页切换': 'Browser.onChange',
+  // '索引.标签页切换': 'Browser.onChange',
   '索引.类型选择': 'Browser.onSelect',
   '索引.年选择': 'Browser.onAirdateSelect',
   '索引.月选择': 'Browser.onMonthSelect',
+  '索引.切换布局': 'Browser.switchLayout',
 
   // - [x] 每日放送
   '每日放送.跳转': 'Calendar.to',
@@ -46,7 +48,7 @@ export default {
   '目录.上一页': 'Catalog.prev',
   '目录.下一页': 'Catalog.next',
   '目录.页码跳转': 'Catalog.doSearch',
-  '目录.提示': 'Catalog.alert',
+  // '目录.提示': 'Catalog.alert',
 
   // - [x] 目录详情
   '目录详情.跳转': 'CatalogDetail.to',
@@ -54,6 +56,7 @@ export default {
   '目录详情.收藏': 'CatalogDetail.doCollect',
   '目录详情.取消收藏': 'CatalogDetail.doErase',
   '目录详情.封面图查看': 'CatalogDetail.imageView',
+  '目录详情.排序': 'CatalogDetail.sort',
 
   // 收藏的人物
   '收藏的人物.跳转': 'Character.to',
@@ -104,6 +107,22 @@ export default {
   '频道.跳转': 'Channel.to',
   '频道.右上角菜单': 'Channel.topRightMenu',
 
+  // 文库
+  '文库.跳转': 'Wenku.to',
+  '文库.选择': 'Wenku.onSelect',
+  '文库.到顶': 'Wenku.scrollToTop',
+  '文库.切换布局': 'Wenku.switchLayout',
+
+  // Manga
+  'Manga.跳转': 'Manga.to',
+  'Manga.选择': 'Manga.onSelect',
+  'Manga.到顶': 'Manga.scrollToTop',
+  'Manga.切换布局': 'Manga.switchLayout',
+
+  // 推荐
+  '推荐.跳转': 'Guess.to',
+  '推荐.刷新': 'Guess.refresh',
+
   /* ==================== home ==================== */
   // 首页
   '首页.跳转': 'Home.to',
@@ -114,13 +133,14 @@ export default {
   '首页.置顶或取消置顶': 'Home.itemToggleTop',
   '首页.全部展开': 'Home.expandAll',
   '首页.全部关闭': 'Home.closeAll',
-  '首页.选择布局': 'Home.selectLayout',
+  // '首页.选择布局': 'Home.selectLayout',
   '首页.格子布局条目选择': 'Home.selectGirdSubject',
   '首页.观看下一章节': 'Home.doWatchedNextEp',
   '首页.更新书籍下一个章节': 'Home.doUpdateNext',
   '首页.管理收藏': 'Home.doUpdateCollection',
   '首页.章节菜单操作': 'Home.doEpsSelect',
   '首页.章节按钮长按': 'Home.doEpsLongPress',
+  '首页.搜索源': 'Home.searchEp',
 
   // 人物
   '人物.跳转': 'Mono.to',
@@ -128,6 +148,7 @@ export default {
   '人物.收藏人物': 'Mono.doCollect',
   '人物.取消收藏人物': 'Mono.doEraseCollect',
   '人物.封面图查看': 'Mono.imageView',
+  '人物.启动ICO': 'Mono.ico',
 
   // 条目
   '条目.查看': 'Subject.view',
@@ -142,7 +163,7 @@ export default {
   '条目.更新书籍章节': 'Subject.doUpdateBookEp',
   '条目.输入框更新章节': 'Subject.doUpdateSubjectEp',
   '条目.章节按钮长按': 'Subject.doEpsLongPress',
-  '条目.跳到条目': 'Subject.toSubject',
+  // '条目.跳到条目': 'Subject.toSubject',
   '条目.封面图查看': 'Subject.imageView',
   '条目.右上角菜单': 'Subject.topRightMenu',
   '条目.删除收藏': 'Subject.doEraseCollection',
@@ -151,9 +172,24 @@ export default {
   '条目.翻译曲目': 'Subject.doDiscTranslate',
   '条目.查看奖杯': 'Subject.toPSNINE',
   '条目.设置章节筛选': 'Subject.updateFilterEps',
+  '条目.阅读轻小说': 'Subject.readNoval',
+  '条目.阅读漫画': 'Subject.readManga',
+  '条目.预览': 'Subject.viewThumbs',
+  '条目.筛选分数': 'Subject.filterScores',
+  '条目.复制标题': 'Subject.copyTitle',
+  '条目.展开收起功能块': 'Subject.switchBlock',
+
+  // 章节
+  '章节.跳转': 'Episodes.to',
+  '章节.右上角菜单': 'Episodes.topRightMenu',
+
+  // 条目目录
+  '条目目录.跳转': 'SubjectCatalogs.to',
+  '条目目录.右上角菜单': 'SubjectCatalogs.topRightMenu',
 
   // 用户标签
   '用户标签.跳转': 'Tag.to',
+  '用户标签.右上角菜单': 'Tag.topRightMenu',
   '用户标签.排序选择': 'Tag.onOrderSelect',
   '用户标签.年选择': 'Tag.onAirdateSelect',
   '用户标签.月选择': 'Tag.onMonthSelect',
@@ -178,6 +214,11 @@ export default {
   // 制作人员
   '制作人员.跳转': 'Persons.to',
   '制作人员.右上角菜单': 'Persons.topRightMenu',
+
+  // 用户评分
+  '用户评分.跳转': 'Rating.to',
+  '用户评分.标签页切换': 'Rating.tabsChange',
+  '用户评分.切换类型': 'Rating.toggleFilter',
 
   /* ==================== login ==================== */
   // 辅助登陆
@@ -268,12 +309,22 @@ export default {
   '社区指导原则.不同意': 'UCG.disagree',
   '社区指导原则.同意': 'UCG.agree',
 
+  // 帖子搜索
+  '帖子搜索.跳转': 'RakuenSearch.to',
+  '帖子搜索.选择历史': 'RakuenSearch.selectHistory',
+  '帖子搜索.删除历史': 'RakuenSearch.deleteHistory',
+  '帖子搜索.搜索': 'RakuenSearch.doSearch',
+
   /* ==================== reader ==================== */
   // - [x] 漫画
   '漫画.初始化': 'Comic.init',
   '漫画.搜索章节': 'Comic.searchEps',
   '漫画.搜索图片': 'Comic.searchImages',
   '漫画.搜索': 'Comic.onSearch',
+
+  // HD
+  'HD.查看': 'HD.jump',
+  'HD.提示': 'HD.alert',
 
   /* ==================== timeline ==================== */
   // 时间胶囊
@@ -311,6 +362,7 @@ export default {
   '我的委托.标签页切换': 'TBid.tabsChange',
   '我的委托.排序': 'TBid.onSortPress',
   '我的委托.取消拍卖': 'TBid.onAuctionCancel',
+  '我的委托.一键取消': 'TBid.onBatchCancel',
 
   // 我的持仓
   '我的持仓.跳转': 'TCharaAssets.to',
@@ -319,6 +371,7 @@ export default {
   '我的持仓.排序': 'TCharaAssets.onSortPress',
   '我的持仓.设置前往': 'TCharaAssets.onSelectGo',
   '我的持仓.批量献祭': 'TCharaAssets.doBatchSacrifice',
+  '我的持仓.批量挂单': 'TCharaAssets.doBatchAsk',
 
   // 交易
   '交易.跳转': 'TDeal.to',
@@ -359,12 +412,14 @@ export default {
   '新番榜单.跳转': 'TNew.to',
   '新番榜单.标签页切换': 'TNew.tabsChange',
   '新番榜单.排序': 'TNew.onSortPress',
+  '新番榜单.筛选': 'TNew.onFilter',
   '新番榜单.设置前往': 'TNew.onSelectGo',
 
   // 热门榜单
   '热门榜单.跳转': 'TOverview.to',
   '热门榜单.标签页切换': 'TOverview.tabsChange',
   '热门榜单.排序': 'TOverview.onSortPress',
+  '热门榜单.筛选': 'TOverview.onFilter',
   '热门榜单.设置前往': 'TOverview.onSelectGo',
 
   // 番市首富
@@ -384,6 +439,7 @@ export default {
   '资产重组.展开收起记录': 'TSacrifice.toggleLogs',
   '资产重组.展开收起圣殿板块': 'TSacrifice.toggleTemples',
   '资产重组.展开收起董事会': 'TSacrifice.toggleUsers',
+  '资产重组.测试效率': 'TSacrifice.doTestSacrifice',
 
   // 人物直达
   '人物直达.跳转': 'TSearch.to',
@@ -417,7 +473,13 @@ export default {
   '英灵殿.跳转': 'TValhall.to',
   '英灵殿.标签页切换': 'TValhall.tabsChange',
   '英灵殿.排序': 'TValhall.onSortPress',
+  '英灵殿.筛选': 'TValhall.onFilter',
   '英灵殿.设置前往': 'TValhall.onSelectGo',
+
+  // 关联角色
+  '关联角色.跳转': 'TRelation.to',
+  '关联角色.排序': 'TRelation.onSortPress',
+  '关联角色.设置前往': 'TRelation.onSelectGo',
 
   // 我的道具
   '我的道具.使用': 'TItems.use',
@@ -426,7 +488,17 @@ export default {
   '每周萌王.跳转': 'TTopWeek.to',
   '每周萌王.刷新': 'TTopWeek.refresh',
 
+  // 粘贴板
+  '粘贴板.跳转': 'TClipboard.to',
+  '粘贴板.刷新': 'TClipboard.refresh',
+  '粘贴板.分享': 'TClipboard.share',
+  '粘贴板.一键注资': 'TClipboard.batchICO',
+
   /* ==================== user ==================== */
+  // 个人设置
+  '个人设置.查看原图': 'UserSetting.origin',
+  '个人设置.保存': 'UserSetting.save',
+
   // 好友
   '好友.跳转': 'Friends.to',
   '好友.排序': 'Friends.sort',
@@ -454,6 +526,10 @@ export default {
   '设置.恢复默认设置': 'Setting.reset',
   '设置.退出登陆': 'Setting.logout',
 
+  // 网络探针
+  '网络探针.全部检测': 'ServerStatus.pingAll',
+  '网络探针.检测': 'ServerStatus.pingOne',
+
   // 空间
   '空间.跳转': 'Zone.to',
   '空间.右上角菜单': 'Zone.topRightMenu',
@@ -464,7 +540,15 @@ export default {
   '空间.解除好友': 'Zone.disconnect',
   '空间.历史': 'Zone.used',
 
+  // 时间线
+  '时间线.跳转': 'UserTimeline.to',
+  '时间线.点击瓷砖': 'UserTimeline.mosaicTilePress',
+
   /* ==================== other ==================== */
   '其他.启动': 'Other.start',
-  '其他.切换主题': 'Other.theme'
+  '其他.切换主题': 'Other.theme',
+  '其他.查看': 'Other.view',
+  '其他.刷新到顶': 'Other.fetchToTop',
+  '其他.Linking': 'Other.deeplink',
+  '其他.崩溃': 'Other.error'
 }

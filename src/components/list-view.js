@@ -3,7 +3,7 @@
  * @Author: czy0729
  * @Date: 2019-04-11 00:46:28
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-07-03 10:20:20
+ * @Last Modified time: 2020-12-10 20:00:11
  */
 import React from 'react'
 import {
@@ -23,6 +23,7 @@ import { LIST_EMPTY } from '@constants'
 import Flex from './flex'
 import Mesume from './mesume'
 import Text from './text'
+import ScrollToTop from './scroll-to-top'
 
 const AnimatedSectionList = Animated.createAnimatedComponent(SectionList)
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList)
@@ -55,6 +56,7 @@ class ListView extends React.Component {
     optimize: true, // 是否开启长列表优化
     showFooter: true,
     showMesume: true,
+    scrollToTop: false, // 自动在顶部补充一区域, 点击列表返回到顶, 安卓用
     onHeaderRefresh: undefined,
     onFooterRefresh: undefined
   }
@@ -147,6 +149,7 @@ class ListView extends React.Component {
       this.scrollToIndex = params => ref.scrollToIndex(params)
       this.scrollToItem = params => ref.scrollToItem(params)
       this.scrollToOffset = params => ref.scrollToOffset(params)
+      this.scrollToLocation = params => ref.scrollToLocation(params)
     }
   }
 
@@ -156,7 +159,7 @@ class ListView extends React.Component {
   }
 
   get commonProps() {
-    const { optimize, showFooter } = this.props
+    const { optimize, showFooter, ListFooterComponent = null } = this.props
     const { refreshState } = this.state
     return {
       ref: this.connectRef,
@@ -167,7 +170,9 @@ class ListView extends React.Component {
 
       refreshing: refreshState === RefreshState.HeaderRefreshing,
       refreshControl: this.renderRefreshControl(),
-      ListFooterComponent: showFooter ? this.renderFooter(refreshState) : null,
+      ListFooterComponent: showFooter
+        ? this.renderFooter(refreshState)
+        : ListFooterComponent,
       onRefresh: this.onHeaderRefresh,
       onEndReached: this.onEndReached,
       onEndReachedThreshold: 0.64,
@@ -248,6 +253,7 @@ class ListView extends React.Component {
                   style={this.styles.footerText}
                   type={footerTextType}
                   size={13}
+                  align='center'
                 >
                   {footerFailureText}
                 </Text>
@@ -276,6 +282,7 @@ class ListView extends React.Component {
                   style={[this.styles.footerText, _.mt.sm]}
                   type={footerTextType}
                   size={13}
+                  align='center'
                 >
                   {footerEmptyDataText}
                 </Text>
@@ -293,7 +300,7 @@ class ListView extends React.Component {
           >
             <ActivityIndicator size='small' />
             <Text
-              style={_.mt.sm}
+              style={[this.styles.footerText, _.mt.sm]}
               type={footerTextType}
               align='center'
               size={13}
@@ -315,7 +322,7 @@ class ListView extends React.Component {
               <Mesume size={80} />
               {systemStore.setting.speech && (
                 <Text
-                  style={_.mt.sm}
+                  style={[this.styles.footerText, _.mt.sm]}
                   type={footerTextType}
                   align='center'
                   size={13}
@@ -354,6 +361,20 @@ class ListView extends React.Component {
     )
   }
 
+  renderScrollToTop() {
+    const { scrollToTop } = this.props
+    if (!scrollToTop) {
+      return null
+    }
+
+    return (
+      <ScrollToTop
+        scrollToIndex={this.scrollToIndex}
+        scrollToLocation={this.scrollToLocation}
+      />
+    )
+  }
+
   render() {
     const {
       style,
@@ -365,29 +386,42 @@ class ListView extends React.Component {
       optimize,
       showFooter,
       animated,
+      scrollToTop,
       ...other
     } = this.props
+    let $list
     if (sectionKey || sections) {
       if (animated) {
-        return (
+        $list = (
           <AnimatedSectionList
             sections={this.section}
             {...this.commonProps}
             {...other}
           />
         )
+      } else {
+        $list = (
+          <SectionList
+            sections={this.section}
+            {...this.commonProps}
+            {...other}
+          />
+        )
       }
-      return (
-        <SectionList sections={this.section} {...this.commonProps} {...other} />
-      )
-    }
-
-    if (animated) {
-      return (
+    } else if (animated) {
+      $list = (
         <AnimatedFlatList data={this.data} {...this.commonProps} {...other} />
       )
+    } else {
+      $list = <FlatList data={this.data} {...this.commonProps} {...other} />
     }
-    return <FlatList data={this.data} {...this.commonProps} {...other} />
+
+    return (
+      <>
+        {$list}
+        {this.renderScrollToTop()}
+      </>
+    )
   }
 
   get styles() {
@@ -404,12 +438,13 @@ const memoStyles = _.memoStyles(_ => ({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    height: 40,
     paddingVertical: 8,
-    paddingHorizontal: _.lg,
-    height: 40
+    paddingHorizontal: _.lg
   },
   footerText: {
-    fontSize: 14 + _.fontSizeAdjust
+    maxWidth: _.window.contentWidth - 2 * _.md,
+    ..._.fontSize(14)
   },
   footerEmpty: {
     minHeight: 240

@@ -2,21 +2,19 @@
  * @Author: czy0729
  * @Date: 2019-05-26 14:45:11
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-06-23 23:47:21
+ * @Last Modified time: 2021-01-24 20:35:42
  */
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
 import { observer } from 'mobx-react'
-import { Touchable, Text } from '@components'
+import { Touchable, Flex, Text } from '@components'
 import { _ } from '@stores'
-import { getTimestamp } from '@utils'
 import { HTMLDecode } from '@utils/html'
 import { t } from '@utils/fetch'
 import { EVENT } from '@constants'
+import Tag from '../base/tag'
 import Cover from '../base/cover'
-
-const imageWidth = _.window.contentWidth * 0.2
-const marginLeft = (_.window.contentWidth - 4 * imageWidth) / 5
+import Stars from '../base/stars'
 
 function CollectionsGrid({
   style,
@@ -26,17 +24,20 @@ function CollectionsGrid({
   cover,
   name,
   nameCn,
-  time,
   score,
-  showScore,
-  isOnHold
+  isCollect,
+  collection,
+  typeCn,
+  num,
+  aid,
+  wid,
+  mid
 }) {
-  let holdDays
-  if (isOnHold) {
-    holdDays = Math.ceil((getTimestamp() - getTimestamp(time)) / 86400)
-  }
+  const imageWidth = _.window.contentWidth * ((1 / num) * 0.84)
+  const imageHeight = imageWidth * 1.4
+  const marginLeft = (_.window.contentWidth - num * imageWidth) / (num + 1)
   const onPress = () => {
-    const { id: eventId, eventData } = event
+    const { id: eventId, data: eventData } = event
     const subjectId = String(id).replace('/subject/', '')
     t(eventId, {
       to: 'Subject',
@@ -49,25 +50,43 @@ function CollectionsGrid({
       subjectId,
       _jp: name,
       _cn: nameCn,
-      _image: cover
+      _image: cover,
+      _aid: aid,
+      _wid: wid,
+      _mid: mid
     })
   }
+
+  const _collection = collection || (isCollect ? '已收藏' : '')
   return (
-    <View style={[styles.item, style]}>
-      <Cover size={imageWidth} src={cover} radius shadow onPress={onPress} />
+    <View
+      style={[
+        {
+          width: imageWidth,
+          marginBottom: marginLeft + _.xs,
+          marginLeft
+        },
+        style
+      ]}
+    >
+      <Cover
+        size={imageWidth}
+        height={imageHeight}
+        src={cover}
+        radius
+        shadow
+        type={typeCn}
+        onPress={onPress}
+      />
+      {!!_collection && <Tag style={styles.collection} value={_collection} />}
       <Touchable withoutFeedback onPress={onPress}>
-        <Text style={_.mt.sm} size={12} numberOfLines={2} bold>
-          {showScore && score && (
-            <Text size={12} type='warning' bold>
-              {score}{' '}
-            </Text>
-          )}
+        <Text style={_.mt.sm} size={11} numberOfLines={3} bold align='center'>
           {HTMLDecode(nameCn || name)}
         </Text>
-        {!!holdDays && (
-          <Text style={_.mt.xs} size={12} type='sub'>
-            搁置{holdDays}天
-          </Text>
+        {!!score && (
+          <Flex style={_.mt.xs} justify='center'>
+            <Stars value={score} color='warning' size={10} />
+          </Flex>
         )}
       </Touchable>
     </View>
@@ -76,15 +95,16 @@ function CollectionsGrid({
 
 CollectionsGrid.defaultProps = {
   event: EVENT,
-  showScore: false
+  num: 3
 }
 
 export default observer(CollectionsGrid)
 
 const styles = StyleSheet.create({
-  item: {
-    width: imageWidth,
-    marginLeft,
-    marginBottom: _.sm
+  collection: {
+    position: 'absolute',
+    zIndex: 1,
+    top: _.xs,
+    left: _.xs
   }
 })

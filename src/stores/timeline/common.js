@@ -2,7 +2,7 @@
  * @Author: czy0729
  * @Date: 2019-07-15 11:11:24
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-03-16 23:15:13
+ * @Last Modified time: 2020-10-05 18:00:28
  */
 import { trim, getTimestamp, safeObject } from '@utils'
 import {
@@ -51,6 +51,7 @@ export async function fetchTimeline(
   if (HTML) {
     const isSelf = MODEL_TIMELINE_SCOPE.getLabel(scope) === '自己'
     const tree = HTMLToTree(HTML[1])
+
     let node
 
     // 日期分组
@@ -135,6 +136,15 @@ export async function fetchTimeline(
           const text = i.text.filter(item => item !== '、')
           p2.text = trim(text[0])
           p4.text = trim(text[1])
+        }
+
+        // fixed: 20201005 范围(自己) 完成了 x of x 集形式文字丢失问题
+        if (!p4.text) {
+          const texts = item?.children?.[idx]?.text || []
+          const text = trim(texts[texts.length - 1] || '')
+          if (text !== p1.text && text !== p2.text) {
+            p4.text = text
+          }
         }
 
         // 位置3: case 1 (条目, 角色, 人物, 小组, 目录, 天窗)
@@ -267,7 +277,7 @@ export async function fetchTimeline(
           p4,
           subject,
           subjectId,
-          time,
+          time: trim(time),
           star,
           comment,
           reply,

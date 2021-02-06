@@ -2,7 +2,7 @@
  * @Author: czy0729
  * @Date: 2019-11-27 21:50:42
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-06-27 14:03:51
+ * @Last Modified time: 2021-01-27 10:29:06
  */
 import React from 'react'
 import { View } from 'react-native'
@@ -10,7 +10,7 @@ import { Flex, Image, Text } from '@components'
 import { Popover } from '@screens/_'
 import { _ } from '@stores'
 import { toFixed } from '@utils'
-import { observer } from '@utils/decorators'
+import { ob } from '@utils/decorators'
 import { B, M } from '@constants'
 
 const area = _.window.width * _.window.height
@@ -33,7 +33,7 @@ function Item({
   const ratioHeight = (h / _.window.height) * 1.2
   const showAvatar = !!icon && (w * h) / area > 0.012
   const _percent = percent * 100
-  const textSize = parseInt(9 * ratio)
+  const textSize = parseInt(8 * ratio)
 
   let priceText
   if (price > B) {
@@ -106,7 +106,7 @@ function Item({
           )}
           <Text
             type='tinygrailPlain'
-            size={parseInt(11 * ratio)}
+            size={parseInt(10 * ratio)}
             numberOfLines={1}
             bold
             selectable={false}
@@ -133,12 +133,10 @@ function Item({
   )
 }
 
-Item.defaultProps = {
+export default ob(Item, {
   onPress: Function.prototype,
   onLongPress: Function.prototype
-}
-
-export default observer(Item)
+})
 
 const memoStyles = _.memoStyles(_ => ({
   item: {

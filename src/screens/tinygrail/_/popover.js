@@ -2,7 +2,7 @@
  * @Author: czy0729
  * @Date: 2019-11-17 21:04:23
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-07-08 10:18:21
+ * @Last Modified time: 2020-10-29 22:12:01
  */
 import React from 'react'
 import { StyleSheet } from 'react-native'
@@ -12,16 +12,26 @@ import { Popover as CompPopover } from '@screens/_'
 import { _ } from '@stores'
 import { observer } from '@utils/decorators'
 import { t } from '@utils/fetch'
-import { EVENT } from '@constants'
+import { IOS, EVENT } from '@constants'
 
 const data = ['收藏', 'K线', '买入', '卖出', '资产重组']
 
-function Popover({ id, event, onCollect }, { navigation }) {
+function Popover(
+  { id, relation, subject, subjectId, event, onCollect },
+  { navigation }
+) {
   const { id: eventId, data: eventData } = event
+  let _data = data
+  if (subject && subjectId) {
+    _data = [..._data, subject]
+  }
+  if (relation.length) {
+    _data = [..._data, `关联角色 (${relation.length + 1})`]
+  }
   return (
     <CompPopover
       contentStyle={styles.content}
-      data={data}
+      data={_data}
       onSelect={title => {
         switch (title) {
           case '收藏':
@@ -85,6 +95,30 @@ function Popover({ id, event, onCollect }, { navigation }) {
             break
 
           default:
+            if (title.includes('关联角色')) {
+              t(eventId, {
+                to: 'TinygrailRelation',
+                from: 'popover',
+                monoId: id,
+                ...eventData
+              })
+
+              navigation.push('TinygrailRelation', {
+                ids: [id, ...relation],
+                name: `${subject} (${relation.length + 1})`
+              })
+              return
+            }
+
+            t(eventId, {
+              to: 'Subject',
+              from: 'popover',
+              monoId: id,
+              ...eventData
+            })
+            navigation.push('Subject', {
+              subjectId
+            })
             break
         }
       }}
@@ -104,6 +138,7 @@ Popover.contextTypes = {
 }
 
 Popover.defaultProps = {
+  relation: [],
   event: EVENT,
   onCollect: Function.prototype
 }
@@ -117,7 +152,7 @@ const styles = StyleSheet.create({
   extra: {
     height: 56,
     paddingTop: 18,
-    paddingRight: _.sm,
+    paddingRight: _.sm + (IOS ? 5 : 0),
     paddingBottom: 12,
     paddingLeft: _.sm
   }

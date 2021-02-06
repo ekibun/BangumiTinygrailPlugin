@@ -1,16 +1,14 @@
-/* eslint-disable jsx-a11y/accessible-emoji */
-/* eslint-disable no-irregular-whitespace */
+/* eslint-disable jsx-a11y/accessible-emoji, no-irregular-whitespace */
 /*
  * @Author: czy0729
  * @Date: 2019-10-05 16:48:42
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-06-25 00:06:35
+ * @Last Modified time: 2021-01-30 14:56:31
  */
 import React from 'react'
-import { ScrollView } from 'react-native'
-import { Flex, Text, Image } from '@components'
+import { ScrollView, Flex, Text, Image } from '@components'
 import { _ } from '@stores'
-import { withHeader, observer } from '@utils/decorators'
+import { withHeader, ob } from '@utils/decorators'
 
 const title = '投食'
 
@@ -19,7 +17,7 @@ export default
   screen: title,
   hm: ['qiafan', 'Qiafan']
 })
-@observer
+@ob
 class Qiafan extends React.Component {
   static navigationOptions = {
     title
@@ -28,30 +26,33 @@ class Qiafan extends React.Component {
   render() {
     return (
       <ScrollView
-        style={_.container.screen}
+        style={_.container.plain}
         contentContainerStyle={_.container.outer}
+        scrollToTop
       >
-        <Text size={15} lineHeight={18}>
-          　　自19年2月开始，项目已持续开发快一年了。最初仅是为了练手而建立，也是第一次做app
-          (现实中就是个做网页的)
-          ，后来发现比想象的有趣太多，便一直开发至今。回头一算，实际撸码时间已经不少于6000个小时。
+        <Text lineHeight={16}>
+          　　自19年2月依赖项目已持续开发快两年。最初仅是为练手而建立，也是第一次做app，后来发现很有趣便一直开发至今。回头一算，发电时间也许已经超过1万小时。
         </Text>
-        <Text style={_.mt.sm} size={15} lineHeight={18}>
-          　　现阶段功能越堆越多，需求有点混乱了，感觉有点大杂烩了，需要认真思考一下，把项目拉回正轨。另外也知道性能有点比不上友商，大前提下还是框架的问题
-          (当然也是水平问题)。
+        <Text style={_.mt.sm} lineHeight={16}>
+          　　最近狠下心把底层框架艰难地升级了，流畅性应该比4.0之前的版本有肉眼可见的提升。
         </Text>
-        <Text style={_.mt.sm} size={15} lineHeight={18}>
-          　　最近花了很多时间打磨细节,
-          自感觉已经有肉眼可见的提升。觉得好用的，可以在github上给星星，也可以在分发平台
-          (比如酷安) 上打分,
-          这会极大地鼓励作者继续开发，这些无形的资产都会对作者以后的职业生涯产生重要的帮助。
+        <Text style={_.mt.sm} lineHeight={16}>
+          　　还是那句话，用户的支持就是作者继续开发下去的动力，觉得好用的不忘到github上给星星或分发平台（如酷安）上打分，这些无形的资产也许会对作者日后的职业生涯产生重要的帮助。
         </Text>
-        <Text style={_.mt.sm} size={15} lineHeight={18}>
-          　　最后无任欢迎提需求和意见
-          (当然会优先并尽可能满足付费用户)。接下来有计划爬取轻小说、漫画和真人剧的直接观看地址。
+        <Text style={_.mt.sm} lineHeight={16}>
+          　　本App作为一个第三方客户端，相比于bgm.tv在出发点上可能会存在分歧，App的主要目的还是让用户能发现喜欢的番剧，所以在后来的开发，一直只是在聚合各种元素。在发布超过40多个版本的同时，功能趋于完整，开发到了瓶颈阶段，所以无任欢迎提各种意见和需求。
         </Text>
-        <Text style={_.mt.sm} size={15} lineHeight={18} align='right'>
-          　　2020/03/22
+        <Text style={_.mt.md} lineHeight={16} align='right'>
+          　　2021/01/30
+        </Text>
+        <Text style={_.mt.lg} lineHeight={16}>
+          　　补充说明一下何为高级用户，只要给予过打赏的不论大小，并留言或告知留下用户id即可。作者看见会第一时间把您加进高级用户组，可以无限制享受App内所有功能。
+        </Text>
+        <Text style={_.mt.sm} lineHeight={16}>
+          　　目前定义为：只有源站点没有的功能才能成为高级功能，并且普通用户也能使用，只会在不影响使用的程度内进行限制，以避免滥用。
+        </Text>
+        <Text style={_.mt.sm} lineHeight={16}>
+          　　为了能继续发展，部分功能可能会突然消失，懂的都懂(bgm38)。
         </Text>
         <Text
           style={{
@@ -60,11 +61,21 @@ class Qiafan extends React.Component {
           align='center'
           type='sub'
         >
-          (当然支持下面的方式bgm38)
+          支持下面方式
+        </Text>
+        <Text
+          style={{
+            marginVertical: 20
+          }}
+          align='center'
+          type='sub'
+        >
+          (投食前可以的话备注一下bgm的id, 以后若有新的高级功能,
+          会第一时间为投食用户开放!)
         </Text>
         <Flex
           style={{
-            marginTop: 400
+            marginTop: 200
           }}
           justify='center'
         >
@@ -77,8 +88,8 @@ class Qiafan extends React.Component {
         </Flex>
         <Text
           style={{
-            marginTop: 160,
-            marginBottom: 40
+            marginTop: 120,
+            marginBottom: 20
           }}
           align='center'
           type='sub'
@@ -87,16 +98,7 @@ class Qiafan extends React.Component {
         </Text>
         <Text
           style={{
-            marginVertical: 20
-          }}
-          align='center'
-          type='sub'
-        >
-          (老板们打🍚前可以的话最好备注一下bgm的id, 好让记录下来)
-        </Text>
-        <Text
-          style={{
-            marginTop: 40
+            marginTop: 80
           }}
           align='center'
           type='sub'
@@ -105,7 +107,7 @@ class Qiafan extends React.Component {
         </Text>
         <Flex
           style={{
-            marginTop: 160
+            marginTop: 120
           }}
           justify='center'
         >

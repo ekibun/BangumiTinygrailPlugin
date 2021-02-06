@@ -4,7 +4,7 @@
  * @Author: czy0729
  * @Date: 2019-04-29 19:54:57
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-07-07 12:00:32
+ * @Last Modified time: 2020-12-26 22:19:53
  */
 import React from 'react'
 import { View } from 'react-native'
@@ -303,12 +303,28 @@ class RenderHtml extends React.Component {
       }
 
       /**
+       * 安卓识别<pre>目前报错, 暂时屏蔽此标签
+       */
+      if (!IOS) {
+        if (_html.includes('<pre>')) {
+          _html = HTMLDecode(_html)
+            .replace(/<pre>/g, '<div>')
+            .replace(/<\/pre>/g, '</div>')
+        }
+      }
+
+      /**
        * 缩小引用的字号
        */
       _html = _html.replace(
         /<div class="quote"><q>/g,
-        '<div class="quote"><q style="font-size: 12px">'
+        '<div class="quote"><q style="font-size: 12px; line-height: 16px">'
       )
+
+      /**
+       * 去除图片之间的br
+       */
+      _html = _html.replace(/<br><img/g, '<img')
 
       return HTMLDecode(_html)
     } catch (error) {

@@ -4,18 +4,21 @@
  * @Author: czy0729
  * @Date: 2019-02-22 01:25:31
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-07-17 11:27:49
+ * @Last Modified time: 2021-01-21 01:15:37
  */
 import { Platform } from 'react-native'
+import PropTypes from 'prop-types'
 
 const expoPackageJson = require('@/node_modules/expo/package.json')
 const appJson = require('@/app.json')
 
 export const DEV = global.__DEV__ // 是否开发模式
-export const SDK = parseInt(expoPackageJson.version.split(',')[0]) // 打包apk和bangumi-ios-test线上expo使用35, 打包ipa提审需至少使用37
+export const SDK = parseInt(expoPackageJson.version.split('.')[0]) // 打包apk和bangumi-ios-test线上expo使用35, 打包ipa提审需至少使用37
 export const BUNDLE_IDENTIFIER = appJson.name // Expo线上预览唯一标识
 export const VERSION_GITHUB_RELEASE = appJson.expo.version // 版本号
-export const VERSION_TINYGRAIL_PLUGIN = appJson.expo.versionTinygrail // 小圣杯助手版本
+export const VERSION_TINYGRAIL_PLUGIN = appJson.expo.description.split(
+  'tinygrail plugin '
+)[1] // 小圣杯助手版本
 export const BARE = true // 裸工作流 (已稳定脱离, 待废弃)
 
 /* ==================== BASE ==================== */
@@ -37,7 +40,7 @@ export const URL_DEFAULT_AVATAR = '/icon.jpg'
 // APP
 export const APP_ID = 'bgm8885c4d524cd61fc' // client_id
 export const APP_SECRET = '1da52e7834bbb73cca90302f9ddbc8dd' // client_secret
-export const APP_ID_SAY_DEVELOP = '19945783' // 功能留言板入口
+export const APP_ID_SAY_DEVELOP = '23045125' // 功能留言板入口 2020年: 19945783
 export const APP_ID_SAY_TINYGRAIL = '19820034' // 小圣杯意见反馈入口
 export const APP_ID_BAIDU = '20200130000378695' // 百度翻译
 // export const APP_USERID_TOURIST = 476179 // 6907***59@qq.com (安卓游客)
@@ -47,6 +50,7 @@ export const APP_USERID_IOS_AUTH = 542389 // say***02@163.com (iOS审核)
 
 // ENV
 export const IOS = Platform.OS === 'ios' // 是否iOS
+export const IS_BEFORE_ANDROID_10 = !IOS && Platform.Version < 29 // 安卓10之前
 export const TITLE = IOS ? 'bgm.tv' : 'Bangumi' // Bangumi字眼在App内的显示
 
 // TINYGRAIL
@@ -61,7 +65,11 @@ export const GITHUB_PROJECT_GH = 'https://czy0729.github.io/Bangumi' // gh-pages
 export const GITHUB_RELEASE = `${GITHUB_PROJECT}/releases` // 版本析出地址
 export const GITHUB_RELEASE_REPOS =
   'https://api.github.com/repos/czy0729/Bangumi/releases' // 版本析出api地址
-export const GITHUB_DATA = `${GITHUB_PROJECT_GH}/web/data.json` // online数
+// export const GITHUB_DATA = `${GITHUB_PROJECT_GH}/web/data.json` // online数
+export const GITHUB_DATA =
+  'https://gitee.com/a402731062/bangumi/raw/master/data.json' // online数
+export const GITHUB_ADVANCE =
+  'https://gitee.com/a402731062/bangumi/raw/master/advance.json' // 高级会员
 
 // 图片
 export const IMG_EMPTY = {
@@ -76,10 +84,10 @@ export const IMG_DEFAULT_AVATAR = '//lain.bgm.tv/pic/user/s/icon.jpg' // 空头�
 export const IMG_DEFAULT = require('@assets/images/default.png') // 默认图
 export const IMG_ERROR = require('@assets/images/icon/pic-error-defult.png') // 图裂图
 
-export const IMG_WIDTH = 88
-export const IMG_HEIGHT = IMG_WIDTH * 1.28
+export const IMG_WIDTH = 82
+export const IMG_HEIGHT = IMG_WIDTH * 1.4
 export const IMG_WIDTH_SM = 64
-export const IMG_HEIGHT_SM = IMG_WIDTH_SM * 1.28
+export const IMG_HEIGHT_SM = IMG_WIDTH_SM * 1.4
 export const IMG_AVATAR_WIDTH = 32
 
 // 全局统一列表数据结构
@@ -97,6 +105,7 @@ export const LIST_EMPTY = {
 export const LIMIT_LIST = 100 // 用于制造分页数据
 export const LIMIT_LIST_COMMENTS = 50 // 用于制造分页数据 (评论)
 export const LIMIT_TOPIC_PUSH = 500 // 对评论数多的帖子进行网页跳转
+export const LIMIT_HEAVY_RENDER = 10 // 部分首屏渲染任务非常重的页面设置的初始最大项显示值
 
 // EVENT
 export const EVENT = {
@@ -107,6 +116,7 @@ export const EVENT = {
 // 时间数组
 export const DATA_AIRTIME = [
   '全部',
+  '2021',
   '2020',
   '2019',
   '2018',
@@ -258,7 +268,56 @@ export const DATA_BROWSER_MONTH = [
   '11',
   '12'
 ]
+export const DATA_ALPHABET = [
+  'A',
+  'B',
+  'C',
+  'D',
+  'E',
+  'F',
+  'G',
+  'H',
+  'I',
+  'J',
+  'K',
+  'L',
+  'M',
+  'N',
+  'O',
+  'P',
+  'Q',
+  'R',
+  'S',
+  'T',
+  'U',
+  'V',
+  'W',
+  'X',
+  'Y',
+  'Z'
+]
 
 // decimal
 export const B = 100000000
 export const M = 10000
+
+// source
+export const SITES = ['bilibili', 'qq', 'iqiyi', 'acfun', 'youku']
+export const SITES_DS = [
+  'acfun',
+  'bilibili',
+  'sohu',
+  'youku',
+  'qq',
+  'iqiyi',
+  'letv',
+  'pptv',
+  'mgtv',
+  'nicovideo',
+  'netflix'
+]
+
+export const contextTypes = {
+  $: PropTypes.object,
+  navigation: PropTypes.object
+}

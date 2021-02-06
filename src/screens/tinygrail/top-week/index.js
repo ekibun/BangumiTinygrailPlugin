@@ -2,16 +2,15 @@
  * @Author: czy0729
  * @Date: 2020-03-08 20:39:14
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-06-27 13:00:44
+ * @Last Modified time: 2021-01-27 10:22:40
  */
 import React from 'react'
-import { ScrollView, View } from 'react-native'
-import PropTypes from 'prop-types'
-import { Flex, Text, Touchable } from '@components'
+import { View } from 'react-native'
+import { ScrollView, Flex, Text, Touchable } from '@components'
 import { Avatar, IconHeader } from '@screens/_'
 import { _ } from '@stores'
 import { formatNumber } from '@utils'
-import { inject, withHeader, observer } from '@utils/decorators'
+import { inject, withHeader, obc } from '@utils/decorators'
 import { tinygrailOSS } from '@utils/app'
 import { t } from '@utils/fetch'
 import { info } from '@utils/ui'
@@ -29,15 +28,10 @@ export default
   hm: ['tinygrail/top-week', 'TopWeek'],
   withHeaderParams
 })
-@observer
+@obc
 class TinygrailTopWeek extends React.Component {
   static navigationOptions = {
     title
-  }
-
-  static contextTypes = {
-    $: PropTypes.object,
-    navigation: PropTypes.object
   }
 
   componentDidMount() {
@@ -68,6 +62,7 @@ class TinygrailTopWeek extends React.Component {
         <ScrollView
           style={_.container.flex}
           contentContainerStyle={_.container.bottom}
+          scrollToTOP
         >
           {list.map((item, index) => {
             let changeColor
@@ -110,12 +105,15 @@ class TinygrailTopWeek extends React.Component {
             return (
               <View key={item.id} style={this.styles.item}>
                 <Flex
-                  style={[this.styles.wrap, index !== 0 && this.styles.border]}
+                  style={[
+                    this.styles.wrap,
+                    index !== 0 && !_.flat && this.styles.border
+                  ]}
                 >
                   <Avatar
                     style={this.styles.avatar}
                     src={tinygrailOSS(item.avatar)}
-                    size={44}
+                    size={36}
                     borderColor='transparent'
                     name={item.name}
                     onPress={() => {
@@ -125,7 +123,8 @@ class TinygrailTopWeek extends React.Component {
                       })
 
                       navigation.push('Mono', {
-                        monoId: `character/${item.id}`
+                        monoId: `character/${item.id}`,
+                        _name: item.name
                       })
                     }}
                   />
@@ -144,10 +143,10 @@ class TinygrailTopWeek extends React.Component {
                     >
                       <Flex>
                         <Flex.Item>
-                          <Text type='tinygrailPlain' size={15} bold>
+                          <Text type='tinygrailPlain' bold>
                             {item.rank}. {item.name}
                             {!!item.rankChange && (
-                              <Text type={changeColor} size={15}>
+                              <Text type={changeColor}>
                                 {' '}
                                 {item.rankChange > 0 && '+'}
                                 {item.rankChange}
@@ -157,7 +156,7 @@ class TinygrailTopWeek extends React.Component {
                         </Flex.Item>
                         <View style={_.ml.sm}>
                           <Text type='tinygrailText' size={11} align='right'>
-                            <Text size={13} bold>
+                            <Text size={13} type='tinygrailPlain' bold>
                               +{extraText}
                             </Text>{' '}
                             {item.type}人
@@ -209,7 +208,7 @@ const memoStyles = _.memoStyles(_ => ({
     backgroundColor: _.colorTinygrailContainer
   },
   wrap: {
-    paddingVertical: _.md,
+    paddingVertical: _.sm + 4,
     paddingRight: _.wind
   },
   border: {

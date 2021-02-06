@@ -2,14 +2,14 @@
  * @Author: czy0729
  * @Date: 2019-11-17 12:08:17
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-07-08 10:27:34
+ * @Last Modified time: 2020-12-27 01:38:31
  */
 import React from 'react'
 import { View } from 'react-native'
 import PropTypes from 'prop-types'
 import { observer } from 'mobx-react'
-import { Touchable, Flex, Text, Image } from '@components'
-import { _ } from '@stores'
+import { Flex, Text, Image } from '@components'
+import { _, systemStore } from '@stores'
 import { Avatar } from '@screens/_'
 import { HTMLDecode } from '@utils/html'
 import { tinygrailOSS } from '@utils/app'
@@ -18,8 +18,8 @@ import { EVENT } from '@constants'
 
 const imageWidth = _.window.contentWidth * 0.28
 const imageHeight = imageWidth * 1.28
-const imageResizeWidth = imageWidth * 1.12
-const imageResizeHeight = imageHeight * 1.12
+const imageResizeWidth = imageWidth * 1.2
+const imageResizeHeight = imageHeight * 1.2
 const marginLeft = (_.window.contentWidth - 3 * imageWidth) / 4
 
 function ItemTemple(
@@ -36,15 +36,16 @@ function ItemTemple(
     event,
     type,
     level,
-    count,
+    // count,
     onPress
   },
   { navigation }
 ) {
   const styles = memoStyles()
+  const { avatarRound } = systemStore.setting
   const { id: eventId, data: eventData } = event
   const isView = type === 'view' // 后来加的最近圣殿
-  const isFormCharaAssets = !!onPress
+  // const isFormCharaAssets = !!onPress
   const _name = HTMLDecode(nickname || name)
 
   let colorLevel
@@ -61,39 +62,64 @@ function ItemTemple(
     : sacrifices
   return (
     <View style={[styles.item, style]}>
-      <View style={_.tSelect(undefined, _.shadow)}>
-        <View
-          style={[
-            styles.wrap,
-            {
-              borderColor: colorLevel,
-              borderWidth: colorLevel ? _.tSelect(3, 2) : 0
+      <View
+        style={[
+          styles.wrap,
+          {
+            borderColor: colorLevel,
+            borderWidth: colorLevel ? 3 : 0
+          }
+        ]}
+      >
+        <Image
+          style={styles.image}
+          size={imageResizeWidth}
+          height={imageResizeHeight}
+          src={tinygrailOSS(cover)}
+          imageViewer={!onPress}
+          imageViewerSrc={tinygrailOSS(cover, 480)}
+          resizeMode={
+            // 高度远小于宽度的图不能contain, 会留白
+            imageResizeHeight * 1.2 >= imageResizeWidth ? 'cover' : 'contain'
+          }
+          event={{
+            id: eventId,
+            data: {
+              name,
+              ...eventData
             }
-          ]}
-        >
-          <Image
-            style={styles.image}
-            size={imageResizeWidth}
-            height={imageResizeHeight}
-            src={tinygrailOSS(cover)}
-            imageViewer={!onPress}
-            imageViewerSrc={tinygrailOSS(cover, 480)}
-            resizeMode='contain'
-            event={{
-              id: eventId,
-              data: {
-                name,
-                ...eventData
-              }
-            }}
-            onPress={onPress}
-          />
-        </View>
+          }}
+          onPress={onPress}
+        />
       </View>
       {isView ? (
         <View style={_.mt.sm}>
+          {!!avatar && (
+            <Flex
+              style={[
+                styles.fixed,
+                {
+                  borderRadius: avatarRound ? 36 : _.radiusSm
+                }
+              ]}
+              justify='center'
+            >
+              <Avatar
+                style={styles.avatar}
+                navigation={navigation}
+                size={31}
+                src={avatar}
+                userId={userId}
+                name={_name}
+                borderColor='transparent'
+                event={event}
+              />
+            </Flex>
+          )}
           <Text
             type='tinygrailPlain'
+            size={11}
+            bold
             numberOfLines={1}
             onPress={() => {
               t(eventId, {
@@ -109,70 +135,50 @@ function ItemTemple(
           >
             {HTMLDecode(name)}
           </Text>
-          <Text
-            style={_.mt.xs}
-            type='tinygrailText'
-            size={12}
-            numberOfLines={1}
-            bold
-            onPress={() => {
-              t(eventId, {
-                to: 'Zone',
-                userId,
-                ...eventData
-              })
-
-              navigation.push('Zone', {
-                userId,
-                from: 'tinygrail',
-                _id: userId,
-                _name: nickname
-              })
-            }}
-          >
-            {HTMLDecode(nickname)}
-          </Text>
         </View>
       ) : (
-        <Touchable style={_.mt.sm} withoutFeedback onPress={onPress}>
-          <Flex>
-            {!!avatar && (
+        <View style={_.mt.sm}>
+          {!!avatar && (
+            <Flex
+              style={[
+                styles.fixed,
+                {
+                  borderRadius: avatarRound ? 36 : _.radiusSm
+                }
+              ]}
+              justify='center'
+            >
               <Avatar
                 style={styles.avatar}
                 navigation={navigation}
-                size={28}
+                size={31}
                 src={avatar}
                 userId={name}
                 name={_name}
                 borderColor='transparent'
                 event={event}
               />
-            )}
-            <Flex.Item>
-              <Text
-                type='tinygrailPlain'
-                size={isFormCharaAssets ? 14 : 12}
-                numberOfLines={1}
-              >
-                {numText}
-              </Text>
-              <Text
-                style={styles.name}
-                type='tinygrailText'
-                size={isFormCharaAssets ? 12 : 10}
-                numberOfLines={1}
-                bold
-              >
-                {_name}
-              </Text>
-            </Flex.Item>
-            {count > 1 && (
-              <Text style={_.ml.xs} type='warning' size={12}>
-                x{count}
-              </Text>
-            )}
-          </Flex>
-        </Touchable>
+            </Flex>
+          )}
+          <Text
+            style={styles.name}
+            type='tinygrailPlain'
+            size={11}
+            bold
+            numberOfLines={1}
+          >
+            {numText}
+            <Text
+              type='tinygrailText'
+              size={10}
+              lineHeight={11}
+              numberOfLines={1}
+            >
+              {' '}
+              {_name}
+            </Text>
+          </Text>
+        </View>
       )}
     </View>
   )
@@ -192,11 +198,11 @@ export default observer(ItemTemple)
 const memoStyles = _.memoStyles(_ => ({
   item: {
     width: imageWidth,
-    marginTop: 24,
+    marginTop: _.sm,
+    marginBottom: _.sm + 2,
     marginLeft
   },
   avatar: {
-    marginRight: _.sm,
     backgroundColor: _.tSelect(_._colorDarkModeLevel2, _.colorTinygrailBg)
   },
   wrap: {
@@ -215,5 +221,16 @@ const memoStyles = _.memoStyles(_ => ({
   },
   name: {
     marginTop: 1
+  },
+  fixed: {
+    position: 'absolute',
+    zIndex: 1,
+    top: 0,
+    left: 0,
+    width: 36,
+    height: 36,
+    marginTop: -36,
+    marginLeft: -6,
+    backgroundColor: _.colorTinygrailContainer
   }
 }))

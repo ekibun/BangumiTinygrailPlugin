@@ -2,18 +2,17 @@
  * @Author: czy0729
  * @Date: 2019-09-19 00:42:30
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-04-06 03:04:05
+ * @Last Modified time: 2021-01-27 10:18:02
  */
 import React from 'react'
 import { View } from 'react-native'
-import PropTypes from 'prop-types'
 import { Flex, Text, Touchable, Iconfont } from '@components'
 import { Avatar } from '@screens/_'
 import { _ } from '@stores'
 import { lastDate, getTimestamp, formatNumber } from '@utils'
 import { tinygrailOSS } from '@utils/app'
 import { t } from '@utils/fetch'
-import { observer } from '@utils/decorators'
+import { obc } from '@utils/decorators'
 
 function Item(
   { index, balance, desc, change, time, charaId },
@@ -72,13 +71,13 @@ function Item(
 
   return (
     <View style={styles.container}>
-      <Touchable onPress={onPress}>
-        <Flex style={[styles.wrap, !isTop && styles.border]}>
+      <Touchable withoutFeedback={!onPress} onPress={onPress}>
+        <Flex style={[styles.wrap, !isTop && !_.flat && styles.border]}>
           <Flex.Item style={_.mr.sm}>
             <View style={styles.item}>
-              <Text type='tinygrailPlain' size={16}>
-                {formatNumber(balance)}{' '}
-                <Text type='tinygrailText' size={12} lineHeight={16}>
+              <Text type='tinygrailPlain' size={15} bold>
+                {formatNumber(balance, 2, $.short)}{' '}
+                <Text type='tinygrailText' size={11} lineHeight={15}>
                   {' '}
                   {lastDate(getTimestamp((time || '').replace('T', ' ')))}
                 </Text>
@@ -88,7 +87,7 @@ function Item(
                   <Avatar
                     style={[styles.avatar, _.mr.sm]}
                     src={tinygrailOSS(icons)}
-                    size={32}
+                    size={28}
                     borderColor='transparent'
                     onPress={() => {
                       // ICO的记录没有人物id
@@ -102,7 +101,8 @@ function Item(
                       })
 
                       navigation.push('Mono', {
-                        monoId: `character/${charaId}`
+                        monoId: `character/${charaId}`,
+                        _name: desc
                       })
                     }}
                   />
@@ -119,17 +119,20 @@ function Item(
                 style={{
                   color
                 }}
-                size={16}
+                size={15}
+                bold
                 align='right'
               >
                 {change
                   ? `${color === _.colorBid ? '+' : '-'}${formatNumber(
-                      Math.abs(change)
+                      Math.abs(change),
+                      2,
+                      $.short
                     )}`
                   : ''}
               </Text>
             ) : (
-              <Text type={changeType} size={16} align='right'>
+              <Text type={changeType} size={15} bold align='right'>
                 {changeNum}
               </Text>
             )}
@@ -148,12 +151,7 @@ function Item(
   )
 }
 
-Item.contextTypes = {
-  $: PropTypes.object,
-  navigation: PropTypes.object
-}
-
-export default observer(Item)
+export default obc(Item)
 
 const memoStyles = _.memoStyles(_ => ({
   container: {

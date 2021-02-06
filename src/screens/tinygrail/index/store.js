@@ -1,23 +1,24 @@
 /*
  * @Author: czy0729
  * @Date: 2019-03-22 08:49:20
- * @Last Modified by: ekibun
- * @Last Modified time: 2020-07-01 13:05:37
+ * @Last Modified by: czy0729
+ * @Last Modified time: 2020-11-05 20:25:20
  */
 import { Alert } from 'react-native'
 import cheerio from 'cheerio-without-node-native'
 import { observable, computed } from 'mobx'
-import { userStore, tinygrailStore } from '@stores'
+import { userStore, tinygrailStore, systemStore } from '@stores'
 import { urlStringify, getTimestamp, formatNumber, toFixed } from '@utils'
 import store from '@utils/store'
-import { info } from '@utils/ui'
+import { info, feedback } from '@utils/ui'
 import { queue, t } from '@utils/fetch'
 import axios from '@utils/thirdParty/axios'
 import {
   HOST,
   TINYGRAIL_APP_ID,
   TINYGRAIL_URL_OAUTH_REDIRECT,
-  M
+  M,
+  DEV
 } from '@constants'
 import { API_TINYGRAIL_TEST, API_TINYGRAIL_LOGOUT } from '@constants/api'
 import inject from './inject'
@@ -25,17 +26,23 @@ import inject from './inject'
 const namespace = 'ScreenTinygrail'
 const errorStr = '/false'
 const maxErrorCount = 3
+const excludeState = {
+  loading: false,
+  visible: false,
+  count: 0,
+  bonus: [],
+  isBonus2: false
+}
 
 export default class ScreenTinygrail extends store {
   state = observable({
-    loading: false,
     loadingAssets: false,
     loadingBonus: false,
     currentBalance: 0,
     currentTotal: 0,
     lastBalance: 0,
     lastTotal: 0,
-    short: false,
+    ...excludeState,
     _loaded: false
   })
 
@@ -44,17 +51,18 @@ export default class ScreenTinygrail extends store {
 
   init = async () => {
     // 初始化state
-    const state = await this.getStorage(undefined, namespace)
+    const state = (await this.getStorage(undefined, namespace)) || {}
     this.setState({
       ...state,
-      loading: false
+      ...excludeState,
+      _loaded: tinygrailStore.cookie ? getTimestamp() : false
     })
 
     await inject.init()
 
     // 没有资产就自动授权
     const { _loaded } = await tinygrailStore.fetchAssets()
-    if (!_loaded) {
+    if (!_loaded && !DEV) {
       await this.doAuth()
     }
 
@@ -68,6 +76,7 @@ export default class ScreenTinygrail extends store {
     tinygrailStore.fetchAdvance()
     this.caculateChange()
     this.fetchCount()
+    this.checkCount()
     return true
   }
 
@@ -120,6 +129,10 @@ export default class ScreenTinygrail extends store {
   }
 
   // -------------------- get --------------------
+  @computed get short() {
+    return systemStore.setting.xsbShort
+  }
+
   @computed get userCookie() {
     return userStore.userCookie
   }
@@ -149,6 +162,11 @@ export default class ScreenTinygrail extends store {
     return assets
   }
 
+  @computed get nextPrice() {
+    const { count = 0, isBonus2 } = this.state
+    return isBonus2 ? 2000 * 2 ** count : 1000
+  }
+
   list(key = 'bid') {
     return computed(() => tinygrailStore.list(key)).get()
   }
@@ -157,6 +175,7 @@ export default class ScreenTinygrail extends store {
   /**
    * 小圣杯授权
    */
+  _doAuthFailCount = 0
   doAuth = async () => {
     let res
     this.setState({
@@ -164,13 +183,16 @@ export default class ScreenTinygrail extends store {
     })
 
     try {
-      await this.logout()
+      // await this.logout()
       await this.oauth()
       res = this.authorize()
 
       await res
       t('小圣杯.授权成功')
 
+      this._doAuthFailCount = 0
+
+      feedback()
       info('已更新授权')
       this.setState({
         loading: false,
@@ -180,6 +202,13 @@ export default class ScreenTinygrail extends store {
     } catch (error) {
       t('小圣杯.授权失败')
 
+      if (this._doAuthFailCount < 5) {
+        this._doAuthFailCount += 1
+        info(`重试授权 [${this._doAuthFailCount}]`)
+        return this.doAuth()
+      }
+
+      this._doAuthFailCount = 0
       info('授权失败请重试, 或检查登陆状态')
       this.setState({
         loading: false
@@ -212,14 +241,12 @@ export default class ScreenTinygrail extends store {
 
       const data = await res
       const { Total, Temples, Share, Tax, Daily } = data.data.Value
-      const { short } = this.state
-
       const AfterTax = Share - Tax
       let _Total
       let _Share
       let _Tax
       let _AfterTax
-      if (short) {
+      if (this.short) {
         _Total =
           Total > M ? `${toFixed(Total / M, 1)}万` : formatNumber(Total, 2)
         _Share =
@@ -260,7 +287,6 @@ export default class ScreenTinygrail extends store {
     }
 
     t('小圣杯.刮刮乐')
-
     try {
       this.setState({
         loadingBonus: true
@@ -270,47 +296,16 @@ export default class ScreenTinygrail extends store {
       this.setState({
         loadingBonus: false
       })
+      feedback()
 
       if (State === 0) {
-        if (isBonus2) {
-          let text = '彩票刮刮乐共获得：'
-          Value.forEach(item => {
-            text += ` #${item.Id}「${item.Name}」${item.Amount}股`
-          })
+        this.setState({
+          bonus: Value,
+          isBonus2 // 是否幻想乡
+        })
 
-          Alert.alert('操作成功', `${text}，前往持仓查看吗`, [
-            {
-              text: '取消',
-              style: 'cancel'
-            },
-            {
-              text: '确定',
-              onPress: () => {
-                navigation.push('TinygrailCharaAssets', {
-                  form: 'lottery',
-                  message: text
-                })
-              }
-            }
-          ])
-          return
-        }
-
-        Alert.alert('操作成功', `${Value}，前往持仓查看吗`, [
-          {
-            text: '取消',
-            style: 'cancel'
-          },
-          {
-            text: '确定',
-            onPress: () => {
-              navigation.push('TinygrailCharaAssets', {
-                form: 'lottery',
-                message: Value
-              })
-            }
-          }
-        ])
+        this.onShowModal()
+        this.checkCount()
       } else {
         info(Message)
       }
@@ -341,6 +336,7 @@ export default class ScreenTinygrail extends store {
       this.setState({
         loadingBonus: false
       })
+      feedback()
 
       if (State === 0) {
         info(Value)
@@ -376,6 +372,7 @@ export default class ScreenTinygrail extends store {
       this.setState({
         loadingBonus: false
       })
+      feedback()
 
       if (State === 0) {
         info(Value)
@@ -411,6 +408,7 @@ export default class ScreenTinygrail extends store {
       this.setState({
         loadingBonus: false
       })
+      feedback()
 
       if (State === 0) {
         info(Value)
@@ -428,7 +426,7 @@ export default class ScreenTinygrail extends store {
   }
 
   doSend = () =>
-    Alert.alert('小圣杯助手', '是否给作者发送2000cc?', [
+    Alert.alert('小圣杯助手', '是否给作者发送10000cc?', [
       {
         text: '取消',
         style: 'cancel'
@@ -437,6 +435,8 @@ export default class ScreenTinygrail extends store {
         text: '确定',
         onPress: async () => {
           const { State, Value, Message } = await tinygrailStore.doSend()
+          feedback()
+
           if (State === 0) {
             info(Value)
             await tinygrailStore.fetchAssets()
@@ -521,6 +521,7 @@ export default class ScreenTinygrail extends store {
       return false
     }
 
+    feedback()
     tinygrailStore.updateCookie(
       `${data.headers['set-cookie'][0].split(';')[0]};`
     )
@@ -549,14 +550,39 @@ export default class ScreenTinygrail extends store {
    * 开启/关闭缩略资金
    */
   toogleShort = () => {
-    const { short } = this.state
+    systemStore.switchSetting('xsbShort')
     t('小圣杯.缩略资金', {
-      short: !short
+      short: this.short
+    })
+  }
+
+  onShowModal = () =>
+    this.setState({
+      visible: true
     })
 
+  onCloseModal = () => {
     this.setState({
-      short: !short
+      visible: false
     })
-    this.setStorage(undefined, undefined, namespace)
+
+    setTimeout(() => {
+      this.setState({
+        bonus: []
+      })
+    }, 400)
+  }
+
+  checkCount = async () => {
+    if (!tinygrailStore.cookie) {
+      return
+    }
+
+    const { State, Value } = await tinygrailStore.doCheckDaily()
+    if (State === 0) {
+      this.setState({
+        count: Value
+      })
+    }
   }
 }

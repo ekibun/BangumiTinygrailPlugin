@@ -3,19 +3,20 @@
  * @Author: czy0729
  * @Date: 2019-05-09 16:49:41
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-07-09 14:52:59
+ * @Last Modified time: 2020-12-12 15:31:23
  */
 import React, { useState, useCallback } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { useObserver } from 'mobx-react-lite'
 import { LinearGradient } from 'expo-linear-gradient'
 import { _ } from '@stores'
-import Iconfont from './iconfont'
 import Touchable from './touchable'
+import Flex from './flex'
+import Iconfont from './iconfont'
 
 const size = 216 // 1个比例的最大高度
 
-function Expand({ style, ratio, children }) {
+function Expand({ style, moreStyle, ratio, children }) {
   const [state, setState] = useState({
     layouted: false,
     expand: false,
@@ -35,13 +36,14 @@ function Expand({ style, ratio, children }) {
           styles.container,
           style,
           {
+            marginBottom: state.expand ? 0 : -28,
             height: state.expand ? 'auto' : state.maxHeight || state.height
           }
         ]}
       >
         <View
           style={{
-            height: state.height
+            height: state.expand ? 'auto' : state.height
           }}
         >
           {children}
@@ -56,8 +58,10 @@ function Expand({ style, ratio, children }) {
                 `rgba(${_.colorPlainRaw.join()}, 1)`
               ]}
             />
-            <Touchable style={styles.more} onPress={onExpand}>
-              <Iconfont name='down' size={20} />
+            <Touchable style={[styles.more, moreStyle]} onPress={onExpand}>
+              <Flex justify='center'>
+                <Iconfont name='down' size={16} />
+              </Flex>
             </Touchable>
           </>
         )}
@@ -104,16 +108,16 @@ const styles = StyleSheet.create({
   linear: {
     position: 'absolute',
     right: 0,
-    bottom: 0,
+    bottom: -2,
     left: 0,
-    height: 64,
-    marginBottom: -2
+    height: 64
   },
   more: {
     position: 'absolute',
-    left: '50%',
+    zIndex: 1,
+    right: 0,
     bottom: 0,
-    padding: _.sm,
-    marginLeft: -16
+    left: 0,
+    padding: _.md
   }
 })

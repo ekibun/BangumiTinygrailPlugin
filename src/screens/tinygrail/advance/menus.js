@@ -2,13 +2,12 @@
  * @Author: czy0729
  * @Date: 2020-01-09 16:41:59
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-05-01 22:43:52
+ * @Last Modified time: 2021-01-27 10:05:06
  */
 import React from 'react'
-import PropTypes from 'prop-types'
 import { Flex } from '@components'
 import { _ } from '@stores'
-import { observer } from '@utils/decorators'
+import { obc } from '@utils/decorators'
 import MenuItem from './menu-item'
 
 function Menus({ navigation }) {
@@ -47,15 +46,17 @@ function Menus({ navigation }) {
         pathname='TinygrailAdvanceSacrifice'
         icon='app'
       />
+      <MenuItem
+        navigation={navigation}
+        title='资金分析'
+        pathname='TinygrailTree'
+        icon='fen-xi'
+      />
     </Flex>
   )
 }
 
-Menus.contextTypes = {
-  $: PropTypes.object
-}
-
-export default observer(Menus)
+export default obc(Menus)
 
 const memoStyles = _.memoStyles(_ => ({
   section: {

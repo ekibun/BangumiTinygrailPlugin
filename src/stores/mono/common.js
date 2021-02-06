@@ -2,7 +2,7 @@
  * @Author: czy0729
  * @Date: 2019-07-15 09:33:32
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-05-21 20:20:02
+ * @Last Modified time: 2020-12-12 16:10:10
  */
 import { safeObject } from '@utils'
 import { cheerio } from '@utils/html'
@@ -19,8 +19,8 @@ export function cheerioCharacters(HTML) {
         const $li = cheerio(element)
         const $a = $li.find('> div.clearit > h2 > a')
         const $actorA = $li.find('div.actorBadge a.l')
-        const cover = $li.find('img.avatar').attr('src')
-        const actorCover = $li.find('div.actorBadge img').attr('src')
+        const cover = $li.find('img.avatar').attr('src') || ''
+        const actorCover = $li.find('div.actorBadge img').attr('src') || ''
         return safeObject({
           id: $a.attr('href').replace('/character/', ''),
           cover:
@@ -31,10 +31,10 @@ export function cheerioCharacters(HTML) {
             .text()
             .trim()
             .replace('/ ', ''),
-          replies: $li.find('small.na').text().trim(),
+          replies: $li.find('small.na').text().trim().replace(/\(|\)/g, ''),
           position: $li.find('span.badge_job').text().trim(),
           info: $li.find('div.crt_info span.tip').text().trim(),
-          actorId: $actorA.attr('href').replace('/person/', ''),
+          actorId: String($actorA.attr('href') || '').replace('/person/', ''),
           actorCover:
             actorCover !== '/img/info_only.png'
               ? String(actorCover).split('?')[0]

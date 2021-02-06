@@ -2,12 +2,17 @@
  * @Author: czy0729
  * @Date: 2019-02-21 20:36:42
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-06-27 16:47:04
+ * @Last Modified time: 2021-01-20 20:28:07
  */
-import { AsyncStorage, Clipboard } from 'react-native'
+import { InteractionManager, Clipboard } from 'react-native'
+import AsyncStorage from '@react-native-community/async-storage'
 import * as WebBrowser from 'expo-web-browser'
-import { DEV } from '@constants'
+import { DEV, B, M } from '@constants'
 import { info } from './ui'
+
+export function runAfter(fn) {
+  return InteractionManager.runAfterInteractions(fn)
+}
 
 /**
  * 节流
@@ -216,8 +221,8 @@ export function date(format, timestamp) {
   ]
   let f = {
     d: function () {
-      return f.j()
-      // return pad(f.j(), 2)
+      // return f.j()
+      return pad(f.j(), 2)
     },
     D: function () {
       t = f.l()
@@ -263,8 +268,8 @@ export function date(format, timestamp) {
       return txt_months[f.n()]
     },
     m: function () {
-      return f.n()
-      // return pad(f.n(), 2)
+      // return f.n()
+      return pad(f.n(), 2)
     },
     M: function () {
       t = f.F()
@@ -536,7 +541,16 @@ export function random(start, end) {
  * @return {String}
  */
 /* eslint-disable */
-export function formatNumber(s, n = 2) {
+export function formatNumber(s, n = 2, xsb) {
+  if (xsb) {
+    if (s >= B) {
+      return `${formatNumber(s / B, 1)}亿`
+    } else if (s >= M) {
+      return `${formatNumber(s / M, 1)}万`
+    }
+    return formatNumber(s, n)
+  }
+
   if (s === '') {
     return Number(s).toFixed(n)
   }
@@ -639,3 +653,11 @@ export function lastDate(timestamp, overDaysToShowTime = 365, simple = true) {
   return '刚刚'
 }
 /* eslint-enable */
+
+/**
+ * 清除搜索关键字的特殊字符
+ * @param {*} str
+ */
+export function cleanQ(str) {
+  return String(str).replace(/['!"#$%&\\'()*+,./:;<=>?@[\\\]^`{|}~']/g, ' ')
+}

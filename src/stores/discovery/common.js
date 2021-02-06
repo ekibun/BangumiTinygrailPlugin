@@ -2,10 +2,10 @@
  * @Author: czy0729
  * @Date: 2019-10-03 15:24:25
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-06-27 01:06:40
+ * @Last Modified time: 2020-12-12 16:00:39
  */
 import { safeObject } from '@utils'
-import { cheerio } from '@utils/html'
+import { cheerio, HTMLDecode } from '@utils/html'
 import { getCoverMedium } from '@utils/app'
 import { matchAvatar, matchUserId } from '@utils/match'
 
@@ -18,13 +18,13 @@ export function analysisTags(HTML) {
   const tags = $('#tagList a.level1')
     .map((index, element) => {
       const $li = cheerio(element)
-      return $li.text() || ''
+      return $li.text().trim() || ''
     })
     .get()
   const nums = $('#tagList small.grey')
     .map((index, element) => {
       const $li = cheerio(element)
-      return ($li.text() || '').replace(/\(|\)/g, '')
+      return ($li.text().trim() || '').replace(/\(|\)/g, '')
     })
     .get()
 
@@ -55,17 +55,17 @@ export function analysisCatalog(HTML) {
       const $title = $li.find('h3 > a.l')
       return safeObject({
         avatar: matchAvatar($li.find('img.avatar').attr('src'), 0),
-        name: $tip.text(),
+        name: $tip.text().trim(),
         userId: matchUserId($tip.attr('href')),
-        last: $li.find('span.tip_j').text(),
-        title: $title.text(),
+        last: $li.find('span.tip_j').text().trim(),
+        title: $title.text().trim(),
         id: ($title.attr('href') || '').replace('/index/', ''),
-        info: $li.find('span.info > p').text().replace(/\n/g, ' '),
-        book: $li.find('span.subject_type_1').text(),
-        anime: $li.find('span.subject_type_2').text(),
-        music: $li.find('span.subject_type_3').text(),
-        game: $li.find('span.subject_type_4').text(),
-        real: $li.find('span.subject_type_6').text()
+        info: $li.find('span.info > p').text().trim().replace(/\n/g, ' '),
+        book: $li.find('span.subject_type_1').text().trim(),
+        anime: $li.find('span.subject_type_2').text().trim(),
+        music: $li.find('span.subject_type_3').text().trim(),
+        game: $li.find('span.subject_type_4').text().trim(),
+        real: $li.find('span.subject_type_6').text().trim()
       })
     })
     .get()
@@ -96,18 +96,20 @@ export function analysisCatalogDetail(HTML) {
       return safeObject({
         id: ($a.attr('href') || '').replace('/subject/', ''),
         image: $li.find('img.cover').attr('src'),
-        title: ($a.text() || '').replace('修改删除', ''),
+        title: ($a.text().trim() || '').replace('修改删除', ''),
         type,
-        info: $li.find('p.info').text(),
-        comment: $li.find('div.text_main_even > div.text').text(),
-        isCollect: !!$li.find('p.collectModify').text()
+        info: $li.find('p.info').text().trim(),
+        comment: HTMLDecode(
+          $li.find('div.text_main_even > div.text').text().trim()
+        ),
+        isCollect: !!$li.find('p.collectModify').text().trim()
       })
     })
     .get()
 
   const $a = $('div.grp_box > a.l')
   const [time = '', collect = ''] = (
-    $('div.grp_box > span.tip_j').text() || ''
+    $('div.grp_box > span.tip_j').text().trim() || ''
   ).split('\n/')
 
   const href = $('div.rr > a').attr('href') || ''
@@ -118,12 +120,13 @@ export function analysisCatalogDetail(HTML) {
   } else {
     joinUrl = href
   }
+
   return {
     list: list.filter(item => !item.id.includes('ep/')),
-    title: $('div#header > h1').text(),
+    title: $('div#header > h1').text().trim(),
     avatar: matchAvatar($('img.avatar').attr('src'), 0),
-    progress: $('div.progress small').text(),
-    nickname: $a.text(),
+    progress: $('div.progress small').text().trim(),
+    nickname: $a.text().trim(),
     userId: ($a.attr('href') || '').replace('/user/', ''),
     time: time.replace('创建于 ', '').trim(),
     collect: collect.match(/\d+/) && collect.match(/\d+/)[0],
@@ -144,22 +147,26 @@ export function cheerioBlog(HTML) {
       .map((index, element) => {
         const $li = cheerio(element)
         const $a = $li.find('h2.title a')
-        const times = $li.find('div.time').text().split('/ ')
+        const times = $li.find('div.time').text().trim().split('/ ')
         return safeObject({
           id: $a.attr('href').replace('/blog/', ''),
-          title: $a.text(),
+          title: $a.text().trim(),
           cover: $li.find('span.pictureFrameGroup img').attr('src'),
           time: String(times[times.length - 1]).replace('\n', ''),
-          replies: $li.find('div.content .blue').text().replace(/\(|\)/g, ''),
-          content: `${$li.find('div.content').text().split('...')[0]}...`,
-          username: String($li.find('div.time small.blue a').text()).replace(
-            '\n',
-            ''
-          ),
-          subject: String($li.find('div.time small.grey a').text()).replace(
-            '\n',
-            ''
-          ),
+          replies: $li
+            .find('div.content .blue')
+            .text()
+            .trim()
+            .replace(/\(|\)/g, ''),
+          content: `${
+            $li.find('div.content').text().trim().split('...')[0]
+          }...`,
+          username: String(
+            $li.find('div.time small.blue a').text().trim()
+          ).replace('\n', ''),
+          subject: String(
+            $li.find('div.time small.grey a').text().trim()
+          ).replace('\n', ''),
           tags: ''
         })
       })
@@ -236,7 +243,7 @@ export function cheerioChannel(HTML) {
           const $user = $li.find(' > td[align=right] > a')
           return safeObject({
             id: $a.attr('href').replace('/subject/topic', 'subject'),
-            title: $a.text().trim(),
+            title: HTMLDecode($a.text().trim()),
             replies: $li
               .find(' > td > a.l + small.grey')
               .text()

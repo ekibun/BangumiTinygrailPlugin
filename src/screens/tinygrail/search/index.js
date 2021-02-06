@@ -2,18 +2,18 @@
  * @Author: czy0729
  * @Date: 2019-09-03 21:52:01
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-04-19 17:51:59
+ * @Last Modified time: 2021-01-27 10:22:02
  */
 import React from 'react'
 import { View } from 'react-native'
-import PropTypes from 'prop-types'
 import { Flex } from '@components'
 import { _ } from '@stores'
-import { inject, withHeader, observer } from '@utils/decorators'
+import { inject, withHeader, obc } from '@utils/decorators'
 import { withHeaderParams } from '../styles'
 import StatusBarEvents from '../_/status-bar-events'
 import SearchBar from './search-bar'
 import History from './history'
+import Result from './result'
 import Store from './store'
 
 const title = '人物直达'
@@ -25,15 +25,10 @@ export default
   hm: ['tinygrail/search', 'TinygrailSearch'],
   withHeaderParams
 })
-@observer
+@obc
 class TinygrailSearch extends React.Component {
   static navigationOptions = {
-    title
-  }
-
-  static contextTypes = {
-    $: PropTypes.object,
-    navigation: PropTypes.object
+    title: '人物查询'
   }
 
   componentDidMount() {
@@ -42,13 +37,15 @@ class TinygrailSearch extends React.Component {
   }
 
   render() {
+    const { $ } = this.context
+    const { list } = $.state
     return (
       <View style={this.styles.container}>
         <StatusBarEvents />
         <Flex style={this.styles.searchBar}>
           <SearchBar />
         </Flex>
-        <History style={_.mt.sm} />
+        {list.length ? <Result style={_.mt.sm} /> : <History style={_.mt.sm} />}
       </View>
     )
   }

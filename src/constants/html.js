@@ -5,7 +5,7 @@
  * @Author: czy0729
  * @Date: 2019-04-12 22:58:20
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-05-21 19:49:01
+ * @Last Modified time: 2021-01-29 15:52:36
  */
 import { MODEL_TIMELINE_SCOPE } from '@constants/model'
 import { urlStringify } from '@utils'
@@ -24,6 +24,31 @@ export const HTML_SUBJECT = subjectId => `${HOST}/subject/${subjectId}`
  */
 export const HTML_SUBJECT_COMMENTS = (subjectId, page = 1) =>
   `${HOST}/subject/${subjectId}/comments?page=${page}`
+
+/**
+ * 所有人评分
+ * @param {*} subjectId
+ * @param {*} status    wishes | collections | doings | on_hold | dropped
+ * @param {*} isFriend
+ * @param {*} page
+ */
+export const HTML_SUBJECT_RATING = (
+  subjectId,
+  status = 'collections',
+  isFriend = false,
+  page = 1
+) =>
+  `${HOST}/subject/${subjectId}/${status}?page=${page}${
+    isFriend ? '&filter=friends' : ''
+  }`
+
+/**
+ * 包含条目的目录列表
+ * @param {*} subjectId
+ * @param {*} page
+ */
+export const HTML_SUBJECT_CATALOGS = (subjectId, page = 1) =>
+  `${HOST}/subject/${subjectId}/index?page=${page}`
 
 /**
  * 章节信息
@@ -97,6 +122,14 @@ export const HTML_RAKUEN = (scope, type) =>
   `${HOST}/rakuen/${scope}?type=${type}`
 
 /**
+ * 超展开搜索
+ * @param {*} q
+ * @param {*} page
+ */
+export const HTML_RAKUEN_SEARCH = (q = '', page = 1) =>
+  `https://search.gitee.com/?q=${q}&type=code&repo=VFZSSmVrMUVZelJPUkU1b1RucFplbHBuUFQxaE56WXpaZz09YTc2M2Y%3D&pageno=${page}`
+
+/**
  * 帖子
  * @param {*} topicId eg. group/12345, subject/12345, ep/12345, prsn/123456
  */
@@ -144,11 +177,9 @@ export const HTML_BLOG_LIST = (type = '', page = 1) =>
  */
 export const HTML_SEARCH = (text, cat = '', page = 1, legacy = '') => {
   const [type, _cat] = cat.split('_')
-  let _text = text
-  if (legacy) {
-    _text = `"${_text}"`
-  }
-  return `${HOST}/${type}_search/${_text}?cat=${_cat}&page=${page}`
+  return `${HOST}/${type}_search/${text}?cat=${_cat}&page=${page}&legacy=${
+    legacy ? 1 : 0
+  }`
 }
 
 /**
@@ -289,6 +320,11 @@ export const HTML_USER_COLLECTIONS = (
     tag,
     page
   })}`
+
+/**
+ * 个人设置
+ */
+export const HTML_USER_SETTING = () => `${HOST}/settings`
 
 /**
  * 用户时光机页面

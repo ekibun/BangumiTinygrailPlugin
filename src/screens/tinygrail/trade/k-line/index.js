@@ -2,15 +2,14 @@
  * @Author: czy0729
  * @Date: 2019-09-01 13:51:41
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-05-27 10:56:55
+ * @Last Modified time: 2021-01-27 10:26:58
  */
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
-import PropTypes from 'prop-types'
 import WebView from '@components/@/web-view'
 import { Loading, Text } from '@components'
 import { _, tinygrailStore } from '@stores'
-import { observer } from '@utils/decorators'
+import { obc } from '@utils/decorators'
 import { info } from '@utils/ui'
 import { HOST_CDN } from '@constants/cdn'
 import html from './html'
@@ -20,13 +19,8 @@ const H_WEBVIEW = Math.min(_.window.height * 0.64, 480)
 let renderCount = 0
 
 export default
-@observer
+@obc
 class KLine extends React.Component {
-  static contextTypes = {
-    $: PropTypes.object,
-    navigation: PropTypes.object
-  }
-
   static defaultProps = {
     focus: false
   }

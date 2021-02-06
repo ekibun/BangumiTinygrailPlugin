@@ -2,10 +2,10 @@
  * @Author: czy0729
  * @Date: 2019-09-19 00:35:28
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-05-03 04:07:59
+ * @Last Modified time: 2020-11-05 01:09:03
  */
 import { observable, computed } from 'mobx'
-import { tinygrailStore } from '@stores'
+import { tinygrailStore, systemStore } from '@stores'
 import { getTimestamp } from '@utils'
 import store from '@utils/store'
 import { t } from '@utils/fetch'
@@ -24,6 +24,10 @@ export const tabs = [
     key: 'lottery'
   },
   {
+    title: 'ICO',
+    key: 'ico'
+  },
+  {
     title: '卖出',
     key: 'asks'
   },
@@ -31,7 +35,6 @@ export const tabs = [
     title: '买入',
     key: 'bid'
   },
-
   {
     title: '竞拍',
     key: 'auction'
@@ -43,10 +46,6 @@ export const tabs = [
   {
     title: '分红',
     key: 'award'
-  },
-  {
-    title: 'ICO',
-    key: 'ico'
   }
 ]
 const namespace = 'ScreenTinygrailLogs'
@@ -81,6 +80,10 @@ export default class ScreenTinygrailLogs extends store {
   fetchBalance = () => tinygrailStore.fetchBalance()
 
   // -------------------- get --------------------
+  @computed get short() {
+    return systemStore.setting.xsbShort
+  }
+
   @computed get balance() {
     return tinygrailStore.balance
   }
@@ -90,7 +93,7 @@ export default class ScreenTinygrailLogs extends store {
   }
 
   // -------------------- page --------------------
-  onChange = (item, page) => {
+  onChange = page => {
     if (page === this.state.page) {
       return
     }

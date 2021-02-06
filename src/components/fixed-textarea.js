@@ -4,14 +4,14 @@
  * @Author: czy0729
  * @Date: 2019-06-10 22:24:08
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-07-09 14:37:11
+ * @Last Modified time: 2021-01-30 23:20:45
  */
 import React from 'react'
 import { ScrollView, View } from 'react-native'
 import { observer } from 'mobx-react'
 import { TextareaItem } from '@ant-design/react-native'
 import { _ } from '@stores'
-import { getStorage, setStorage } from '@utils'
+import { getStorage, setStorage, open } from '@utils'
 import { IOS } from '@constants'
 import Text from './text'
 import Bgm from './bgm'
@@ -22,6 +22,10 @@ import Touchable from './touchable'
 
 const namespace = 'c-fixed-textarea'
 const maxHistoryCount = 7 // 最大常用bgm表情数量
+const sourceFlag = '来自Bangumi for'
+const sourceText = `\n[color=grey][size=10][${sourceFlag} ${
+  IOS ? 'iOS' : 'android'
+}] [url=https://bgm.tv/group/topic/350677][color=grey]获取[/color][/url][/size][/color]`
 
 export default
 @observer
@@ -30,6 +34,7 @@ class FixedTextarea extends React.Component {
     value: '',
     placeholder: '',
     simple: false,
+    source: false,
     onClose: Function.prototype,
     onChange: Function.prototype,
     onSubmit: Function.prototype // value => {}
@@ -41,6 +46,7 @@ class FixedTextarea extends React.Component {
     showBgm: false,
     showReplyHistory: false,
     showKeyboardSpacer: false,
+    showSource: false,
     keyboardHeight: 0,
     history: [],
     replyHistory: []
@@ -50,6 +56,7 @@ class FixedTextarea extends React.Component {
 
   async componentDidMount() {
     try {
+      const showSource = (await getStorage(`${namespace}|showSource`)) || false
       const history = (await getStorage(namespace)) || '15'
       const bgmHistory = history
         .split(',')
@@ -58,6 +65,7 @@ class FixedTextarea extends React.Component {
       const replyHistory = (await getStorage(`${namespace}|replyHistory`)) || []
 
       this.setState({
+        showSource,
         history: bgmHistory,
         replyHistory
       })
@@ -150,7 +158,6 @@ class FixedTextarea extends React.Component {
     this.setState({
       value: `${left}${right}`
     })
-
     this.setSelection(left.length)
     this.setRecentUseBgm(bgmIndex)
   }
@@ -163,7 +170,7 @@ class FixedTextarea extends React.Component {
     }
 
     const { onSubmit } = this.props
-    onSubmit(value)
+    onSubmit(this.value)
     this.setReplyHistory(value)
 
     this.clear()
@@ -194,6 +201,10 @@ class FixedTextarea extends React.Component {
 
   // 设定光标位置
   setSelection = start => {
+    if (!IOS) {
+      return
+    }
+
     const ref = this.ref.textAreaRef
     setTimeout(() => {
       ref.setNativeProps({
@@ -202,7 +213,7 @@ class FixedTextarea extends React.Component {
           end: start
         }
       })
-    })
+    }, 0)
   }
 
   showBgm = () => {
@@ -325,6 +336,25 @@ class FixedTextarea extends React.Component {
     }, 0)
   }
 
+  toggleSource = () => {
+    const { showSource } = this.state
+    const newShowSource = !showSource
+    this.setState({
+      showSource: newShowSource
+    })
+    setStorage(`${namespace}|showSource`, newShowSource)
+  }
+
+  get value() {
+    const { source } = this.props
+    const { value, showSource } = this.state
+    if (!source || !showSource || value.includes(sourceFlag)) {
+      return value
+    }
+
+    return `${value}${sourceText}`
+  }
+
   renderBtn(text, symbol) {
     if (text === 'BGM') {
       const { showBgm, showReplyHistory } = this.state
@@ -339,7 +369,7 @@ class FixedTextarea extends React.Component {
             }
           }}
         >
-          <Text type={showBgm && !showReplyHistory ? 'main' : 'sub'} size={11}>
+          <Text type={showBgm && !showReplyHistory ? 'main' : 'sub'} size={12}>
             {text}
           </Text>
         </Touchable>
@@ -359,7 +389,11 @@ class FixedTextarea extends React.Component {
             }
           }}
         >
-          <Text type={showReplyHistory ? 'main' : 'sub'} size={11}>
+          <Text
+            type={showReplyHistory ? 'main' : 'sub'}
+            size={11}
+            align='center'
+          >
             {text}
           </Text>
         </Touchable>
@@ -369,9 +403,15 @@ class FixedTextarea extends React.Component {
     return (
       <Touchable
         style={this.styles.toolBarBtn}
-        onPress={() => this.onAddSymbolText(symbol)}
+        onPress={() => {
+          if (text === '图床') {
+            open('https://imgchr.com/')
+          } else {
+            this.onAddSymbolText(symbol)
+          }
+        }}
       >
-        <Text type='sub' size={11}>
+        <Text type='sub' size={11} align='center'>
           {text}
         </Text>
       </Touchable>
@@ -386,7 +426,11 @@ class FixedTextarea extends React.Component {
 
     const { simple } = this.props
     return (
-      <Flex style={this.styles.toolBar} wrap='wrap'>
+      <Flex
+        style={this.styles.toolBar}
+        wrap='wrap'
+        justify={simple ? undefined : 'between'}
+      >
         {this.renderBtn('BGM')}
         {!simple && this.renderBtn('加粗', 'b')}
         {!simple && this.renderBtn('斜体', 'i')}
@@ -394,8 +438,47 @@ class FixedTextarea extends React.Component {
         {!simple && this.renderBtn('删除', 's')}
         {!simple && this.renderBtn('剧透', 'mask')}
         {!simple && this.renderBtn('图片', 'img')}
+        {!simple && this.renderBtn('图床', 'imgchr')}
         {!simple && this.renderBtn('链接', 'url')}
         {this.renderBtn('历史')}
+      </Flex>
+    )
+  }
+
+  renderSource() {
+    const { source } = this.props
+    const { showTextarea, showSource } = this.state
+    if (!source || !showTextarea) {
+      return null
+    }
+
+    return (
+      <Flex style={this.styles.source}>
+        <Flex.Item>
+          {showSource && (
+            <Text
+              style={{
+                opacity: 0.8
+              }}
+              size={10}
+              type='sub'
+            >
+              [来自Bangumi for {IOS ? 'iOS' : 'android'}]
+            </Text>
+          )}
+        </Flex.Item>
+        <Touchable onPress={this.toggleSource}>
+          <Flex>
+            <Iconfont
+              name={showSource ? 'check-circle' : 'radio'}
+              size={11}
+              color={showSource ? _.colorMain : _.colorSub}
+            />
+            <Text style={_.ml.xs} type='sub' size={11}>
+              宣传语
+            </Text>
+          </Flex>
+        </Touchable>
       </Flex>
     )
   }
@@ -427,6 +510,7 @@ class FixedTextarea extends React.Component {
               color={canSend ? _.colorMain : _.colorIcon}
             />
           </Touchable>
+          {this.renderSource()}
         </Flex>
       </View>
     )
@@ -465,7 +549,7 @@ class FixedTextarea extends React.Component {
                 style={this.styles.replyHistory}
                 onPress={() => this.onChange(item)}
               >
-                <Text lineHeight={22}>{item}</Text>
+                <Text lineHeight={18}>{item}</Text>
               </Touchable>
             ))}
           </>
@@ -568,7 +652,8 @@ const memoStyles = _.memoStyles(_ => ({
     marginLeft: -_.sm
   },
   toolBarBtn: {
-    padding: 8
+    paddingVertical: 8,
+    paddingHorizontal: 5
   },
   bgmContainer: {
     paddingVertical: _.sm
@@ -596,6 +681,14 @@ const memoStyles = _.memoStyles(_ => ({
   },
   send: {
     padding: _.sm,
-    marginTop: 3
+    marginTop: 3,
+    marginRight: -8
+  },
+  source: {
+    position: 'absolute',
+    zIndex: 2,
+    right: 4,
+    bottom: _.md,
+    left: 2
   }
 }))

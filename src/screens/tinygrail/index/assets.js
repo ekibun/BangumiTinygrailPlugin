@@ -2,15 +2,13 @@
  * @Author: czy0729
  * @Date: 2019-11-17 01:37:57
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-07-11 10:48:48
+ * @Last Modified time: 2021-01-27 10:14:57
  */
 import React from 'react'
-import { StyleSheet } from 'react-native'
-import PropTypes from 'prop-types'
 import { Flex, Text, Touchable } from '@components'
 import { _ } from '@stores'
 import { formatNumber, toFixed } from '@utils'
-import { observer } from '@utils/decorators'
+import { obc } from '@utils/decorators'
 import { M } from '@constants'
 
 function Assets(props, { $ }) {
@@ -19,15 +17,14 @@ function Assets(props, { $ }) {
     currentBalance,
     currentTotal,
     lastBalance,
-    lastTotal,
-    short
+    lastTotal
   } = $.state
   const { balance, lastIndex } = $.assets
 
   // 缩短
   let _balance = balance
   let _total = $.total
-  if (short) {
+  if ($.short) {
     if (_balance > 1000) {
       _balance = `${toFixed(_balance / M, 1)}万`
     } else {
@@ -51,7 +48,7 @@ function Assets(props, { $ }) {
   let balanceChangeText
   let balanceTextColor
   let _changeBalance
-  if (short && Math.abs(changeBalance) >= 1000) {
+  if ($.short && Math.abs(changeBalance) >= 1000) {
     _changeBalance = `${toFixed(Math.abs(changeBalance) / M, 1)}万`
   } else {
     _changeBalance = formatNumber(Math.abs(changeBalance), 1)
@@ -68,7 +65,7 @@ function Assets(props, { $ }) {
   let totalChangeText
   let totalTextColor
   let _changeTotal
-  if (short && Math.abs(changeTotal) >= 1000) {
+  if ($.short && Math.abs(changeTotal) >= 1000) {
     _changeTotal = `${toFixed(Math.abs(changeTotal) / M, 1)}万`
   } else {
     _changeTotal = formatNumber(Math.abs(changeTotal), 1)
@@ -102,7 +99,8 @@ function Assets(props, { $ }) {
             )}
             {!!lastIndex && `/ #${lastIndex}`}
             <Text type='tinygrailPlain' size={13}>
-              {short ? ' [-]' : ' [+]'}
+              {' '}
+              {$.short ? '[-]' : '[+]'}
             </Text>
           </Text>
         </Touchable>
@@ -116,13 +114,9 @@ function Assets(props, { $ }) {
   )
 }
 
-Assets.contextTypes = {
-  $: PropTypes.object
-}
+export default obc(Assets)
 
-export default observer(Assets)
-
-const styles = StyleSheet.create({
+const styles = _.create({
   container: {
     width: '100%',
     paddingVertical: _.sm,

@@ -2,20 +2,19 @@
  * @Author: czy0729
  * @Date: 2020-01-25 20:20:02
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-03-21 11:20:50
+ * @Last Modified time: 2021-01-27 10:08:48
  */
 import React from 'react'
-import PropTypes from 'prop-types'
 import { ListView, Loading } from '@components'
 import { _ } from '@stores'
 import { keyExtractor } from '@utils/app'
-import { observer } from '@utils/decorators'
+import { obc } from '@utils/decorators'
 import ItemAdvance from '../_/item-advance'
 
 function List(props, { $ }) {
   const { _loaded } = $.advanceSacrificeList
   if (!_loaded) {
-    return <Loading style={_.container.flex} />
+    return <Loading style={_.container.flex} color={_.colorTinygrailText} />
   }
 
   const event = {
@@ -31,24 +30,20 @@ function List(props, { $ }) {
   return (
     <ListView
       style={_.container.flex}
+      contentContainerStyle={_.container.bottom}
       keyExtractor={keyExtractor}
       refreshControlProps={{
         color: _.colorTinygrailText
       }}
       footerTextType='tinygrailText'
       data={$.advanceSacrificeList}
+      scrollToTop
       renderItem={renderItem}
       onHeaderRefresh={$.fetchAdvanceSacrificeList}
     />
   )
 }
 
-List.defaultProps = {
+export default obc(List, {
   title: '全部'
-}
-
-List.contextTypes = {
-  $: PropTypes.object
-}
-
-export default observer(List)
+})

@@ -2,22 +2,31 @@
  * @Author: czy0729
  * @Date: 2019-07-13 20:58:50
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-05-13 00:08:24
+ * @Last Modified time: 2021-01-13 22:09:27
  */
 import React from 'react'
 import { observer } from 'mobx-react'
-import { Touchable, Text, Flex, Input } from '@components'
+import { Touchable, Flex, Input, Heatmap, Iconfont } from '@components'
 import { _ } from '@stores'
 
-function Pagination({ style, input, onPrev, onNext, onChange, onSearch }) {
+function Pagination({
+  style,
+  input,
+  heatmaps,
+  onPrev,
+  onNext,
+  onChange,
+  onSearch
+}) {
   const styles = memoStyles()
   return (
-    <Flex style={[_.container.wind, style]}>
+    <Flex style={[styles.container, style]}>
       <Flex.Item>
         <Touchable onPress={onPrev}>
           <Flex style={styles.pagination} justify='center'>
-            <Text>上一页</Text>
+            <Iconfont name='arrow-left' size={18} color={_.colorDesc} />
           </Flex>
+          {!!heatmaps.prev && <Heatmap id={heatmaps.prev} />}
         </Touchable>
       </Flex.Item>
       <Flex.Item style={_.ml.sm}>
@@ -31,12 +40,19 @@ function Pagination({ style, input, onPrev, onNext, onChange, onSearch }) {
           onChange={onChange}
           onSubmitEditing={onSearch}
         />
+        {!!heatmaps.search && <Heatmap id={heatmaps.search} />}
       </Flex.Item>
       <Flex.Item style={_.ml.sm}>
         <Touchable onPress={onNext}>
           <Flex style={styles.pagination} justify='center'>
-            <Text>下一页</Text>
+            <Iconfont
+              style={styles.right}
+              name='arrow-left'
+              size={18}
+              color={_.colorDesc}
+            />
           </Flex>
+          {!!heatmaps.next && <Heatmap id={heatmaps.next} />}
         </Touchable>
       </Flex.Item>
     </Flex>
@@ -44,6 +60,7 @@ function Pagination({ style, input, onPrev, onNext, onChange, onSearch }) {
 }
 
 Pagination.defaultProps = {
+  heatmaps: {},
   onPrev: Function.prototype,
   onNext: Function.prototype,
   onChange: Function.prototype,
@@ -53,15 +70,24 @@ Pagination.defaultProps = {
 export default observer(Pagination)
 
 const memoStyles = _.memoStyles(_ => ({
+  container: {
+    marginHorizontal: _.wind
+  },
   pagination: {
-    height: 34,
-    backgroundColor: _.colorPlain,
-    borderWidth: _.hairlineWidth,
-    borderColor: _.colorBorder,
-    borderRadius: _.radiusXs
+    height: 30
   },
   input: {
-    height: 34,
-    textAlign: 'center'
+    height: 30,
+    ..._.fontSize(13),
+    textAlign: 'center',
+    backgroundColor: 'transparent',
+    borderWidth: 0
+  },
+  right: {
+    transform: [
+      {
+        rotate: '180deg'
+      }
+    ]
   }
 }))

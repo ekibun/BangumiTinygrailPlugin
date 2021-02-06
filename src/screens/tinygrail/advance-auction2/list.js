@@ -2,20 +2,19 @@
  * @Author: czy0729
  * @Date: 2020-01-09 19:50:24
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-05-01 22:34:24
+ * @Last Modified time: 2021-01-27 10:07:04
  */
 import React from 'react'
-import PropTypes from 'prop-types'
 import { ListView, Loading } from '@components'
 import { _ } from '@stores'
 import { keyExtractor } from '@utils/app'
-import { observer } from '@utils/decorators'
+import { obc } from '@utils/decorators'
 import ItemAdvance from '../_/item-advance'
 
 function List(props, { $ }) {
-  const { _loaded } = $.advanceAuctionList
+  const { _loaded } = $.computedList
   if (!_loaded) {
-    return <Loading style={_.container.flex} />
+    return <Loading style={_.container.flex} color={_.colorTinygrailText} />
   }
 
   const event = {
@@ -29,15 +28,17 @@ function List(props, { $ }) {
   return (
     <ListView
       style={_.container.flex}
+      contentContainerStyle={_.container.bottom}
       keyExtractor={keyExtractor}
       refreshControlProps={{
         color: _.colorTinygrailText
       }}
       footerTextType='tinygrailText'
-      data={$.advanceAuctionList}
+      data={$.computedList}
+      scrollToTop
       renderItem={({ item, index }) => (
         <ItemAdvance
-          index={index}
+          index={item._index || index}
           event={event}
           isAuctioning={$.auctioningMap[item.id]}
           assets={$.myCharaAssetsMap[item.id]}
@@ -49,12 +50,6 @@ function List(props, { $ }) {
   )
 }
 
-List.defaultProps = {
+export default obc(List, {
   title: '全部'
-}
-
-List.contextTypes = {
-  $: PropTypes.object
-}
-
-export default observer(List)
+})

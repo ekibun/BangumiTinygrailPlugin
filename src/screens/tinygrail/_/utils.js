@@ -2,9 +2,37 @@
  * @Author: czy0729
  * @Date: 2019-10-04 13:51:00
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-05-01 21:15:37
+ * @Last Modified time: 2020-11-30 17:36:25
  */
+import { ToastAndroid } from 'react-native'
 import { tinygrailStore } from '@stores'
+import { throttle } from '@utils'
+import { info } from '@utils/ui'
+import { IOS } from '@constants'
+import XSBRelationData from '@constants/json/xsb-relation'
+
+export function relation(data) {
+  return {
+    ...data,
+    list: data.list.map(item => {
+      const i = {
+        ...item
+      }
+      const { s, r } = XSBRelationData.data[item.monoId || item.id] || {}
+      if (s) {
+        i._subject = XSBRelationData.name[s]
+        i._subjectId = s
+      }
+      if (r) i._relation = r
+      return i
+    })
+  }
+}
+
+export const SORT_GF = {
+  label: '股份',
+  value: 'gf'
+}
 
 export const SORT_SC = {
   label: '收藏',
@@ -34,6 +62,11 @@ export const SORT_SDGXB = {
 export const SORT_DJ = {
   label: '等级',
   value: 'dj'
+}
+
+export const SORT_GDS = {
+  label: '挂单数',
+  value: 'cgs'
 }
 
 export const SORT_CGS = {
@@ -84,6 +117,9 @@ export const SORT_XFJL = {
 export function sortList(sort, direction, list) {
   const base = direction === 'down' ? 1 : -1
   switch (sort) {
+    case SORT_GF.value:
+      return list.sort((a, b) => ((b.amount || 0) - (a.amount || 0)) * base)
+
     case SORT_SC.value:
       return list.sort((a, b) => {
         const aCollected = tinygrailStore.collected(a.id || 0)
@@ -166,3 +202,16 @@ export function sortList(sort, direction, list) {
       return list
   }
 }
+
+export function levelList(level, list) {
+  if (level === undefined) {
+    return list
+  }
+
+  return list.filter(item => item.level == level)
+}
+
+function _info(message) {
+  info(message, 0.4)
+}
+export const throttleInfo = throttle(_info, IOS ? 400 : ToastAndroid.SHORT)

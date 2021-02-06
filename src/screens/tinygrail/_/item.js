@@ -2,7 +2,7 @@
  * @Author: czy0729
  * @Date: 2019-08-25 19:51:55
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-07-08 10:31:06
+ * @Last Modified time: 2020-11-09 15:39:18
  */
 import React from 'react'
 import { Alert, View } from 'react-native'
@@ -28,6 +28,9 @@ function Item(props, { $, navigation }) {
   const styles = memoStyles()
   const {
     _index,
+    _subject,
+    _subjectId,
+    _relation,
     style,
     index,
     id,
@@ -96,10 +99,10 @@ function Item(props, { $, navigation }) {
     if (!String(_end).includes('+')) {
       _end = `${end}+${timezone}:00`
     }
-    extra = `${formatTime(_end)} / 已筹集${totalText || '-'}`
+    extra = `${formatTime(_end)} / 已筹${totalText || '-'}`
   } else {
     // 流动股息比
-    extra = `+${toFixed(rate, 2)}`
+    extra = `+${toFixed(rate, 1)}`
     if (show) {
       const rateRatio = toFixed(((rate || 0) / (current || 10)) * 10, 1)
       extra += ` (${rateRatio})`
@@ -122,7 +125,7 @@ function Item(props, { $, navigation }) {
     if (isValhall) {
       extra += ` / 底价${toFixed(price, 1)} / 数量${formatNumber(state, 0)}`
     } else {
-      if (show) {
+      if (show || isAuction) {
         extra += ` / ${lastDate(getTimestamp(tinygrailFixedTime(lastOrder)))}`
       }
       if (marketValueText) {
@@ -134,8 +137,12 @@ function Item(props, { $, navigation }) {
     }
   }
 
+  let icoUser
+  let icoHighlight
   if (users && users !== 'ico') {
-    extra += ` / ${users || '-'}人`
+    extra += ' / '
+    icoUser = users
+    icoHighlight = Number(icoUser || 0) > 9 && Number(icoUser || 0) < 15
   }
 
   let prevText
@@ -157,12 +164,13 @@ function Item(props, { $, navigation }) {
     }
   }
   const auctioning = auctionText === '竞拍中'
+  const src = tinygrailOSS(icon)
   return (
     <Flex style={[styles.container, style]} align='start'>
       <Avatar
         style={styles.avatar}
-        src={tinygrailOSS(icon)}
-        size={40}
+        src={src}
+        size={36}
         name={name}
         borderColor='transparent'
         onPress={() => {
@@ -173,7 +181,8 @@ function Item(props, { $, navigation }) {
           })
 
           navigation.push('Mono', {
-            monoId: `character/${monoId || id}`
+            monoId: `character/${monoId || id}`,
+            _name: name
           })
         }}
       />
@@ -217,11 +226,11 @@ function Item(props, { $, navigation }) {
                 <Flex.Item>
                   <Text
                     type='tinygrailPlain'
-                    size={name.length > 8 ? 12 : 14}
+                    size={name.length > 12 ? 10 : name.length > 8 ? 12 : 14}
                     bold
                     lineHeight={15}
                   >
-                    {!isDeal && (
+                    {!isDeal && _index !== undefined && (
                       <Text type='tinygrailPlain' size={15}>
                         {_index}.{' '}
                       </Text>
@@ -254,11 +263,20 @@ function Item(props, { $, navigation }) {
                     )}
                     {isDeal && !isAuction && !isValhall && ' / '}
                     {extra}
+                    {!!icoUser && (
+                      <Text
+                        size={11}
+                        type={icoHighlight ? 'warning' : 'tinygrailText'}
+                        bold={icoHighlight}
+                      >
+                        {icoUser}人
+                      </Text>
+                    )}
                   </Text>
                 </Flex.Item>
                 {isAuction && (
                   <View>
-                    <Text type={auctionTextColor} size={15} align='right'>
+                    <Text type={auctionTextColor} bold align='right'>
                       {auctionText}
                     </Text>
                     <Text
@@ -291,9 +309,7 @@ function Item(props, { $, navigation }) {
                 ])
               }
             >
-              <Text type='tinygrailText' size={15}>
-                [取消]
-              </Text>
+              <Text type='tinygrailText'>[取消]</Text>
             </Touchable>
           )}
           {!isAuction && (
@@ -311,6 +327,9 @@ function Item(props, { $, navigation }) {
             <Popover
               id={monoId || id}
               event={event}
+              relation={_relation}
+              subject={_subject}
+              subjectId={_subjectId}
               onCollect={tinygrailStore.toggleCollect}
             />
           )}
@@ -344,8 +363,7 @@ const memoStyles = _.memoStyles(_ => ({
     paddingRight: _.wind - _._wind
   },
   avatar: {
-    marginRight: _.xs,
-    marginTop: _.md,
+    marginTop: _.md + 2,
     backgroundColor: _.tSelect(_._colorDarkModeLevel2, _.colorTinygrailBg)
   },
   item: {

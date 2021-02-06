@@ -2,7 +2,7 @@
  * @Author: czy0729
  * @Date: 2019-07-15 09:33:32
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-06-21 02:51:54
+ * @Last Modified time: 2020-12-12 17:18:22
  */
 import { safeObject } from '@utils'
 import { getCoverMedium } from '@utils/app'
@@ -155,11 +155,15 @@ export async function fetchMono({ monoId = 0 }) {
         node = findTreeNode(children, 'div > div > span')
         const staff = node ? node[0].text[0] : ''
 
+        node = findTreeNode(children, 'div > div > h3 > span')
+        const type = node ? String(node[0].attrs.class).substring(30, 31) : ''
+
         mono.works.push({
           href,
           name: HTMLDecode(name),
           cover,
-          staff
+          staff,
+          type
         })
       })
     }
@@ -197,6 +201,9 @@ export async function fetchMono({ monoId = 0 }) {
         node = findTreeNode(children, 'ul > li > a > img')
         const castCover = node ? String(node[0].attrs.src).split('?')[0] : ''
 
+        node = findTreeNode(children, 'div > div > h3 > span')
+        const type = node ? String(node[0].attrs.class).substring(30, 31) : ''
+
         mono.jobs.push({
           href,
           name: HTMLDecode(name),
@@ -206,7 +213,8 @@ export async function fetchMono({ monoId = 0 }) {
           cast,
           castHref,
           castTag,
-          castCover
+          castCover,
+          type
         })
       })
     }
@@ -253,9 +261,36 @@ export function cheerioSubjectFormHTML(HTML) {
       )
     }
   })
+
+  let type = ''
+  $('.nameSingle small.grey').each((index, element) => {
+    type += cheerio(element).text().trim()
+  })
+
+  // 详情
+  const info = $('#infobox')
+    .html()
+    .replace(/\n/g, '')
+    .replace(/ class="(.+?)"/g, '')
+    .replace(/ title="(.+?)"/g, '')
+    .replace(/>( +)</g, '><')
+    .trim()
+
+  // 先从info里面提取
+  let totalEps = info.match(/<li><span>话数: <\/span>(\d+)<\/li>/)
+  if (totalEps) {
+    totalEps = totalEps[1]
+  } else {
+    totalEps = $('div.prgText').text().trim().replace('/ ', '')
+  }
+
   return {
+    type,
     watchedEps: $('#watchedeps').attr('value') || 0,
-    totalEps: $('div.prgText').text().trim().replace('/ ', ''),
+    totalEps,
+
+    // 详情
+    info,
 
     // 标签
     tags:
@@ -346,7 +381,7 @@ export function cheerioSubjectFormHTML(HTML) {
           const $a = $row.find('a.avatar')
           return safeObject({
             avatar: matchAvatar($row.find('span.avatarNeue').attr('style')),
-            name: $a.text(),
+            name: HTMLDecode($a.text()),
             userId: matchUserId($a.attr('href')),
             star: matchStar($row.find('span.starlight').attr('class')),
             status: String($row.find('small.grey').text())
@@ -356,14 +391,22 @@ export function cheerioSubjectFormHTML(HTML) {
         })
         .get() || [],
 
-    // 详情
-    info: $('#infobox')
-      .html()
-      .replace(/\n/g, '')
-      .replace(/ class="(.+?)"/g, '')
-      .replace(/ title="(.+?)"/g, '')
-      .replace(/>( +)</g, '><')
-      .trim(),
+    // 目录
+    catalog:
+      $('#subjectPanelIndex li.clearit')
+        .map((index, element) => {
+          const $row = cheerio(element)
+          const $user = $row.find('small.grey a.avatar')
+          const $catalog = $row.find('.innerWithAvatar > a.avatar')
+          return safeObject({
+            avatar: matchAvatar($row.find('span.avatarNeue').attr('style')),
+            name: $user.text().trim(),
+            userId: $user.attr('href').replace('/user/', ''),
+            id: parseInt($catalog.attr('href').replace('/index/', '')),
+            title: $catalog.text().trim()
+          })
+        })
+        .get() || [],
 
     // 锁定
     lock: $('div.tipIntro > div.inner > h3').text(),
@@ -494,6 +537,93 @@ export function cheerioMonoVoices(HTML) {
                   })
                 })
                 .get() || []
+          })
+        })
+        .get() || []
+  }
+}
+
+/**
+ * 分析评分
+ * @param {*} HTML
+ */
+export function cheerioRating(HTML) {
+  const $ = cheerio(HTML)
+  const counts = {
+    wishes: 0,
+    collections: 0,
+    doings: 0,
+    on_hold: 0,
+    dropped: 0
+  }
+  $('ul.secTab li')
+    .map((index, element) => {
+      const text = cheerio(element).text()
+      const count = parseInt((text.match(/\d+/g) || [])[0]) || 0
+      if (text.includes('想')) {
+        counts.wishes = count
+      } else if (text.includes('过')) {
+        counts.collections = count
+      } else if (text.includes('在')) {
+        counts.doings = count
+      } else if (text.includes('搁置')) {
+        counts.on_hold = count
+      } else {
+        counts.dropped = count
+      }
+      return count
+    })
+    .get()
+  return {
+    counts,
+    list:
+      $('#memberUserList li')
+        .map((index, element) => {
+          const $li = cheerio(element)
+          const $user = $li.find('a.avatar')
+          const starText = $li.find('span.starlight').attr('class')
+          const name = $user.text().trim()
+          const time = $li.find('p.info').text().trim()
+          return safeObject({
+            id: $user.attr('href').replace('/user/', ''),
+            avatar: $li.find('img').attr('src').split('?')[0],
+            name,
+            time,
+            star: starText ? parseInt(starText.match(/\d+/)[0]) : 0,
+            comment: HTMLDecode(
+              $li
+                .find('div.userContainer')
+                .text()
+                .trim()
+                .replace(`${name}\n${time}`, '')
+            )
+          })
+        })
+        .get() || []
+  }
+}
+
+/**
+ * 分析评分
+ * @param {*} HTML
+ */
+export function cheerioSubjectCatalogs(HTML) {
+  const $ = cheerio(HTML)
+  return {
+    list:
+      $('li.tml_item')
+        .map((index, element) => {
+          const $li = cheerio(element)
+          const $title = $li.find('h3 a.l')
+          const $user = $li.find('span.tip_j a.l')
+          const avatar = matchAvatar($li.find('span.avatarNeue').attr('style'))
+          return safeObject({
+            id: parseInt($title.attr('href').replace('/index/', '')),
+            title: $title.text().trim(),
+            userId: $user.attr('href').replace('/user/', ''),
+            userName: $user.text().trim(),
+            avatar,
+            time: $li.find('span.tip').text().trim()
           })
         })
         .get() || []

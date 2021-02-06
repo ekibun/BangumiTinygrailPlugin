@@ -3,7 +3,7 @@
  * @Author: czy0729
  * @Date: 2019-03-28 15:35:04
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-07-16 22:33:09
+ * @Last Modified time: 2020-12-04 11:16:57
  */
 import React from 'react'
 import {
@@ -14,18 +14,21 @@ import {
   View
 } from 'react-native'
 import { observer } from 'mobx-react'
-import { _, systemStore } from '@stores'
+import { getSystemStoreAsync } from '@utils/async'
 import { IOS } from '@constants'
+import _ from '@styles'
 
+/**
+ * 防止瞬间多次点击
+ * @param {*} functionTobeCalled
+ */
 let isCalled = false
 let timer
-function callOnceInInterval(functionTobeCalled, interval = 160) {
+function callOnceInInterval(functionTobeCalled, interval = 40) {
   if (!isCalled) {
     isCalled = true
     clearTimeout(timer)
-    timer = setTimeout(() => {
-      isCalled = false
-    }, interval)
+    timer = setTimeout(() => (isCalled = false), interval)
 
     /**
      * 把点击事件放在requestAnimationFrame里面, 在安卓上面是两个完全不同的体验
@@ -57,7 +60,7 @@ function Touchable({
     )
   }
 
-  const { ripple } = systemStore.setting
+  const { ripple } = getSystemStoreAsync().setting
   if (IOS || !ripple) {
     if (highlight) {
       return (

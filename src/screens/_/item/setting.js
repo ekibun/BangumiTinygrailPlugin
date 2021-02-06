@@ -2,7 +2,7 @@
  * @Author: czy0729
  * @Date: 2019-05-24 02:02:43
  * @Last Modified by: czy0729
- * @Last Modified time: 2020-06-24 21:33:08
+ * @Last Modified time: 2020-12-26 15:54:13
  */
 import React from 'react'
 import { View } from 'react-native'
@@ -10,30 +10,40 @@ import { observer } from 'mobx-react'
 import { Touchable, Flex, Text, Iconfont } from '@components'
 import { _ } from '@stores'
 
-function ItemSetting({ style, hd, ft, arrow, information, onPress, ...other }) {
+function ItemSetting({
+  style,
+  show,
+  hd,
+  ft,
+  arrow,
+  information,
+  informationType,
+  children,
+  onPress,
+  ...other
+}) {
+  if (!show) {
+    return null
+  }
+
   const styles = memoStyles()
   const content = (
     <View style={styles.item}>
       <Flex>
         <Flex.Item>
-          <Text type='title' size={17} bold>
+          <Text type='title' size={16} bold>
             {hd}
           </Text>
         </Flex.Item>
-        {typeof ft === 'string' ? (
-          <Text type='sub' size={15}>
-            {ft}
-          </Text>
-        ) : (
-          ft
-        )}
-        {arrow && <Iconfont style={_.ml.xs} name='right' />}
+        {typeof ft === 'string' ? <Text type='sub'>{ft}</Text> : ft}
+        {arrow && <Iconfont style={_.ml.xs} size={14} name='right' />}
       </Flex>
       {information && (
-        <Text style={styles.information} type='sub' size={13} lineHeight={15}>
+        <Text style={styles.information} type={informationType} size={12}>
           {information}
         </Text>
       )}
+      {children}
     </View>
   )
 
@@ -52,6 +62,11 @@ function ItemSetting({ style, hd, ft, arrow, information, onPress, ...other }) {
   )
 }
 
+ItemSetting.defaultProps = {
+  show: true,
+  informationType: 'sub'
+}
+
 export default observer(ItemSetting)
 
 const memoStyles = _.memoStyles(_ => ({
@@ -60,11 +75,11 @@ const memoStyles = _.memoStyles(_ => ({
     backgroundColor: _.colorPlain
   },
   item: {
-    paddingVertical: _.md,
+    paddingVertical: _.md - 2,
     paddingRight: _.wind
   },
   information: {
-    marginTop: _.sm,
-    maxWidth: '88%'
+    maxWidth: '80%',
+    marginTop: _.xs
   }
 }))
